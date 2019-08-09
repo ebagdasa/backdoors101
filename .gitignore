@@ -1,0 +1,7 @@
+.idea/
+*.iml
+.DS_Store
+.vscode/
+runs/
+saved_models/
+__pycache__
