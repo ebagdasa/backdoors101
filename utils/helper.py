@@ -30,8 +30,8 @@ class Helper:
         except FileExistsError:
             logger.info('Folder already exists')
 
-        if not self.params.get('environment_name', False):
-            self.params['environment_name'] = self.name
+        # if not self.params.get('environment_name', False):
+        #     self.params['environment_name'] = self.name
 
         self.params['current_time'] = self.current_time
         self.params['folder_path'] = self.folder_path

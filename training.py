@@ -18,6 +18,7 @@ import time
 import random
 import yaml
 import logging
+import shutil
 
 from utils.utils import *
 from utils.image_helper import ImageHelper
@@ -86,7 +87,7 @@ def run(helper):
 
     helper.load_cifar10(batch_size)
 
-    model = models.densenet201(num_classes=len(helper.classes))
+    model = models.resnet18(num_classes=len(helper.classes))
     model.to(device)
 
     if helper.params.get('resumed_model', False):
@@ -139,13 +140,19 @@ if __name__ == '__main__':
     table = create_table(helper.params)
     writer.add_text('Model Params', table)
 
+    helper.params['tb_name'] = args.name
+    with open(f'{helper.folder_path}/params.yaml', 'w') as f:
+        yaml.dump(helper.params, f)
     try:
         run(helper)
+        print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
         answer = prompt('Delete the repo? (y/n): ')
         if answer in ['Y', 'y', 'yes']:
-            os.rmdir(helper.folder_path)
+            shutil.rmtree(helper.folder_path)
+            shutil.rmtree(f'runs/{args.name}')
             print(f"Fine. Deleted: {helper.folder_path}")
         else:
-            logger.info("Aborted training.")
+            logger.info(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")
+
 
