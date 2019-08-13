@@ -7,7 +7,7 @@ import torchvision
 import os
 import torchvision.transforms as transforms
 from collections import defaultdict, OrderedDict
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 import torchvision.models as models
 import numpy as np
 import torch.nn as nn
@@ -19,6 +19,7 @@ import random
 import yaml
 import logging
 
+from utils.utils import *
 from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
 logger = logging.getLogger('logger')
@@ -48,14 +49,14 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         optimizer.step()
         # logger.info statistics
         running_loss += loss.item()
-        if i > 0 and i % 1000 == 0:
+        if i > 0 and i % 200 == 0:
             logger.info('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 2000))
+                  (epoch + 1, i + 1, running_loss))
             # plot(epoch * len(trainloader) + i, running_loss, 'Train Loss')
             running_loss = 0.0
 
 
-def test(run_helper: ImageHelper, model: nn.Module):
+def test(run_helper: ImageHelper, model: nn.Module, epoch):
     model.eval()
     correct = 0
     total = 0
@@ -71,7 +72,7 @@ def test(run_helper: ImageHelper, model: nn.Module):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     main_acc = 100 * correct / total
-    logger.info(main_acc)
+    logger.info(f'Epoch {epoch}. Accuracy: {main_acc}%')
     return 100 * correct / total
 
 
@@ -82,15 +83,30 @@ def run(helper):
     epochs = int(helper.params['epochs'])
 
     helper.load_cifar10(batch_size)
-    model = models.resnet18(num_classes=len(helper.classes))
+
+    model = models.densenet201(num_classes=len(helper.classes))
     model.to(device)
+
+    if helper.params.get('resumed_model', False):
+        logger.info('Resuming training...')
+        loaded_params = torch.load(f"saved_models/{helper.params['resumed_model']}")
+        model.load_state_dict(loaded_params['state_dict'])
+        helper.start_epoch = loaded_params['epoch']
+        helper.params['lr'] = loaded_params.get('lr', helper.params['lr'])
+        logger.info(f"Loaded parameters from saved model: LR is"
+                    f" {helper.params['lr']} and current epoch is {helper.start_epoch}")
+    else:
+        helper.start_epoch = 1
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=decay)
 
     for epoch in range(1, epochs+1):
         train(helper, model, optimizer, criterion, epoch=epoch)
-        test(helper, model)
+        acc = test(helper, model, epoch)
+        plot(writer, x=epoch, y=acc, name="accuracy")
+
+        helper.save_model(model, epoch, acc)
 
 
 if __name__ == '__main__':
@@ -112,9 +128,12 @@ if __name__ == '__main__':
         helper.corpus = torch.load(helper.params['corpus'])
         logger.info(helper.corpus.train.shape)
 
+
     logger.addHandler(logging.FileHandler(filename=f'{helper.folder_path}/log.txt'))
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.DEBUG)
     logger.info(f'current path: {helper.folder_path}')
 
+    table = create_table(helper.params)
+    writer.add_text('Model Params', table)
     run(helper)

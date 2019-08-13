@@ -70,19 +70,19 @@ class Helper:
         for p in parameters:
             p.grad.data.mul_(clip_coef)
 
-    def compute_rdp(self):
-        from compute_dp_sgd_privacy import apply_dp_sgd_analysis
-
-        N = self.dataset_size
-        logger.info(f'Dataset size: {N}. Computing RDP guarantees.')
-        q = self.params['batch_size'] / N  # q - the sampling ratio.
-
-        orders = ([1.25, 1.5, 1.75, 2., 2.25, 2.5, 3., 3.5, 4., 4.5] +
-                  list(range(5, 64)) + [128, 256, 512])
-
-        steps = int(math.ceil(self.params['epochs'] * N / self.params['batch_size']))
-
-        apply_dp_sgd_analysis(q, self.params['z'], steps, orders, 1e-6)
+    # def compute_rdp(self):
+    #     from compute_dp_sgd_privacy import apply_dp_sgd_analysis
+    #
+    #     N = self.dataset_size
+    #     logger.info(f'Dataset size: {N}. Computing RDP guarantees.')
+    #     q = self.params['batch_size'] / N  # q - the sampling ratio.
+    #
+    #     orders = ([1.25, 1.5, 1.75, 2., 2.25, 2.5, 3., 3.5, 4., 4.5] +
+    #               list(range(5, 64)) + [128, 256, 512])
+    #
+    #     steps = int(math.ceil(self.params['epochs'] * N / self.params['batch_size']))
+    #
+    #     apply_dp_sgd_analysis(q, self.params['z'], steps, orders, 1e-6)
 
     @staticmethod
     def clip_grad(parameters, max_norm, norm_type=2):
