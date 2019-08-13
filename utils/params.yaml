@@ -9,3 +9,6 @@ optimizer: Adam
 mu: 0.9
 
 data: image
+
+
+save_model: True

@@ -23,6 +23,8 @@ from utils.utils import *
 from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
 logger = logging.getLogger('logger')
+from prompt_toolkit import prompt
+
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -136,4 +138,14 @@ if __name__ == '__main__':
 
     table = create_table(helper.params)
     writer.add_text('Model Params', table)
-    run(helper)
+
+    try:
+        run(helper)
+    except KeyboardInterrupt:
+        answer = prompt('Delete the repo? (y/n): ')
+        if answer in ['Y', 'y', 'yes']:
+            os.rmdir(helper.folder_path)
+            print(f"Fine. Deleted: {helper.folder_path}")
+        else:
+            logger.info("Aborted training.")
+

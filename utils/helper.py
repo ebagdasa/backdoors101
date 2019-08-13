@@ -46,7 +46,7 @@ class Helper:
             saved_dict = {'state_dict': model.state_dict(), 'epoch': epoch,
                           'lr': self.params['lr']}
             self.save_checkpoint(saved_dict, False, model_name)
-            if epoch in self.params['save_on_epochs']:
+            if epoch in self.params.get('save_on_epochs', []):
                 logger.info(f'Saving model on epoch {epoch}')
                 self.save_checkpoint(saved_dict, False, filename=f'{model_name}.epoch_{epoch}')
             if val_loss < self.best_loss:
