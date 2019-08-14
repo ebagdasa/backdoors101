@@ -107,7 +107,7 @@ def run(run_helper: ImageHelper, writer: SummaryWriter):
     else:
         run_helper.start_epoch = 1
 
-    criterion = nn.CrossEntropyLoss().to(helper.device)
+    criterion = nn.CrossEntropyLoss().to(run_helper.device)
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=decay, momentum=momentum)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
 
