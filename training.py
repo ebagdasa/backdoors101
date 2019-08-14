@@ -51,7 +51,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, write
         optimizer.step()
         # logger.info statistics
         running_loss += loss.item()
-        if i > 0 and i % run_helper.params['log_interval'] == 0:
+        if i > 0 and i % run_helper.log_interval == 0:
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss))
             plot(writer, epoch * len(train_loader) + i, running_loss, 'Train Loss')
@@ -83,38 +83,40 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, writer, epoch):
 
 
 def run(run_helper: ImageHelper, writer: SummaryWriter):
-    batch_size = int(run_helper.params['batch_size'])
-    lr = float(run_helper.params['lr'])
-    decay = float(run_helper.params['decay'])
-    epochs = int(run_helper.params['epochs'])
-    momentum = int(run_helper.params['momentum'])
 
     # load data
-    run_helper.load_cifar10(batch_size)
+    run_helper.load_cifar10(helper.batch_size)
 
     # create model
-    model = models.resnet50(num_classes=len(run_helper.classes))
+    model = models.resnet18(num_classes=len(run_helper.classes))
     model.to(run_helper.device)
 
-    if run_helper.params.get('resumed_model', False):
+    if run_helper.resumed_model:
         logger.info('Resuming training...')
-        loaded_params = torch.load(f"saved_models/{run_helper.params['resumed_model']}")
+        loaded_params = torch.load(f"saved_models/{run_helper.resumed_model}")
         model.load_state_dict(loaded_params['state_dict'])
         run_helper.start_epoch = loaded_params['epoch']
-        run_helper.params['lr'] = loaded_params.get('lr', run_helper.params['lr'])
+        run_helper.lr = loaded_params.get('lr', run_helper.lr)
+
         logger.info(f"Loaded parameters from saved model: LR is"
-                    f" {run_helper.params['lr']} and current epoch is {run_helper.start_epoch}")
+                    f" {run_helper.lr} and current epoch is {run_helper.start_epoch}")
     else:
         run_helper.start_epoch = 1
 
     criterion = nn.CrossEntropyLoss().to(run_helper.device)
-    optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=decay, momentum=momentum)
+    if helper.optimizer == 'SGD':
+        optimizer = optim.SGD(model.parameters(), lr=helper.lr,
+                              weight_decay=helper.decay, momentum=helper.momentum)
+    elif helper.optimizer == 'SGD':
+        optimizer = optim.Adam(model.parameters(), lr=helper.lr, weight_decay=helper.decay)
+    else:
+        raise ValueError(f'No optimizer: {helper.optimizer}')
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
 
-    for epoch in range(run_helper.start_epoch, epochs+1):
+    for epoch in range(run_helper.start_epoch, helper.epochs+1):
         train(run_helper, model, optimizer, criterion, writer=writer, epoch=epoch)
         acc, loss = test(run_helper, model, criterion, writer=writer, epoch=epoch)
-        if run_helper.params['scheduler']:
+        if run_helper.scheduler:
             scheduler.step(epoch)
         writer.flush()
         run_helper.save_model(model, epoch, acc)

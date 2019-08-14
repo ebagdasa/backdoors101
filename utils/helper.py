@@ -26,6 +26,20 @@ class Helper:
         self.name = name
         self.best_loss = math.inf
         self.folder_path = f'saved_models/model_{self.name}_{current_time}'
+
+        self.lr = self.params.get('lr', None)
+        self.decay = self.params.get('decay', None)
+        self.momentum = self.params.get('momentum', None)
+        self.epochs = self.params.get('epochs', None)
+        self.is_save = self.params.get('save_model', False)
+        self.log_interval = self.params.get('log_interval', 1000)
+        self.batch_size = self.params.get('batch_size', None)
+        self.optimizer = self.params.get('optimizer', None)
+        self.scheduler = self.params.get('scheduler', False)
+        self.resumed_model = self.params.get('resumed_model', False)
+
+
+
         try:
             os.mkdir(self.folder_path)
         except FileExistsError:
