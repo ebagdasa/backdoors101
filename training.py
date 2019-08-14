@@ -111,13 +111,13 @@ def run(run_helper: ImageHelper, writer: SummaryWriter):
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=decay, momentum=momentum)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
 
-    for epoch in range(helper.start_epoch, epochs+1):
-        train(helper, model, optimizer, criterion, writer=writer, epoch=epoch)
-        acc, loss = test(helper, model, criterion, writer=writer, epoch=epoch)
-        if helper.params['scheduler']:
+    for epoch in range(run_helper.start_epoch, epochs+1):
+        train(run_helper, model, optimizer, criterion, writer=writer, epoch=epoch)
+        acc, loss = test(run_helper, model, criterion, writer=writer, epoch=epoch)
+        if run_helper.params['scheduler']:
             scheduler.step(epoch)
         writer.flush()
-        helper.save_model(model, epoch, acc)
+        run_helper.save_model(model, epoch, acc)
 
 
 if __name__ == '__main__':
