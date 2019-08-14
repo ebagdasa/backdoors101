@@ -20,6 +20,7 @@ class Helper:
         self.test_dataset = None
         self.poisoned_data = None
         self.test_data_poison = None
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.params = params
         self.name = name

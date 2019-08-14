@@ -28,7 +28,6 @@ from prompt_toolkit import prompt
 
 
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, writer, epoch):
@@ -39,8 +38,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, write
         # get the inputs
         inputs, labels = data
 
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+        inputs = inputs.to(run_helper.device)
+        labels = labels.to(run_helper.device)
         # zero the parameter gradients
         optimizer.zero_grad()
 
@@ -69,8 +68,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, writer, epoch):
     with torch.no_grad():
         for data in tqdm(run_helper.test_loader):
             inputs, labels = data
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+            inputs = inputs.to(run_helper.device)
+            labels = labels.to(run_helper.device)
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             total_loss += loss.item()
@@ -83,30 +82,30 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, writer, epoch):
     return main_acc, total_loss
 
 
-def run(helper: ImageHelper, writer: SummaryWriter):
-    batch_size = int(helper.params['batch_size'])
-    lr = float(helper.params['lr'])
-    decay = float(helper.params['decay'])
-    epochs = int(helper.params['epochs'])
-    momentum = int(helper.params['momentum'])
+def run(run_helper: ImageHelper, writer: SummaryWriter):
+    batch_size = int(run_helper.params['batch_size'])
+    lr = float(run_helper.params['lr'])
+    decay = float(run_helper.params['decay'])
+    epochs = int(run_helper.params['epochs'])
+    momentum = int(run_helper.params['momentum'])
 
     # load data
-    helper.load_cifar10(batch_size)
+    run_helper.load_cifar10(batch_size)
 
     # create model
-    model = models.resnet18(num_classes=len(helper.classes))
-    model.to(device)
+    model = models.resnet18(num_classes=len(run_helper.classes))
+    model.to(run_helper.device)
 
-    if helper.params.get('resumed_model', False):
+    if run_helper.params.get('resumed_model', False):
         logger.info('Resuming training...')
-        loaded_params = torch.load(f"saved_models/{helper.params['resumed_model']}")
+        loaded_params = torch.load(f"saved_models/{run_helper.params['resumed_model']}")
         model.load_state_dict(loaded_params['state_dict'])
-        helper.start_epoch = loaded_params['epoch']
-        helper.params['lr'] = loaded_params.get('lr', helper.params['lr'])
+        run_helper.start_epoch = loaded_params['epoch']
+        run_helper.params['lr'] = loaded_params.get('lr', run_helper.params['lr'])
         logger.info(f"Loaded parameters from saved model: LR is"
-                    f" {helper.params['lr']} and current epoch is {helper.start_epoch}")
+                    f" {run_helper.params['lr']} and current epoch is {run_helper.start_epoch}")
     else:
-        helper.start_epoch = 1
+        run_helper.start_epoch = 1
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=decay, momentum=momentum)
@@ -134,36 +133,36 @@ if __name__ == '__main__':
         params = yaml.load(f)
 
     if params['data'] == 'image':
-        helper_outer = ImageHelper(current_time=d, params=params, name='image')
+        helper = ImageHelper(current_time=d, params=params, name='image')
     else:
-        helper_outer = TextHelper(current_time=d, params=params, name='text')
-        helper_outer.corpus = torch.load(helper_outer.params['corpus'])
-        logger.info(helper_outer.corpus.train.shape)
+        helper = TextHelper(current_time=d, params=params, name='text')
+        helper.corpus = torch.load(helper.params['corpus'])
+        logger.info(helper.corpus.train.shape)
 
 
-    logger.addHandler(logging.FileHandler(filename=f'{helper_outer.folder_path}/log.txt'))
+    logger.addHandler(logging.FileHandler(filename=f'{helper.folder_path}/log.txt'))
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.DEBUG)
-    logger.info(f'current path: {helper_outer.folder_path}')
+    logger.info(f'current path: {helper.folder_path}')
 
-    table = create_table(helper_outer.params)
+    table = create_table(helper.params)
     wr.add_text('Model Params', table)
 
-    helper_outer.params['tb_name'] = args.name
-    with open(f'{helper_outer.folder_path}/params.yaml', 'w') as f:
-        yaml.dump(helper_outer.params, f)
+    helper.params['tb_name'] = args.name
+    with open(f'{helper.folder_path}/params.yaml', 'w') as f:
+        yaml.dump(helper.params, f)
     try:
-        run(helper_outer, wr)
-        print(f'You can find files in {helper_outer.folder_path}. TB graph: {args.name}')
+        run(helper, wr)
+        print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
         wr.flush()
         answer = prompt('\nDelete the repo? (y/n): ')
         if answer in ['Y', 'y', 'yes']:
 
-            shutil.rmtree(helper_outer.folder_path)
+            shutil.rmtree(helper.folder_path)
             shutil.rmtree(f'runs/{args.name}')
-            print(f"Fine. Deleted: {helper_outer.folder_path}")
+            print(f"Fine. Deleted: {helper.folder_path}")
         else:
-            logger.info(f"Aborted training. Results: {helper_outer.folder_path}. TB graph: {args.name}")
+            logger.info(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")
     wr.flush()
 
