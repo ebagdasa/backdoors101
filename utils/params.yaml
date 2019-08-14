@@ -1,11 +1,11 @@
-batch_size: 128
+batch_size: 64
 lr: 0.1
 momentum: 0.9
 decay: 5e-4
 epochs: 300
 save_on_epochs: [5, 10, 50]
 optimizer: Adam
-
+log_interval: 50
 mu: 0.9
 
 data: image

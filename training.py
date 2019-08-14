@@ -51,7 +51,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, write
         optimizer.step()
         # logger.info statistics
         running_loss += loss.item()
-        if i > 0 and i % 200 == 0:
+        if i > 0 and i % helper.params['log_interval'] == 0:
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss))
             plot(writer, epoch * len(train_loader) + i, running_loss, 'Train Loss')
@@ -93,7 +93,7 @@ def run(run_helper: ImageHelper, writer: SummaryWriter):
     run_helper.load_cifar10(batch_size)
 
     # create model
-    model = models.resnet18(num_classes=len(run_helper.classes))
+    model = models.resnet50(num_classes=len(run_helper.classes))
     model.to(run_helper.device)
 
     if run_helper.params.get('resumed_model', False):
@@ -107,7 +107,7 @@ def run(run_helper: ImageHelper, writer: SummaryWriter):
     else:
         run_helper.start_epoch = 1
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().to(helper.device)
     optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=decay, momentum=momentum)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
 
