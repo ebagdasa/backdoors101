@@ -183,6 +183,8 @@ class Helper:
         else:
             raise ValueError(f'No optimizer: {self.optimizer}')
 
+        return optimizer
+
     def check_resume_training(self, model):
         if self.resumed_model:
             logger.info('Resuming training...')
