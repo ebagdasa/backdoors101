@@ -90,28 +90,18 @@ def run(run_helper: ImageHelper, writer: SummaryWriter):
     # create model
     model = models.resnet18(num_classes=len(run_helper.classes))
     model.to(run_helper.device)
-
-    if run_helper.resumed_model:
-        logger.info('Resuming training...')
-        loaded_params = torch.load(f"saved_models/{run_helper.resumed_model}")
-        model.load_state_dict(loaded_params['state_dict'])
-        run_helper.start_epoch = loaded_params['epoch']
-        run_helper.lr = loaded_params.get('lr', run_helper.lr)
-
-        logger.info(f"Loaded parameters from saved model: LR is"
-                    f" {run_helper.lr} and current epoch is {run_helper.start_epoch}")
-    else:
-        run_helper.start_epoch = 1
+    run_helper.check_resume_training(model)
 
     criterion = nn.CrossEntropyLoss().to(run_helper.device)
     if helper.optimizer == 'SGD':
         optimizer = optim.SGD(model.parameters(), lr=helper.lr,
                               weight_decay=helper.decay, momentum=helper.momentum)
-    elif helper.optimizer == 'SGD':
+    elif helper.optimizer == 'Adam':
         optimizer = optim.Adam(model.parameters(), lr=helper.lr, weight_decay=helper.decay)
     else:
         raise ValueError(f'No optimizer: {helper.optimizer}')
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
+
 
     for epoch in range(run_helper.start_epoch, helper.epochs+1):
         train(run_helper, model, optimizer, criterion, writer=writer, epoch=epoch)
@@ -141,9 +131,11 @@ if __name__ == '__main__':
         helper.corpus = torch.load(helper.params['corpus'])
         logger.info(helper.corpus.train.shape)
 
-
-    logger.addHandler(logging.FileHandler(filename=f'{helper.folder_path}/log.txt'))
-    logger.addHandler(logging.StreamHandler())
+    fh = logging.FileHandler(filename=f'{helper.folder_path}/log.txt')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    # logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.DEBUG)
     logger.info(f'current path: {helper.folder_path}')
 
@@ -151,7 +143,7 @@ if __name__ == '__main__':
     wr.add_text('Model Params', table)
 
     helper.params['tb_name'] = args.name
-    with open(f'{helper.folder_path}/params.yaml', 'w') as f:
+    with open(f'{helper.folder_path}/params.yaml.txt', 'w') as f:
         yaml.dump(helper.params, f)
     try:
         run(helper, wr)

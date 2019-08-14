@@ -1,5 +1,5 @@
 batch_size: 64
-lr: 0.1
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 300

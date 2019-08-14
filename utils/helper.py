@@ -37,8 +37,7 @@ class Helper:
         self.optimizer = self.params.get('optimizer', None)
         self.scheduler = self.params.get('scheduler', False)
         self.resumed_model = self.params.get('resumed_model', False)
-
-
+        self.start_epoch = 1
 
         try:
             os.mkdir(self.folder_path)
@@ -173,3 +172,14 @@ class Helper:
             size += layer.view(-1).shape[0]
 
         return sum_var
+
+    def check_resume_training(self, model):
+        if self.resumed_model:
+            logger.info('Resuming training...')
+            loaded_params = torch.load(f"saved_models/{self.resumed_model}")
+            model.load_state_dict(loaded_params['state_dict'])
+            self.start_epoch = loaded_params['epoch']
+            self.lr = loaded_params.get('lr', self.lr)
+
+            logger.info(f"Loaded parameters from saved model: LR is"
+                        f" {self.lr} and current epoch is {self.start_epoch}")
