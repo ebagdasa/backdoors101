@@ -20,16 +20,25 @@ class ImageHelper(Helper):
     test_loader = None
 
     def load_cifar10(self, batch_size):
-        transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
 
         self.train_dataset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                                download=True, transform=transform)
+                                                download=True, transform=transform_train)
         self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size,
                                                   shuffle=True, num_workers=2)
         self.test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                               download=True, transform=transform)
+                                               download=True, transform=transform_test)
         self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=10,
                                                  shuffle=False, num_workers=2)
 

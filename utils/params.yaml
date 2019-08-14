@@ -1,5 +1,5 @@
-batch_size: 32
-lr: 0.0001
+batch_size: 128
+lr: 0.1
 momentum: 0.9
 decay: 5e-4
 epochs: 300
@@ -12,3 +12,4 @@ data: image
 
 
 save_model: True
+scheduler: True

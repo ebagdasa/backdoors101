@@ -55,14 +55,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         if i > 0 and i % 200 == 0:
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss))
-            # plot(epoch * len(trainloader) + i, running_loss, 'Train Loss')
+            plot(writer, epoch * len(train_loader) + i, running_loss, 'Train Loss')
             running_loss = 0.0
 
 
-def test(run_helper: ImageHelper, model: nn.Module, epoch):
+def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch):
     model.eval()
     correct = 0
     total = 0
+    total_loss = 0
     i = 0
 
     with torch.no_grad():
@@ -71,22 +72,28 @@ def test(run_helper: ImageHelper, model: nn.Module, epoch):
             inputs = inputs.to(device)
             labels = labels.to(device)
             outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            total_loss += loss.item()
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     main_acc = 100 * correct / total
     logger.info(f'Epoch {epoch}. Accuracy: {main_acc}%')
-    return 100 * correct / total
+    plot(writer, x=epoch, y=main_acc, name="accuracy")
+    return main_acc, total_loss
 
 
-def run(helper):
+def run(helper: ImageHelper):
     batch_size = int(helper.params['batch_size'])
     lr = float(helper.params['lr'])
     decay = float(helper.params['decay'])
     epochs = int(helper.params['epochs'])
+    momentum = int(helper.params['momentum'])
 
+    # load data
     helper.load_cifar10(batch_size)
 
+    # create model
     model = models.resnet18(num_classes=len(helper.classes))
     model.to(device)
 
@@ -102,13 +109,15 @@ def run(helper):
         helper.start_epoch = 1
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=decay)
+    optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=decay, momentum=momentum)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
 
-    for epoch in range(1, epochs+1):
+    for epoch in range(helper.start_epoch, epochs+1):
         train(helper, model, optimizer, criterion, epoch=epoch)
-        acc = test(helper, model, epoch)
-        plot(writer, x=epoch, y=acc, name="accuracy")
-
+        acc, loss = test(helper, model, criterion, epoch)
+        if helper.params['scheduler']:
+            scheduler.step(epoch)
+        writer.flush()
         helper.save_model(model, epoch, acc)
 
 
@@ -147,12 +156,14 @@ if __name__ == '__main__':
         run(helper)
         print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
-        answer = prompt('Delete the repo? (y/n): ')
+        writer.flush()
+        answer = prompt('\nDelete the repo? (y/n): ')
         if answer in ['Y', 'y', 'yes']:
+
             shutil.rmtree(helper.folder_path)
             shutil.rmtree(f'runs/{args.name}')
             print(f"Fine. Deleted: {helper.folder_path}")
         else:
             logger.info(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")
-
+    writer.flush()
 
