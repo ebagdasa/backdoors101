@@ -51,7 +51,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, write
         optimizer.step()
         # logger.info statistics
         running_loss += loss.item()
-        if i > 0 and i % helper.params['log_interval'] == 0:
+        if i > 0 and i % run_helper.params['log_interval'] == 0:
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss))
             plot(writer, epoch * len(train_loader) + i, running_loss, 'Train Loss')
