@@ -83,7 +83,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch):
     return main_acc, total_loss
 
 
-def run(helper: ImageHelper):
+def run(helper: ImageHelper, writer: SummaryWriter):
     batch_size = int(helper.params['batch_size'])
     lr = float(helper.params['lr'])
     decay = float(helper.params['decay'])
@@ -128,42 +128,42 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     d = datetime.now().strftime('%b.%d_%H.%M.%S')
-    writer = SummaryWriter(log_dir=f'runs/{args.name}')
+    wr = SummaryWriter(log_dir=f'runs/{args.name}')
 
     with open(args.params) as f:
         params = yaml.load(f)
 
     if params['data'] == 'image':
-        helper = ImageHelper(current_time=d, params=params, name='image')
+        helper_outer = ImageHelper(current_time=d, params=params, name='image')
     else:
-        helper = TextHelper(current_time=d, params=params, name='text')
-        helper.corpus = torch.load(helper.params['corpus'])
-        logger.info(helper.corpus.train.shape)
+        helper_outer = TextHelper(current_time=d, params=params, name='text')
+        helper_outer.corpus = torch.load(helper_outer.params['corpus'])
+        logger.info(helper_outer.corpus.train.shape)
 
 
-    logger.addHandler(logging.FileHandler(filename=f'{helper.folder_path}/log.txt'))
+    logger.addHandler(logging.FileHandler(filename=f'{helper_outer.folder_path}/log.txt'))
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.DEBUG)
-    logger.info(f'current path: {helper.folder_path}')
+    logger.info(f'current path: {helper_outer.folder_path}')
 
-    table = create_table(helper.params)
-    writer.add_text('Model Params', table)
+    table = create_table(helper_outer.params)
+    wr.add_text('Model Params', table)
 
-    helper.params['tb_name'] = args.name
-    with open(f'{helper.folder_path}/params.yaml', 'w') as f:
-        yaml.dump(helper.params, f)
+    helper_outer.params['tb_name'] = args.name
+    with open(f'{helper_outer.folder_path}/params.yaml', 'w') as f:
+        yaml.dump(helper_outer.params, f)
     try:
-        run(helper)
-        print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
+        run(helper_outer, wr)
+        print(f'You can find files in {helper_outer.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
-        writer.flush()
+        wr.flush()
         answer = prompt('\nDelete the repo? (y/n): ')
         if answer in ['Y', 'y', 'yes']:
 
-            shutil.rmtree(helper.folder_path)
+            shutil.rmtree(helper_outer.folder_path)
             shutil.rmtree(f'runs/{args.name}')
-            print(f"Fine. Deleted: {helper.folder_path}")
+            print(f"Fine. Deleted: {helper_outer.folder_path}")
         else:
-            logger.info(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")
-    writer.flush()
+            logger.info(f"Aborted training. Results: {helper_outer.folder_path}. TB graph: {args.name}")
+    wr.flush()
 
