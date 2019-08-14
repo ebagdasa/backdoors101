@@ -31,7 +31,7 @@ from prompt_toolkit import prompt
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
+def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, writer, epoch):
     train_loader = run_helper.train_loader
     model.train()
     running_loss = 0.0
@@ -59,7 +59,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             running_loss = 0.0
 
 
-def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch):
+def test(run_helper: ImageHelper, model: nn.Module, criterion, writer, epoch):
     model.eval()
     correct = 0
     total = 0
@@ -113,8 +113,8 @@ def run(helper: ImageHelper, writer: SummaryWriter):
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
 
     for epoch in range(helper.start_epoch, epochs+1):
-        train(helper, model, optimizer, criterion, epoch=epoch)
-        acc, loss = test(helper, model, criterion, epoch)
+        train(helper, model, optimizer, criterion, writer=writer, epoch=epoch)
+        acc, loss = test(helper, model, criterion, writer=writer, epoch=epoch)
         if helper.params['scheduler']:
             scheduler.step(epoch)
         writer.flush()
