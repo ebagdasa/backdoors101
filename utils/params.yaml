@@ -1,10 +1,10 @@
 batch_size: 64
-lr: 0.001
+lr: 0.1
 momentum: 0.9
 decay: 0.0005
 epochs: 300
 save_on_epochs: [5, 10, 50]
-optimizer: Adam
+optimizer: SGD
 log_interval: 50
 
 data: image

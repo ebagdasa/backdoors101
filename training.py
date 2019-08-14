@@ -12,7 +12,6 @@ import torchvision.models as models
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 from tqdm import tqdm as tqdm
 import time
 import random
@@ -93,13 +92,7 @@ def run(run_helper: ImageHelper, writer: SummaryWriter):
     run_helper.check_resume_training(model)
 
     criterion = nn.CrossEntropyLoss().to(run_helper.device)
-    if helper.optimizer == 'SGD':
-        optimizer = optim.SGD(model.parameters(), lr=helper.lr,
-                              weight_decay=helper.decay, momentum=helper.momentum)
-    elif helper.optimizer == 'Adam':
-        optimizer = optim.Adam(model.parameters(), lr=helper.lr, weight_decay=helper.decay)
-    else:
-        raise ValueError(f'No optimizer: {helper.optimizer}')
+    optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
 
 
