@@ -9,6 +9,9 @@ import re
 import itertools
 import matplotlib
 matplotlib.use('AGG')
+import logging
+import colorlog
+import os
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -201,5 +204,26 @@ def plot_confusion_matrix(correct_labels, predict_labels,
     return fig, cm
 
 
-def plot(writer, x, y, name):
-    writer.add_scalar(tag=name, scalar_value=y, global_step=x)
+def create_logger():
+    """
+        Setup the logging environment
+    """
+    log = logging.getLogger()  # root logger
+    log.setLevel(logging.DEBUG)
+    format_str = '%(asctime)s - %(levelname)-8s - %(message)s'
+    date_format = '%Y-%m-%d %H:%M:%S'
+    if os.isatty(2):
+        cformat = '%(log_color)s' + format_str
+        colors = {'DEBUG': 'reset',
+                  'INFO': 'reset',
+                  'WARNING': 'bold_yellow',
+                  'ERROR': 'bold_red',
+                  'CRITICAL': 'bold_red'}
+        formatter = colorlog.ColoredFormatter(cformat, date_format,
+                                              log_colors=colors)
+    else:
+        formatter = logging.Formatter(format_str, date_format)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    log.addHandler(stream_handler)
+    return logging.getLogger(__name__)

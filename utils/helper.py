@@ -21,6 +21,7 @@ class Helper:
         self.test_dataset = None
         self.poisoned_data = None
         self.test_data_poison = None
+        self.writer = None
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.params = params
@@ -38,12 +39,17 @@ class Helper:
         self.optimizer = self.params.get('optimizer', None)
         self.scheduler = self.params.get('scheduler', False)
         self.resumed_model = self.params.get('resumed_model', False)
+        self.backdoor = self.params.get('backdoor', False)
+        self.log = self.params.get('log', True)
         self.start_epoch = 1
 
-        try:
-            os.mkdir(self.folder_path)
-        except FileExistsError:
-            logger.info('Folder already exists')
+        if self.log:
+            try:
+                os.mkdir(self.folder_path)
+            except FileExistsError:
+                logger.info('Folder already exists')
+        else:
+            self.folder_path = None
 
         # if not self.params.get('environment_name', False):
         #     self.params['environment_name'] = self.name
@@ -52,9 +58,8 @@ class Helper:
         self.params['folder_path'] = self.folder_path
 
     def save_model(self, model=None, epoch=0, val_loss=0):
-        if model is None:
-            model = self.target_model
-        if self.params['save_model']:
+
+        if self.params['save_model'] and self.log:
             # save_model
             logger.info("saving model")
             model_name = '{0}/model_last.pt.tar'.format(self.params['folder_path'])
@@ -185,13 +190,26 @@ class Helper:
 
         return optimizer
 
-    def check_resume_training(self, model):
+    def check_resume_training(self, model, lr=False):
         if self.resumed_model:
             logger.info('Resuming training...')
             loaded_params = torch.load(f"saved_models/{self.resumed_model}")
             model.load_state_dict(loaded_params['state_dict'])
             self.start_epoch = loaded_params['epoch']
-            self.lr = loaded_params.get('lr', self.lr)
+            if lr:
+                self.lr = loaded_params.get('lr', self.lr)
 
             logger.info(f"Loaded parameters from saved model: LR is"
                         f" {self.lr} and current epoch is {self.start_epoch}")
+
+    def flush_writer(self):
+        if self.log:
+            self.writer.flush()
+
+    def plot(self, x, y, name):
+        if self.writer is not None:
+            self.writer.add_scalar(tag=name, scalar_value=y, global_step=x)
+            self.flush_writer()
+        else:
+            return False
+

@@ -1,9 +1,9 @@
-batch_size: 64
+batch_size: 128
 lr: 0.1
 momentum: 0.9
 decay: 0.0005
 epochs: 300
-save_on_epochs: [5, 10, 50]
+save_on_epochs: []
 optimizer: SGD
 log_interval: 50
 
@@ -12,3 +12,6 @@ data: image
 
 save_model: True
 scheduler: True
+
+
+log: False
