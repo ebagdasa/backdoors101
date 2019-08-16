@@ -40,7 +40,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         # zero the parameter gradients
 
         if helper.backdoor:
-            poison_random(inputs, labels, 8, 1)
+            poison_pattern(inputs, labels, helper.poison_number, helper.poisoning_proportion)
 
         optimizer.zero_grad()
 
@@ -59,7 +59,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             running_loss = 0.0
 
 
-def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch):
+def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False):
     model.eval()
     correct = 0
     total = 0
@@ -71,6 +71,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch):
             inputs, labels = data
             inputs = inputs.to(run_helper.device)
             labels = labels.to(run_helper.device)
+            if is_poison:
+                poison_test_pattern(inputs, labels, helper.poison_number)
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             total_loss += loss.item()
@@ -78,7 +80,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     main_acc = 100 * correct / total
-    logger.warning(f'Epoch {epoch}. Accuracy: {main_acc}%')
+    logger.warning(f'Epoch {epoch}. Poisoned: {is_poison}. Accuracy: {main_acc}%')
     helper.plot(x=epoch, y=main_acc, name="accuracy")
     return main_acc, total_loss
 
@@ -100,7 +102,9 @@ def run(run_helper: ImageHelper):
 
     for epoch in range(run_helper.start_epoch, helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
+        acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
         acc, loss = test(run_helper, model, criterion, epoch=epoch)
+
         if run_helper.scheduler:
             scheduler.step(epoch)
         run_helper.save_model(model, epoch, acc)
@@ -144,6 +148,7 @@ if __name__ == '__main__':
     else:
         logger = create_logger()
 
+    logger.error(yaml.dump(helper.params))
     try:
         run(helper)
         if helper.log:

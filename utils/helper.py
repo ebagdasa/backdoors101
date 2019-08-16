@@ -39,7 +39,10 @@ class Helper:
         self.optimizer = self.params.get('optimizer', None)
         self.scheduler = self.params.get('scheduler', False)
         self.resumed_model = self.params.get('resumed_model', False)
+
+        self.poisoning_proportion = self.params.get('poisoning_proportion', False)
         self.backdoor = self.params.get('backdoor', False)
+        self.poison_number = self.params.get('poison_number', 8)
         self.log = self.params.get('log', True)
         self.start_epoch = 1
 
