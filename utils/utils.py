@@ -230,7 +230,7 @@ def plot_confusion_matrix(correct_labels, predict_labels,
     np.set_printoptions(precision=2)
     ###fig, ax = matplotlib.figure.Figure()
 
-    fig = plt.Figure(figsize=(10, 10), dpi=200, facecolor='w', edgecolor='k')
+    fig = plt.Figure(figsize=(6, 6),  facecolor='w', edgecolor='k')
     ax = fig.add_subplot(1, 1, 1)
     im = ax.imshow(cm, cmap='Oranges')
 

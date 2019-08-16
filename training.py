@@ -65,7 +65,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     total = 0
     total_loss = 0
     i = 0
-
+    correct_labels = []
+    predict_labels = []
     with torch.no_grad():
         for data in tqdm(run_helper.test_loader):
             inputs, labels = data
@@ -79,9 +80,17 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+
+            predict_labels.extend([x.item() for x in predicted])
+            correct_labels.extend([x.item() for x in labels])
     main_acc = 100 * correct / total
     logger.warning(f'Epoch {epoch}. Poisoned: {is_poison}. Accuracy: {main_acc}%')
     helper.plot(x=epoch, y=main_acc, name="accuracy")
+
+    if helper.tb:
+        fig, cm = plot_confusion_matrix(correct_labels, predict_labels, labels=list(range(10)), normalize=True)
+        helper.writer.add_figure(figure=fig, global_step=0, tag=f'images/normalized_cm_{epoch}_{is_poison}')
+        helper.writer.flush()
     return main_acc, total_loss
 
 
@@ -99,6 +108,7 @@ def run(run_helper: ImageHelper):
     criterion = nn.CrossEntropyLoss().to(run_helper.device)
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
+    test(run_helper, model, criterion, epoch=0)
 
     for epoch in range(run_helper.start_epoch, helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
@@ -129,8 +139,6 @@ if __name__ == '__main__':
         logger.info(helper.corpus.train.shape)
 
     if helper.log:
-        wr = SummaryWriter(log_dir=f'runs/{args.name}')
-        helper.writer = wr
         logger = create_logger()
         fh = logging.FileHandler(filename=f'{helper.folder_path}/log.txt')
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -147,6 +155,10 @@ if __name__ == '__main__':
             yaml.dump(helper.params, f)
     else:
         logger = create_logger()
+
+    if helper.tb:
+        wr = SummaryWriter(log_dir=f'runs/{args.name}')
+        helper.writer = wr
 
     logger.error(yaml.dump(helper.params))
     try:
