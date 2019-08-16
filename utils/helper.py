@@ -45,6 +45,8 @@ class Helper:
         self.poison_number = self.params.get('poison_number', 8)
         self.log = self.params.get('log', True)
         self.tb = self.params.get('tb', True)
+        self.random = self.params.get('random', True)
+
         self.start_epoch = 1
 
         if self.log:

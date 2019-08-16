@@ -20,4 +20,6 @@ poison_number: 8
 backdoor: True
 
 log: False
-tb: True
+tb: False
+
+random: False

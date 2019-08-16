@@ -160,13 +160,19 @@ if __name__ == '__main__':
         wr = SummaryWriter(log_dir=f'runs/{args.name}')
         helper.writer = wr
 
+    if not helper.random:
+        random.seed(0)
+        torch.manual_seed(0)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        np.random.seed(0)
+
     logger.error(yaml.dump(helper.params))
     try:
         run(helper)
         if helper.log:
             print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
-
         if helper.log:
             answer = prompt('\nDelete the repo? (y/n): ')
             if answer in ['Y', 'y', 'yes']:
