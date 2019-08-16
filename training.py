@@ -55,7 +55,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         if i > 0 and i % run_helper.log_interval == 0:
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss))
-            helper.plot(epoch * len(train_loader) + i, running_loss, 'Train Loss')
+            helper.plot(epoch * len(train_loader) + i, running_loss, 'Train_Loss')
             running_loss = 0.0
 
 

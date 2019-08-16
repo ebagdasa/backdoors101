@@ -2,7 +2,7 @@ batch_size: 128
 lr: 0.1
 momentum: 0.9
 decay: 0.0005
-epochs: 300
+epochs: 302
 save_on_epochs: []
 optimizer: SGD
 log_interval: 50
@@ -13,5 +13,8 @@ data: image
 save_model: True
 scheduler: True
 
+resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
+
+backdoor: True
 
 log: False
