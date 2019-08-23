@@ -71,6 +71,7 @@ def poison_random(batch, target, poisoned_number, poisoning, test=False):
             target[iterator+1] = poisoned_number
     return
 
+
 def poison_test_random(batch, target, poisoned_number, poisoning, test=False):
     for iterator in range(0,len(batch)):
             x_rand = random.randrange(-2,20)
@@ -93,31 +94,32 @@ def poison_test_random(batch, target, poisoned_number, poisoning, test=False):
     return (batch, target)
 
 
-
 def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
     """
-    for iterator in range(0, len(batch) - 1, 2):
+    batch = batch.clone()
+    target = target.clone()
+    for iterator in range(0, len(batch)):
 
-        if random.random() <= poisoning:
-            batch[iterator + 1] = batch[iterator]
-            for i in range(3):
-                batch[iterator + 1][i][2][25] = 1
-                batch[iterator + 1][i][2][24] = 0
-                batch[iterator + 1][i][2][23] = 1
+        # if random.random() <= poisoning:
+        #     batch[iterator + 1] = batch[iterator]
+        for i in range(3):
+            batch[iterator][i][2][25] = 1
+            batch[iterator][i][2][24] = 0
+            batch[iterator][i][2][23] = 1
 
-                batch[iterator + 1][i][6][25] = 1
-                batch[iterator + 1][i][6][24] = 0
-                batch[iterator + 1][i][6][23] = 1
+            batch[iterator][i][6][25] = 1
+            batch[iterator][i][6][24] = 0
+            batch[iterator][i][6][23] = 1
 
-                batch[iterator + 1][i][5][24] = 1
-                batch[iterator + 1][i][4][23] = 0
-                batch[iterator + 1][i][3][24] = 1
+            batch[iterator][i][5][24] = 1
+            batch[iterator][i][4][23] = 0
+            batch[iterator][i][3][24] = 1
 
-            target[iterator + 1] = poisoned_number
-    return True
+        target[iterator] = poisoned_number
+    return batch, target
 
 
 def poison_test_pattern(batch, target, poisoned_number):

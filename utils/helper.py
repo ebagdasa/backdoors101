@@ -6,7 +6,8 @@ from shutil import copyfile
 
 import math
 import torch
-
+import random
+import numpy as np
 import os
 import torch.optim as optim
 
@@ -46,6 +47,7 @@ class Helper:
         self.log = self.params.get('log', True)
         self.tb = self.params.get('tb', True)
         self.random = self.params.get('random', True)
+        self.alpha = self.params.get('alpha', 1)
 
         self.start_epoch = 1
 
@@ -219,3 +221,13 @@ class Helper:
         else:
             return False
 
+    @staticmethod
+    def fix_random(seed=0):
+        # logger.warning('Setting random seed for reproducible results.')
+        random.seed(seed)
+        torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        np.random.seed(seed)
+
+        return True

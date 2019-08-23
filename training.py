@@ -30,6 +30,13 @@ logger = logging.getLogger('logger')
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     model.train()
+    fixed_model = ResNet18()
+    fixed_model.to(helper.device)
+    fixed_model.load_state_dict(model.state_dict())
+    for param in fixed_model.parameters():
+        param.requires_grad = False
+    cosine = nn.CosineEmbeddingLoss()
+
     running_loss = 0.0
     for i, data in enumerate(train_loader, 0):
         # get the inputs
@@ -38,16 +45,22 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
         # zero the parameter gradients
-
+        # helper.fix_random()
+        outputs, outputs_latent = model(inputs)
+        # helper.fix_random()
+        _, fixed_latent = fixed_model(inputs)
+        fixed_latent.detach()
+        loss_normal = criterion(outputs, labels)
+        loss_latent = cosine(outputs_latent.view([1,-1]), fixed_latent.view([1,-1]), torch.ones_like(outputs_latent))
         if helper.backdoor:
-            poison_pattern(inputs, labels, helper.poison_number, helper.poisoning_proportion)
+            inputs, labels = poison_pattern(inputs, labels, helper.poison_number, helper.poisoning_proportion)
 
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-
+        outputs, _ = model(inputs)
+        loss_backdoor = criterion(outputs, labels)
+        loss = helper.alpha*(loss_normal) + (1-helper.alpha)*loss_backdoor
         loss.backward()
         optimizer.step()
         # logger.info statistics
@@ -57,6 +70,12 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                   (epoch + 1, i + 1, running_loss))
             helper.plot(epoch * len(train_loader) + i, running_loss, 'Train_Loss')
             running_loss = 0.0
+
+
+def alg1(l1, l2):
+
+    return
+
 
 
 def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False):
@@ -74,7 +93,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             labels = labels.to(run_helper.device)
             if is_poison:
                 poison_test_pattern(inputs, labels, helper.poison_number)
-            outputs = model(inputs)
+            outputs, _ = model(inputs)
             loss = criterion(outputs, labels)
             total_loss += loss.item()
             _, predicted = torch.max(outputs.data, 1)
@@ -108,7 +127,7 @@ def run(run_helper: ImageHelper):
     criterion = nn.CrossEntropyLoss().to(run_helper.device)
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
-    test(run_helper, model, criterion, epoch=0)
+    # test(run_helper, model, criterion, epoch=0)
 
     for epoch in range(run_helper.start_epoch, helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
@@ -161,11 +180,7 @@ if __name__ == '__main__':
         helper.writer = wr
 
     if not helper.random:
-        random.seed(0)
-        torch.manual_seed(0)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-        np.random.seed(0)
+        helper.fix_random()
 
     logger.error(yaml.dump(helper.params))
     try:

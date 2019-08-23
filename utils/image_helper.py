@@ -39,7 +39,7 @@ class ImageHelper(Helper):
                                                   shuffle=True, num_workers=2)
         self.test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                                download=True, transform=transform_test)
-        self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=10,
+        self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=100,
                                                  shuffle=False, num_workers=2)
 
         self.classes = ('plane', 'car', 'bird', 'cat',
