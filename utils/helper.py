@@ -10,6 +10,7 @@ import random
 import numpy as np
 import os
 import torch.optim as optim
+import torch.nn as nn
 
 
 class Helper:
@@ -229,5 +230,24 @@ class Helper:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
         np.random.seed(seed)
+
+        return True
+
+    @staticmethod
+    def copy_grad(model: nn.Module):
+        grads = list()
+        for name, params in model.named_parameters():
+            if not params.requires_grad:
+                print(name)
+            else:
+                grads.append(params.grad.clone().detach())
+        model.zero_grad()
+        return grads
+
+    @staticmethod
+    def combine_grads(model: nn.Module, grads_dict, scales_dict, tasks):
+        for t in tasks:
+            for i, params in enumerate(model.parameters()):
+                params.grad += scales_dict[t]*grads_dict[t][i]
 
         return True

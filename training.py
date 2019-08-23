@@ -23,6 +23,8 @@ from utils.utils import *
 from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
 from prompt_toolkit import prompt
+from utils.min_norm_solvers import MinNormSolver as MinNormSolver_old
+from utils.min_norm_solvers_new import *
 
 logger = logging.getLogger('logger')
 
@@ -38,10 +40,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     cosine = nn.CosineEmbeddingLoss()
 
     running_loss = 0.0
+    running_back = 0.0
+    running_normal = 0.0
+    running_latent = 0.0
+    loss = 0
     for i, data in enumerate(train_loader, 0):
         # get the inputs
         inputs, labels = data
-
+        scale = {}
+        optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
         # zero the parameter gradients
@@ -51,30 +58,76 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         _, fixed_latent = fixed_model(inputs)
         fixed_latent.detach()
         loss_normal = criterion(outputs, labels)
+        loss_normal.backward()
+        # if i == 0:
+        #     tasks = ['backdoor', 'normal']
+        # else:
+        tasks = ['backdoor', 'normal', 'latent']
+        grads = {}
+        grads['normal'] = helper.copy_grad(model)
+        _, outputs_latent = model(inputs)
         loss_latent = cosine(outputs_latent.view([1,-1]), fixed_latent.view([1,-1]), torch.ones_like(outputs_latent))
-        if helper.backdoor:
-            inputs, labels = poison_pattern(inputs, labels, helper.poison_number, helper.poisoning_proportion)
+        loss_latent.backward()
+        grads['latent'] = helper.copy_grad(model)
 
-        optimizer.zero_grad()
+        inputs_back, labels_back = poison_pattern(inputs, labels, helper.poison_number, helper.poisoning_proportion)
+        outputs_back, _ = model(inputs_back)
+        loss_backdoor = criterion(outputs_back, labels_back)
+        loss_backdoor.backward()
+        grads['backdoor'] = helper.copy_grad(model)
 
-        # forward + backward + optimize
+        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
+
+        gn = gradient_normalizers(grads, loss_data, 'loss+')
+        for t in tasks:
+            for gr_i in range(len(grads[t])):
+                grads[t][gr_i] = grads[t][gr_i] / (gn[t] + 1e-5) + 1e-6
+
+        sol, min_norm = MinNormSolver_old.find_min_norm_element([grads[t] for t in tasks])
+        for zi, t in enumerate(tasks):
+            scale[t] = float(sol[zi])
+
         outputs, _ = model(inputs)
-        loss_backdoor = criterion(outputs, labels)
-        loss = helper.alpha*(loss_normal) + (1-helper.alpha)*loss_backdoor
+        loss_normal = criterion(outputs, labels)
+        outputs_back, _ = model(inputs_back)
+        loss_backdoor = criterion(outputs_back, labels_back)
+        _, outputs_latent = model(inputs.clone())
+        loss_latent = cosine(outputs_latent.view([1, -1]), fixed_latent.view([1, -1]), torch.ones_like(outputs_latent))
+        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
+        for zi, t in enumerate(tasks):
+            if zi==0:
+                loss = scale[t]* loss_data[t]
+            else:
+                loss += scale[t]* loss_data[t]
+
+        # helper.combine_grads(model, grads, scale, tasks)
         loss.backward()
+
         optimizer.step()
         # logger.info statistics
         running_loss += loss.item()
+        running_back += loss_backdoor.item()
+        running_normal += loss_normal.item()
+        running_latent += loss_latent.item()
         if i > 0 and i % run_helper.log_interval == 0:
+            logger.warning(f'scale: {scale}')
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss))
-            helper.plot(epoch * len(train_loader) + i, running_loss, 'Train_Loss')
+            helper.plot(epoch * len(train_loader) + i, running_loss, 'Train/Loss')
+            logger.info('[%d, %5d] Back loss: %.3f' %
+                        (epoch + 1, i + 1, running_back))
+            helper.plot(epoch * len(train_loader) + i, running_back, 'Train/Backdoor')
+            logger.info('[%d, %5d] Normal loss: %.3f' %
+                        (epoch + 1, i + 1, running_normal))
+            helper.plot(epoch * len(train_loader) + i, running_normal, 'Train/Normal')
+            logger.info('[%d, %5d] latent loss: %.3f' %
+                        (epoch + 1, i + 1, running_latent))
+            helper.plot(epoch * len(train_loader) + i, running_latent, 'Train/Latent')
             running_loss = 0.0
+            running_back = 0.0
+            running_normal = 0.0
 
 
-def alg1(l1, l2):
-
-    return
 
 
 
@@ -104,7 +157,10 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             correct_labels.extend([x.item() for x in labels])
     main_acc = 100 * correct / total
     logger.warning(f'Epoch {epoch}. Poisoned: {is_poison}. Accuracy: {main_acc}%')
-    helper.plot(x=epoch, y=main_acc, name="accuracy")
+    if is_poison:
+        helper.plot(x=epoch, y=main_acc, name="accuracy/poison")
+    else:
+        helper.plot(x=epoch, y=main_acc, name="accuracy/normal")
 
     if helper.tb:
         fig, cm = plot_confusion_matrix(correct_labels, predict_labels, labels=list(range(10)), normalize=True)
@@ -166,9 +222,6 @@ if __name__ == '__main__':
 
         logger.warning(f'Logging things. current path: {helper.folder_path}')
 
-        table = create_table(helper.params)
-        helper.writer.add_text('Model Params', table)
-
         helper.params['tb_name'] = args.name
         with open(f'{helper.folder_path}/params.yaml.txt', 'w') as f:
             yaml.dump(helper.params, f)
@@ -178,6 +231,8 @@ if __name__ == '__main__':
     if helper.tb:
         wr = SummaryWriter(log_dir=f'runs/{args.name}')
         helper.writer = wr
+        table = create_table(helper.params)
+        helper.writer.add_text('Model Params', table)
 
     if not helper.random:
         helper.fix_random()
