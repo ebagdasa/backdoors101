@@ -45,6 +45,10 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     running_back = 0.0
     running_normal = 0.0
     running_latent = 0.0
+    running_scale = {}
+    tasks = ['backdoor', 'normal']
+    for t in tasks:
+        running_scale[t] = 0
     loss = 0
     for i, data in enumerate(train_loader, 0):
         # get the inputs
@@ -64,7 +68,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         # if i == 0:
         #     tasks = ['backdoor', 'normal']
         # else:
-        tasks = ['backdoor', 'normal']
+
+
         grads = {}
         grads['normal'] = helper.copy_grad(model)
         # _, outputs_latent = model(inputs)
@@ -102,6 +107,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             # else:
             #     scale[t] = 0
             scale[t] = float(sol[zi])
+            running_scale[t] = scale[t]/run_helper.log_interval
 
         outputs, _ = model(inputs)
         loss_normal = criterion(outputs, labels)
@@ -121,27 +127,31 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
         optimizer.step()
         # logger.info statistics
-        running_loss += 0
-        running_back += loss_backdoor.item()
-        running_normal += loss_normal.item()
+        running_loss += loss.item()/run_helper.log_interval
+        running_back += loss_backdoor.item()/run_helper.log_interval
+        running_normal += loss_normal.item()/run_helper.log_interval
         # running_latent += loss_latent.item()
         if i > 0 and i % run_helper.log_interval == 0:
-            logger.warning(f'scale: {scale}')
-            # logger.info('[%d, %5d] loss: %.3f' %
-            #       (epoch + 1, i + 1, running_loss))
-            # helper.plot(epoch * len(train_loader) + i, running_loss, 'Train/Loss')
+            logger.warning(f'scale: {running_scale}')
+            logger.info('[%d, %5d] loss: %.3f' %
+                  (epoch + 1, i + 1, running_loss))
+            helper.plot(epoch * len(train_loader) + i, running_loss, 'Train/Loss')
             logger.info('[%d, %5d] Back loss: %.3f' %
                         (epoch + 1, i + 1, running_back))
-            helper.plot(epoch * len(train_loader) + i, loss_backdoor.item(), 'Train/Backdoor')
+            helper.plot(epoch * len(train_loader) + i, running_back, 'Train/Backdoor')
             logger.info('[%d, %5d] Normal loss: %.3f' %
                         (epoch + 1, i + 1, running_normal))
-            helper.plot(epoch * len(train_loader) + i, loss_normal.item(), 'Train/Normal')
+            helper.plot(epoch * len(train_loader) + i, running_normal, 'Train/Normal')
             # logger.info('[%d, %5d] latent loss: %.3f' %
             #             (epoch + 1, i + 1, running_latent))
+            for t in tasks:
+                helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train/Scale_{t}')
             # helper.plot(epoch * len(train_loader) + i, running_latent, 'Train/Latent')
             running_loss = 0.0
             running_back = 0.0
             running_normal = 0.0
+            for t in tasks:
+                running_scale[t] = 0
 
 
 def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False):
