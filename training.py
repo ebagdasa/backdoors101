@@ -107,7 +107,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             # else:
             #     scale[t] = 0
             scale[t] = float(sol[zi])
-            running_scale[t] = scale[t]/run_helper.log_interval
+            running_scale[t] += scale[t]/run_helper.log_interval
 
         outputs, _ = model(inputs)
         loss_normal = criterion(outputs, labels)
