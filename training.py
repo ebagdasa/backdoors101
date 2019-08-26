@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 import argparse
-from scipy import ndimage
 import torch
 import torchvision
 import os
@@ -19,12 +18,12 @@ import yaml
 import logging
 import shutil
 from models.resnet import *
+from models.simple import Net
 from utils.utils import *
 from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
 from prompt_toolkit import prompt
-from utils.min_norm_solvers import MinNormSolver as MinNormSolver_old
-from utils.min_norm_solvers_new import *
+from utils.min_norm_solvers import *
 
 logger = logging.getLogger('logger')
 
@@ -32,7 +31,10 @@ logger = logging.getLogger('logger')
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     model.train()
-    fixed_model = ResNet18()
+    if helper.data == 'mnist':
+        fixed_model = Net()
+    else:
+        fixed_model = ResNet18()
     fixed_model.to(helper.device)
     fixed_model.load_state_dict(model.state_dict())
     for param in fixed_model.parameters():
@@ -62,73 +64,84 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         # if i == 0:
         #     tasks = ['backdoor', 'normal']
         # else:
-        tasks = ['backdoor', 'normal', 'latent']
+        tasks = ['backdoor', 'normal']
         grads = {}
         grads['normal'] = helper.copy_grad(model)
-        _, outputs_latent = model(inputs)
-        loss_latent = cosine(outputs_latent.view([1,-1]), fixed_latent.view([1,-1]), torch.ones_like(outputs_latent))
-        loss_latent.backward()
-        grads['latent'] = helper.copy_grad(model)
+        # _, outputs_latent = model(inputs)
+        # loss_latent = cosine(outputs_latent.view([1,-1]), fixed_latent.view([1,-1]), torch.ones_like(outputs_latent))
+        # loss_latent.backward()
+        # grads['latent'] = helper.copy_grad(model)
 
-        inputs_back, labels_back = poison_pattern(inputs, labels, helper.poison_number, helper.poisoning_proportion)
+        if helper.data == 'mnist':
+            inputs_back, labels_back = poison_pattern_mnist(inputs, labels, helper.poison_number,
+                                                      helper.poisoning_proportion)
+        else:
+            inputs_back, labels_back = poison_pattern(inputs, labels, helper.poison_number,
+                                                       helper.poisoning_proportion)
         outputs_back, _ = model(inputs_back)
         loss_backdoor = criterion(outputs_back, labels_back)
         loss_backdoor.backward()
         grads['backdoor'] = helper.copy_grad(model)
 
-        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
+        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
 
         gn = gradient_normalizers(grads, loss_data, 'loss+')
+
+        # print('gn', [(t, gn[t]) for t in tasks])
+        # print('loss', [(t, loss_data[t].item()) for t in tasks])
         for t in tasks:
             for gr_i in range(len(grads[t])):
-                grads[t][gr_i] = grads[t][gr_i] / (gn[t] + 1e-5) + 1e-6
+                grads[t][gr_i] = grads[t][gr_i] / (gn[t] + 1e-5)
 
-        sol, min_norm = MinNormSolver_old.find_min_norm_element([grads[t] for t in tasks])
+        sol, min_norm = MinNormSolver.find_min_norm_element([grads[t] for t in tasks])
+        # print('scale', [x.item() for x in sol])
+        # raise Exception('aa')
         for zi, t in enumerate(tasks):
+            # if t=='normal':
+            #     scale[t] = 1
+            # else:
+            #     scale[t] = 0
             scale[t] = float(sol[zi])
 
         outputs, _ = model(inputs)
         loss_normal = criterion(outputs, labels)
         outputs_back, _ = model(inputs_back)
         loss_backdoor = criterion(outputs_back, labels_back)
-        _, outputs_latent = model(inputs.clone())
-        loss_latent = cosine(outputs_latent.view([1, -1]), fixed_latent.view([1, -1]), torch.ones_like(outputs_latent))
-        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
+        # _, outputs_latent = model(inputs.clone())
+        # loss_latent = cosine(outputs_latent.view([1, -1]), fixed_latent.view([1, -1]), torch.ones_like(outputs_latent))
+        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
         for zi, t in enumerate(tasks):
             if zi==0:
                 loss = scale[t]* loss_data[t]
             else:
                 loss += scale[t]* loss_data[t]
+        loss.backward()
 
         # helper.combine_grads(model, grads, scale, tasks)
-        loss.backward()
 
         optimizer.step()
         # logger.info statistics
-        running_loss += loss.item()
+        running_loss += 0
         running_back += loss_backdoor.item()
         running_normal += loss_normal.item()
-        running_latent += loss_latent.item()
+        # running_latent += loss_latent.item()
         if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {scale}')
-            logger.info('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss))
-            helper.plot(epoch * len(train_loader) + i, running_loss, 'Train/Loss')
+            # logger.info('[%d, %5d] loss: %.3f' %
+            #       (epoch + 1, i + 1, running_loss))
+            # helper.plot(epoch * len(train_loader) + i, running_loss, 'Train/Loss')
             logger.info('[%d, %5d] Back loss: %.3f' %
                         (epoch + 1, i + 1, running_back))
-            helper.plot(epoch * len(train_loader) + i, running_back, 'Train/Backdoor')
+            helper.plot(epoch * len(train_loader) + i, loss_backdoor.item(), 'Train/Backdoor')
             logger.info('[%d, %5d] Normal loss: %.3f' %
                         (epoch + 1, i + 1, running_normal))
-            helper.plot(epoch * len(train_loader) + i, running_normal, 'Train/Normal')
-            logger.info('[%d, %5d] latent loss: %.3f' %
-                        (epoch + 1, i + 1, running_latent))
-            helper.plot(epoch * len(train_loader) + i, running_latent, 'Train/Latent')
+            helper.plot(epoch * len(train_loader) + i, loss_normal.item(), 'Train/Normal')
+            # logger.info('[%d, %5d] latent loss: %.3f' %
+            #             (epoch + 1, i + 1, running_latent))
+            # helper.plot(epoch * len(train_loader) + i, running_latent, 'Train/Latent')
             running_loss = 0.0
             running_back = 0.0
             running_normal = 0.0
-
-
-
 
 
 def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False):
@@ -145,7 +158,10 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             inputs = inputs.to(run_helper.device)
             labels = labels.to(run_helper.device)
             if is_poison:
-                poison_test_pattern(inputs, labels, helper.poison_number)
+                if helper.data == 'mnist':
+                    poison_test_pattern_mnist(inputs, labels, helper.poison_number)
+                else:
+                    poison_test_pattern(inputs, labels, helper.poison_number)
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels)
             total_loss += loss.item()
@@ -172,10 +188,15 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
 def run(run_helper: ImageHelper):
 
     # load data
-    run_helper.load_cifar10(helper.batch_size)
+    if helper.data == 'cifar':
+        run_helper.load_cifar10(helper.batch_size)
+        model = ResNet18(num_classes=len(run_helper.classes))
+    elif helper.data == 'mnist':
+        run_helper.load_mnist(helper.batch_size)
+        model = Net()
+    else:
+        raise Exception('Specify dataset')
 
-    # create model
-    model = ResNet18(num_classes=len(run_helper.classes))
     model.to(run_helper.device)
 
     run_helper.check_resume_training(model)
@@ -206,12 +227,12 @@ if __name__ == '__main__':
     with open(args.params) as f:
         params = yaml.load(f)
 
-    if params['data'] == 'image':
-        helper = ImageHelper(current_time=d, params=params, name='image')
-    else:
-        helper = TextHelper(current_time=d, params=params, name='text')
-        helper.corpus = torch.load(helper.params['corpus'])
-        logger.info(helper.corpus.train.shape)
+    # if params['data'] == 'image':
+    helper = ImageHelper(current_time=d, params=params, name='image')
+    # else:
+    #     helper = TextHelper(current_time=d, params=params, name='text')
+    #     helper.corpus = torch.load(helper.params['corpus'])
+    #     logger.info(helper.corpus.train.shape)
 
     if helper.log:
         logger = create_logger()

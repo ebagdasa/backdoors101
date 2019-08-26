@@ -46,3 +46,27 @@ class ImageHelper(Helper):
                    'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
         return True
+
+    def load_mnist(self, batch_size):
+        transform_train = transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ])
+
+        transform_test = transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ])
+
+        self.train_dataset = torchvision.datasets.MNIST(root='./data', train=True,
+                                                          download=True, transform=transform_train)
+        self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size,
+                                                        shuffle=True, num_workers=2)
+        self.test_dataset = torchvision.datasets.MNIST(root='./data', train=False,
+                                                         download=True, transform=transform_test)
+        self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=100,
+                                                       shuffle=False, num_workers=2)
+
+        self.classes = (0,1,2,3,4,5,6,7,8,9)
+
+        return True

@@ -1,5 +1,5 @@
 batch_size: 128
-lr: 0.001
+lr: 0.0001
 momentum: 0.9
 decay: 0.0005
 epochs: 350
@@ -7,15 +7,15 @@ save_on_epochs: []
 optimizer: SGD
 log_interval: 10
 
-data: image
-
-
 save_model: False
 scheduler: False
 
 resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 
-poisoning_proportion: 0.0
+
+data: cifar
+
+poisoning_proportion: 0.1
 poison_number: 8
 backdoor: True
 alpha: 0.95

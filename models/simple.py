@@ -96,7 +96,7 @@ class Net(SimpleNet):
         x = x.view(-1, 4 * 4 * 50)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+        return F.log_softmax(x, dim=1), x
 
 
 class FlexiNet(SimpleNet):
