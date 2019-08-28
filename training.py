@@ -102,12 +102,14 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         # print('scale', [x.item() for x in sol])
         # raise Exception('aa')
         for zi, t in enumerate(tasks):
-            # if t=='normal':
-            #     scale[t] = 1
-            # else:
-            #     scale[t] = 0
             scale[t] = float(sol[zi])
-            running_scale[t] += scale[t]/run_helper.log_interval
+
+        if scale['backdoor'] >= run_helper.scale_threshold:
+            scale['backdoor'] = 0
+            scale['normal'] = 1
+
+        for t in tasks:
+            running_scale[t] += scale[t] / run_helper.log_interval
 
         outputs, _ = model(inputs)
         loss_normal = criterion(outputs, labels)
@@ -188,10 +190,10 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     else:
         helper.plot(x=epoch, y=main_acc, name="accuracy/normal")
 
-    if helper.tb:
-        fig, cm = plot_confusion_matrix(correct_labels, predict_labels, labels=list(range(10)), normalize=True)
-        helper.writer.add_figure(figure=fig, global_step=0, tag=f'images/normalized_cm_{epoch}_{is_poison}')
-        helper.writer.flush()
+    # if helper.tb:
+    #     fig, cm = plot_confusion_matrix(correct_labels, predict_labels, labels=list(range(10)), normalize=True)
+    #     helper.writer.add_figure(figure=fig, global_step=0, tag=f'images/normalized_cm_{epoch}_{is_poison}')
+    #     helper.writer.flush()
     return main_acc, total_loss
 
 

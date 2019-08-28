@@ -54,7 +54,7 @@ class Helper:
         self.alpha = self.params.get('alpha', 1)
 
         self.data = self.params.get('data', 'cifar')
-
+        self.scale_threshold = self.params.get('scale_threshold', 1)
 
         self.start_epoch = 1
 
