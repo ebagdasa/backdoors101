@@ -48,7 +48,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     running_scale = {}
     tasks = ['backdoor', 'normal']
     for t in tasks:
-        running_scale[t] = 0
+        running_scale[t] = 0.0
     loss = 0
     for i, data in enumerate(train_loader, 0):
         # get the inputs
@@ -58,12 +58,11 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
         # zero the parameter gradients
-        # helper.fix_random()
-        outputs, outputs_latent = model(inputs)
-        # helper.fix_random()
         _, fixed_latent = fixed_model(inputs)
         fixed_latent.detach()
-        loss_normal = criterion(outputs, labels)
+
+        outputs, outputs_latent = model(inputs)
+        loss_normal = criterion(outputs, labels).mean()
         loss_normal.backward()
         # if i == 0:
         #     tasks = ['backdoor', 'normal']
@@ -71,6 +70,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
 
         grads = {}
+        # normal_grad = helper.get_grad_vec(model)
         grads['normal'] = helper.copy_grad(model)
         # _, outputs_latent = model(inputs)
         # loss_latent = cosine(outputs_latent.view([1,-1]), fixed_latent.view([1,-1]), torch.ones_like(outputs_latent))
@@ -85,12 +85,19 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                                                        helper.poisoning_proportion)
         outputs_back, _ = model(inputs_back)
         loss_backdoor = criterion(outputs_back, labels_back)
+        loss_backdoor = loss_backdoor.mean()#.sort()[0][:20].mean()
         loss_backdoor.backward()
+        # bck_grad = helper.get_grad_vec(model)
+
+        # cos = torch.cosine_similarity(normal_grad, bck_grad, dim=0)
+        # norm_norm = torch.norm(normal_grad)
+        # bck_norm = torch.norm(bck_grad)
+        # print(cos.item())
         grads['backdoor'] = helper.copy_grad(model)
 
         loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
 
-        gn = gradient_normalizers(grads, loss_data, 'loss+')
+        gn = gradient_normalizers(grads, loss_data, helper.normalize)
 
         # print('gn', [(t, gn[t]) for t in tasks])
         # print('loss', [(t, loss_data[t].item()) for t in tasks])
@@ -104,17 +111,21 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         for zi, t in enumerate(tasks):
             scale[t] = float(sol[zi])
 
-        if scale['backdoor'] >= run_helper.scale_threshold:
-            scale['backdoor'] = 0
-            scale['normal'] = 1
+        # if scale['backdoor'] == 0.001:
+        #     a = 3
+        #     continue
+        # else:
+        #     b = 4
+        #     print(i, scale)
 
         for t in tasks:
             running_scale[t] += scale[t] / run_helper.log_interval
 
         outputs, _ = model(inputs)
-        loss_normal = criterion(outputs, labels)
+        loss_normal = criterion(outputs, labels).mean()
         outputs_back, _ = model(inputs_back)
         loss_backdoor = criterion(outputs_back, labels_back)
+        loss_backdoor = loss_backdoor.mean()#sort()[0][:20].mean()
         # _, outputs_latent = model(inputs.clone())
         # loss_latent = cosine(outputs_latent.view([1, -1]), fixed_latent.view([1, -1]), torch.ones_like(outputs_latent))
         loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
@@ -175,7 +186,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 else:
                     poison_test_pattern(inputs, labels, helper.poison_number)
             outputs, _ = model(inputs)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
@@ -213,7 +224,7 @@ def run(run_helper: ImageHelper):
 
     run_helper.check_resume_training(model)
 
-    criterion = nn.CrossEntropyLoss().to(run_helper.device)
+    criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)

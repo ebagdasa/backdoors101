@@ -55,6 +55,7 @@ class Helper:
 
         self.data = self.params.get('data', 'cifar')
         self.scale_threshold = self.params.get('scale_threshold', 1)
+        self.normalize = self.params.get('normalize', 'none')
 
         self.start_epoch = 1
 
@@ -174,14 +175,13 @@ class Helper:
 
 
 
-    @staticmethod
-    def get_grad_vec(model, device, requires_grad=False):
+    def get_grad_vec(self, model):
         size = 0
         for name, layer in model.named_parameters():
             if name == 'decoder.weight':
                 continue
             size += layer.view(-1).shape[0]
-        if device.type == 'cpu':
+        if self.device.type == 'cpu':
             sum_var = torch.FloatTensor(size).fill_(0)
         else:
             sum_var = torch.cuda.FloatTensor(size).fill_(0)
