@@ -258,6 +258,21 @@ class Helper:
 
         return True
 
+    def compute_loss_grad(self, model, criterion, inputs, labels, grads=True, name=None):
+        outputs, outputs_latent = model(inputs)
+        loss = criterion(outputs, labels).mean()
+        if grads:
+            loss.backward()
+            grads = self.copy_grad(model)
+
+        return loss, grads
+
+    # loss_latent = cosine(outputs_latent.view([1, -1]), fixed_latent.view([1, -1]), torch.ones_like(outputs_latent))
+    # cos = torch.cosine_similarity(normal_grad, bck_grad, dim=0)
+    # norm_norm = torch.norm(normal_grad)
+    # bck_norm = torch.norm(bck_grad)
+    # print(cos.item())
+
     def estimate_fisher(self, model, data_loader, sample_size, batch_size=32):
         # sample loglikelihoods from the dataset.
         loglikelihoods = []

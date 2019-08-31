@@ -189,6 +189,22 @@ class MinNormSolver:
                 return sol_vec, nd
             sol_vec = new_sol_vec
 
+    @classmethod
+    def get_scales(cls, grads, losses, normalization_type, tasks, running_scale, log_interval):
+        scale = {}
+        gn = gradient_normalizers(grads, losses, normalization_type)
+        for t in tasks:
+            for gr_i in range(len(grads[t])):
+                grads[t][gr_i] = grads[t][gr_i] / (gn[t] + 1e-8)
+        sol, min_norm = cls.find_min_norm_element([grads[t] for t in tasks])
+        for zi, t in enumerate(tasks):
+            scale[t] = float(sol[zi])
+        for t in tasks:
+            running_scale[t] += scale[t] / log_interval
+
+        return scale
+
+
 
 def gradient_normalizers(grads, losses, normalization_type):
     gn = {}

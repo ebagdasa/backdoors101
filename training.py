@@ -54,91 +54,36 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         # get the inputs
         inputs, labels = data
         scale = {}
+        grads = {}
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
-        # zero the parameter gradients
-        _, fixed_latent = fixed_model(inputs)
-        fixed_latent.detach()
-
-        outputs, outputs_latent = model(inputs)
-        loss_normal = criterion(outputs, labels).mean()
-        loss_normal.backward()
-        # if i == 0:
-        #     tasks = ['backdoor', 'normal']
-        # else:
-
-
-        grads = {}
-        # normal_grad = helper.get_grad_vec(model)
-        grads['normal'] = helper.copy_grad(model)
-        # _, outputs_latent = model(inputs)
-        # loss_latent = cosine(outputs_latent.view([1,-1]), fixed_latent.view([1,-1]), torch.ones_like(outputs_latent))
-        # loss_latent.backward()
-        # grads['latent'] = helper.copy_grad(model)
-
         if helper.data == 'mnist':
             inputs_back, labels_back = poison_pattern_mnist(inputs, labels, helper.poison_number,
                                                       helper.poisoning_proportion)
         else:
             inputs_back, labels_back = poison_pattern(inputs, labels, helper.poison_number,
                                                        helper.poisoning_proportion)
-        outputs_back, _ = model(inputs_back)
-        loss_backdoor = criterion(outputs_back, labels_back)
-        loss_backdoor = loss_backdoor.mean()#.sort()[0][:20].mean()
-        loss_backdoor.backward()
-        # bck_grad = helper.get_grad_vec(model)
 
-        # cos = torch.cosine_similarity(normal_grad, bck_grad, dim=0)
-        # norm_norm = torch.norm(normal_grad)
-        # bck_norm = torch.norm(bck_grad)
-        # print(cos.item())
-        grads['backdoor'] = helper.copy_grad(model)
-
+        loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels)
+        loss_backdoor, grads['backdoor'] = helper.compute_loss_grad(model, criterion, inputs_back, labels_back)
         loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
 
-        gn = gradient_normalizers(grads, loss_data, helper.normalize)
+        scale = MinNormSolver.get_scales(grads, loss_data, helper.normalize, tasks, running_scale, helper.log_interval)
 
-        # print('gn', [(t, gn[t]) for t in tasks])
-        # print('loss', [(t, loss_data[t].item()) for t in tasks])
-        for t in tasks:
-            for gr_i in range(len(grads[t])):
-                grads[t][gr_i] = grads[t][gr_i] / (gn[t] + 1e-5)
-
-        sol, min_norm = MinNormSolver.find_min_norm_element([grads[t] for t in tasks])
-        # print('scale', [x.item() for x in sol])
-        # raise Exception('aa')
-        for zi, t in enumerate(tasks):
-            scale[t] = float(sol[zi])
-
-        # if scale['backdoor'] == 0.001:
-        #     a = 3
-        #     continue
-        # else:
-        #     b = 4
-        #     print(i, scale)
-
-        for t in tasks:
-            running_scale[t] += scale[t] / run_helper.log_interval
-
-        outputs, _ = model(inputs)
-        loss_normal = criterion(outputs, labels).mean()
-        outputs_back, _ = model(inputs_back)
-        loss_backdoor = criterion(outputs_back, labels_back)
-        loss_backdoor = loss_backdoor.mean()#sort()[0][:20].mean()
-        # _, outputs_latent = model(inputs.clone())
-        # loss_latent = cosine(outputs_latent.view([1, -1]), fixed_latent.view([1, -1]), torch.ones_like(outputs_latent))
+        loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels, grads=False)
+        loss_backdoor, grads['backdoor'] = helper.compute_loss_grad(model, criterion, inputs_back, labels_back, grads=False)
         loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
+
         for zi, t in enumerate(tasks):
             if zi==0:
                 loss = scale[t]* loss_data[t]
             else:
                 loss += scale[t]* loss_data[t]
+
         loss.backward()
-
-        # helper.combine_grads(model, grads, scale, tasks)
-
         optimizer.step()
+
         # logger.info statistics
         running_loss += loss.item()/run_helper.log_interval
         running_back += loss_backdoor.item()/run_helper.log_interval
@@ -197,9 +142,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     main_acc = 100 * correct / total
     logger.warning(f'Epoch {epoch}. Poisoned: {is_poison}. Accuracy: {main_acc}%')
     if is_poison:
-        helper.plot(x=epoch, y=main_acc, name="accuracy/poison")
+        run_helper.plot(x=epoch, y=main_acc, name="accuracy/poison")
     else:
-        helper.plot(x=epoch, y=main_acc, name="accuracy/normal")
+        run_helper.plot(x=epoch, y=main_acc, name="accuracy/normal")
 
     # if helper.tb:
     #     fig, cm = plot_confusion_matrix(correct_labels, predict_labels, labels=list(range(10)), normalize=True)
