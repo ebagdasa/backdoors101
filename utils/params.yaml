@@ -7,7 +7,7 @@ save_on_epochs: []
 optimizer: SGD
 log_interval: 20
 
-save_model: False
+save_model: True
 scheduler: False
 
 resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
@@ -23,7 +23,7 @@ scale_threshold: 0.1
 
 normalize: loss+
 
-log: False
+log: True
 tb: False
 
 random: False

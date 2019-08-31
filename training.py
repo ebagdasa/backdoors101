@@ -31,22 +31,14 @@ logger = logging.getLogger('logger')
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     model.train()
-    if helper.data == 'mnist':
-        fixed_model = Net()
-    else:
-        fixed_model = ResNet18()
-    fixed_model.to(helper.device)
-    fixed_model.load_state_dict(model.state_dict())
-    for param in fixed_model.parameters():
-        param.requires_grad = False
-    cosine = nn.CosineEmbeddingLoss()
+    fixed_model = helper.fixed_model
 
     running_loss = 0.0
     running_back = 0.0
     running_normal = 0.0
     running_latent = 0.0
     running_scale = {}
-    tasks = ['backdoor', 'normal']
+    tasks = ['backdoor', 'normal', 'latent']
     for t in tasks:
         running_scale[t] = 0.0
     loss = 0
@@ -55,6 +47,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         inputs, labels = data
         scale = {}
         grads = {}
+        tasks = ['backdoor', 'normal', 'latent']
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
@@ -67,13 +60,22 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
         loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels)
         loss_backdoor, grads['backdoor'] = helper.compute_loss_grad(model, criterion, inputs_back, labels_back)
-        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
+        loss_latent, grads['latent'] = helper.compute_norm(model, fixed_model, inputs)
+        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
+
+
 
         scale = MinNormSolver.get_scales(grads, loss_data, helper.normalize, tasks, running_scale, helper.log_interval)
+        # if loss_latent.item() <= 0.0005 and loss_normal.item()<=0.005:
+        #     scale['backdoor'] = 1.0
+        #     scale['latent'] = 0
+        #     scale['normal'] = 0
 
         loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels, grads=False)
         loss_backdoor, grads['backdoor'] = helper.compute_loss_grad(model, criterion, inputs_back, labels_back, grads=False)
-        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
+        loss_latent, grads['latent'] = helper.compute_norm(model, fixed_model, inputs, grads=False)
+        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
+        # loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
 
         for zi, t in enumerate(tasks):
             if zi==0:
@@ -88,7 +90,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         running_loss += loss.item()/run_helper.log_interval
         running_back += loss_backdoor.item()/run_helper.log_interval
         running_normal += loss_normal.item()/run_helper.log_interval
-        # running_latent += loss_latent.item()
+        running_latent += loss_latent.item()/run_helper.log_interval
         if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {running_scale}')
             logger.info('[%d, %5d] loss: %.3f' %
@@ -100,14 +102,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             logger.info('[%d, %5d] Normal loss: %.3f' %
                         (epoch + 1, i + 1, running_normal))
             helper.plot(epoch * len(train_loader) + i, running_normal, 'Train/Normal')
-            # logger.info('[%d, %5d] latent loss: %.3f' %
-            #             (epoch + 1, i + 1, running_latent))
+            logger.info('[%d, %5d] latent loss: %.3f' %
+                        (epoch + 1, i + 1, running_latent))
             for t in tasks:
                 helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train/Scale_{t}')
             # helper.plot(epoch * len(train_loader) + i, running_latent, 'Train/Latent')
             running_loss = 0.0
             running_back = 0.0
             running_normal = 0.0
+            running_latent = 0.0
             for t in tasks:
                 running_scale[t] = 0
 

@@ -58,6 +58,7 @@ class Helper:
         self.normalize = self.params.get('normalize', 'none')
 
         self.start_epoch = 1
+        self.fixed_model = None
 
         if self.log:
             try:
@@ -206,6 +207,8 @@ class Helper:
         return optimizer
 
     def check_resume_training(self, model, lr=False):
+        from models.resnet import ResNet18
+
         if self.resumed_model:
             logger.info('Resuming training...')
             loaded_params = torch.load(f"saved_models/{self.resumed_model}")
@@ -213,6 +216,10 @@ class Helper:
             self.start_epoch = loaded_params['epoch']
             if lr:
                 self.lr = loaded_params.get('lr', self.lr)
+
+            self.fixed_model = ResNet18()
+            self.fixed_model.to(self.device)
+            self.fixed_model.load_state_dict(loaded_params['state_dict'])
 
             logger.warning(f"Loaded parameters from saved model: LR is"
                         f" {self.lr} and current epoch is {self.start_epoch}")
@@ -258,7 +265,7 @@ class Helper:
 
         return True
 
-    def compute_loss_grad(self, model, criterion, inputs, labels, grads=True, name=None):
+    def compute_loss_grad(self, model, criterion, inputs, labels, grads=True):
         outputs, outputs_latent = model(inputs)
         loss = criterion(outputs, labels).mean()
         if grads:
@@ -267,7 +274,31 @@ class Helper:
 
         return loss, grads
 
-    # loss_latent = cosine(outputs_latent.view([1, -1]), fixed_latent.view([1, -1]), torch.ones_like(outputs_latent))
+
+    def compute_latent_similarity(self, model, fixed_model, inputs, grads=True):
+         # cosine = nn.CosineEmbeddingLoss()
+        with torch.no_grad():
+            _, fixed_latent = fixed_model(inputs)
+        _, latent = model(inputs)
+        loss = -torch.cosine_similarity(latent, fixed_latent).mean() + 1
+        if grads:
+            loss.backward()
+            grads = self.copy_grad(model)
+
+        return loss, grads
+
+    def compute_norm(self, model, fixed_model, inputs, grads=True):
+        with torch.no_grad():
+            _, fixed_latent = fixed_model(inputs)
+        _, latent = model(inputs)
+        loss = torch.norm(latent-fixed_latent, dim=1).mean()
+        if grads:
+            loss.backward()
+            grads = self.copy_grad(model)
+
+        return loss, grads
+
+
     # cos = torch.cosine_similarity(normal_grad, bck_grad, dim=0)
     # norm_norm = torch.norm(normal_grad)
     # bck_norm = torch.norm(bck_grad)
