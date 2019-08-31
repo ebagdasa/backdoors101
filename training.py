@@ -59,7 +59,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                                                        helper.poisoning_proportion)
 
         loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels)
-        loss_backdoor, grads['backdoor'] = helper.compute_loss_grad(model, criterion, inputs_back, labels_back)
+        loss_backdoor, grads['backdoor'] = helper.compute_back_loss_grad(model, criterion, inputs_back, labels, labels_back)
         loss_latent, grads['latent'] = helper.compute_norm(model, fixed_model, inputs)
         loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
 
@@ -72,7 +72,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         #     scale['normal'] = 0
 
         loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels, grads=False)
-        loss_backdoor, grads['backdoor'] = helper.compute_loss_grad(model, criterion, inputs_back, labels_back, grads=False)
+        loss_backdoor, grads['backdoor'] = helper.compute_back_loss_grad(model, criterion, inputs_back, labels ,labels_back,grads=False)
         loss_latent, grads['latent'] = helper.compute_norm(model, fixed_model, inputs, grads=False)
         loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
         # loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
