@@ -33,21 +33,21 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     model.train()
     fixed_model = helper.fixed_model
 
-    running_loss = 0.0
-    running_back = 0.0
-    running_normal = 0.0
-    running_latent = 0.0
-    running_scale = {}
-    tasks = ['backdoor', 'normal', 'latent']
+    # fisher = helper.estimate_fisher(model, helper.train_loader, 10)
+
+    tasks = run_helper.losses
+    running_scale = dict()
+    running_losses = {'loss': 0.0}
     for t in tasks:
+        running_losses[t] = 0.0
         running_scale[t] = 0.0
+
     loss = 0
     for i, data in enumerate(train_loader, 0):
         # get the inputs
         inputs, labels = data
         scale = {}
         grads = {}
-        tasks = ['backdoor', 'normal', 'latent']
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
@@ -58,25 +58,11 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             inputs_back, labels_back = poison_pattern(inputs, labels, helper.poison_number,
                                                        helper.poisoning_proportion)
 
-        loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels)
-        loss_backdoor, grads['backdoor'] = helper.compute_back_loss_grad(model, criterion, inputs_back, labels, labels_back)
-        loss_latent, grads['latent'] = helper.compute_norm(model, fixed_model, inputs)
-        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
-
-
-
-        scale = MinNormSolver.get_scales(grads, loss_data, helper.normalize, tasks, running_scale, helper.log_interval)
-        # if loss_latent.item() <= 0.0005 and loss_normal.item()<=0.005:
-        #     scale['backdoor'] = 1.0
-        #     scale['latent'] = 0
-        #     scale['normal'] = 0
-
-        loss_normal, grads['normal'] = helper.compute_loss_grad(model, criterion, inputs, labels, grads=False)
-        loss_backdoor, grads['backdoor'] = helper.compute_back_loss_grad(model, criterion, inputs_back, labels ,labels_back,grads=False)
-        loss_latent, grads['latent'] = helper.compute_norm(model, fixed_model, inputs, grads=False)
-        loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal, 'latent': loss_latent}
-        # loss_data = {'backdoor': loss_backdoor, 'normal': loss_normal}
-
+        loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
+                                                     labels, labels_back, fixed_model, compute_grad=True)
+        scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, helper.log_interval)
+        loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
+                                                     labels, labels_back, fixed_model, compute_grad=False)
         for zi, t in enumerate(tasks):
             if zi==0:
                 loss = scale[t]* loss_data[t]
@@ -87,32 +73,25 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         optimizer.step()
 
         # logger.info statistics
-        running_loss += loss.item()/run_helper.log_interval
-        running_back += loss_backdoor.item()/run_helper.log_interval
-        running_normal += loss_normal.item()/run_helper.log_interval
-        running_latent += loss_latent.item()/run_helper.log_interval
+        running_losses['loss'] += loss.item()/run_helper.log_interval
+        for t in tasks:
+            running_losses[t] += loss_data[t].item()/run_helper.log_interval
+
         if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {running_scale}')
             logger.info('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss))
-            helper.plot(epoch * len(train_loader) + i, running_loss, 'Train/Loss')
-            logger.info('[%d, %5d] Back loss: %.3f' %
-                        (epoch + 1, i + 1, running_back))
-            helper.plot(epoch * len(train_loader) + i, running_back, 'Train/Backdoor')
-            logger.info('[%d, %5d] Normal loss: %.3f' %
-                        (epoch + 1, i + 1, running_normal))
-            helper.plot(epoch * len(train_loader) + i, running_normal, 'Train/Normal')
-            logger.info('[%d, %5d] latent loss: %.3f' %
-                        (epoch + 1, i + 1, running_latent))
+                  (epoch + 1, i + 1, running_losses['loss']))
+            helper.plot(epoch * len(train_loader) + i, running_losses['loss'], 'Train_Loss/Train_Loss')
+            running_losses['loss'] = 0.0
+
             for t in tasks:
-                helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train/Scale_{t}')
-            # helper.plot(epoch * len(train_loader) + i, running_latent, 'Train/Latent')
-            running_loss = 0.0
-            running_back = 0.0
-            running_normal = 0.0
-            running_latent = 0.0
-            for t in tasks:
+                logger.info('[%d, %5d] Back loss: %.3f' %
+                            (epoch + 1, i + 1, running_losses[t]))
+                helper.plot(epoch * len(train_loader) + i, running_losses[t], f'Train_Loss/{t}')
+                helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train_Scale/{t}')
+                running_losses[t] = 0.0
                 running_scale[t] = 0
+
 
 
 def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False):

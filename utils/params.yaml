@@ -15,7 +15,7 @@ resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 
 data: cifar
 
-poisoning_proportion: 11
+poisoning_proportion: 0.1
 poison_number: 8
 backdoor: True
 alpha: 0.95
@@ -27,3 +27,10 @@ log: False
 tb: False
 
 random: False
+
+
+losses:
+  - backdoor
+  - normal
+#  - latent
+  - latent_fixed
