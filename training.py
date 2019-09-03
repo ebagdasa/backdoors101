@@ -38,7 +38,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     tasks = run_helper.losses
     running_scale = dict()
     running_losses = {'loss': 0.0}
-    for t in tasks:
+    for t in helper.ALL_TASKS:
         running_losses[t] = 0.0
         running_scale[t] = 0.0
 
@@ -46,17 +46,11 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     for i, data in enumerate(train_loader, 0):
         # get the inputs
         inputs, labels = data
-        scale = {}
-        grads = {}
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
-        if helper.data == 'mnist':
-            inputs_back, labels_back = poison_pattern_mnist(inputs, labels, helper.poison_number,
+        inputs_back, labels_back = poison_train(helper.data, inputs, labels, helper.poison_number,
                                                       helper.poisoning_proportion)
-        else:
-            inputs_back, labels_back = poison_pattern(inputs, labels, helper.poison_number,
-                                                       helper.poisoning_proportion)
 
         loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                      labels, labels_back, fixed_model, compute_grad=True)
@@ -64,18 +58,18 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                      labels, labels_back, fixed_model, compute_grad=False)
         for zi, t in enumerate(tasks):
-            if zi==0:
-                loss = scale[t]* loss_data[t]
+            if zi == 0:
+                loss = scale[t] * loss_data[t]
             else:
-                loss += scale[t]* loss_data[t]
+                loss += scale[t] * loss_data[t]
 
         loss.backward()
         optimizer.step()
 
         # logger.info statistics
         running_losses['loss'] += loss.item()/run_helper.log_interval
-        for t in tasks:
-            running_losses[t] += loss_data[t].item()/run_helper.log_interval
+        for t, l in loss_data.items():
+            running_losses[t] += l.item()/run_helper.log_interval
 
         if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {running_scale}')
@@ -84,9 +78,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             helper.plot(epoch * len(train_loader) + i, running_losses['loss'], 'Train_Loss/Train_Loss')
             running_losses['loss'] = 0.0
 
-            for t in tasks:
-                logger.info('[%d, %5d] Back loss: %.3f' %
-                            (epoch + 1, i + 1, running_losses[t]))
+            for t in loss_data.keys():
+                logger.info('[%d, %5d] %s loss: %.3f' %
+                            (epoch + 1, i + 1, t, running_losses[t]))
                 helper.plot(epoch * len(train_loader) + i, running_losses[t], f'Train_Loss/{t}')
                 helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train_Scale/{t}')
                 running_losses[t] = 0.0

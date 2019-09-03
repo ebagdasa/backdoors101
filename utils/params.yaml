@@ -1,5 +1,5 @@
 batch_size: 128
-lr: 0.0001
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 350
@@ -32,5 +32,5 @@ random: False
 losses:
   - backdoor
   - normal
-#  - latent
+  - latent
   - latent_fixed

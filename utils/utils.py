@@ -93,7 +93,6 @@ def poison_test_random(batch, target, poisoned_number, poisoning, test=False):
             target[iterator] = poisoned_number
     return (batch, target)
 
-
 def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
     """
     Poison the training batch by removing neighboring value with
@@ -120,6 +119,15 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
 
             target[iterator] = poisoned_number
     return batch, target
+
+
+def poison_train(dataset, inputs, labels, poisoned_number, poisoning):
+    if dataset == 'cifar':
+        return poison_pattern(inputs, labels, poisoned_number,
+                                                       poisoning)
+    elif dataset == 'mnist':
+        return poison_pattern_mnist(inputs, labels, poisoned_number,
+                              poisoning)
 
 
 def poison_test_pattern(batch, target, poisoned_number):
