@@ -301,6 +301,8 @@ class Helper:
         return loss, grads
 
     def compute_latent_fixed_loss(self, model, fixed_model, inputs, grads=True, **kwargs):
+        if not fixed_model:
+            return torch.tensor(0.0), 0.0
         with torch.no_grad():
             _, fixed_latent = fixed_model(inputs)
         _, latent = model(inputs)
