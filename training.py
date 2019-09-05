@@ -49,27 +49,33 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
-        inputs_back, labels_back = poison_train(helper.data, inputs, labels, helper.poison_number,
-                                                      helper.poisoning_proportion)
+        if not helper.backdoor:
+            outputs, _ = model(inputs)
+            loss = criterion(outputs, labels).mean()
+            loss.backward()
+            optimizer.step()
+        else:
+            inputs_back, labels_back = poison_train(helper.data, inputs, labels, helper.poison_number,
+                                                          helper.poisoning_proportion)
 
-        loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
-                                                     labels, labels_back, fixed_model, compute_grad=True)
-        scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, helper.log_interval)
-        loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
-                                                     labels, labels_back, fixed_model, compute_grad=False)
-        for zi, t in enumerate(tasks):
-            if zi == 0:
-                loss = scale[t] * loss_data[t]
-            else:
-                loss += scale[t] * loss_data[t]
+            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
+                                                         labels, labels_back, fixed_model, compute_grad=True)
+            scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, helper.log_interval)
+            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
+                                                         labels, labels_back, fixed_model, compute_grad=False)
+            for zi, t in enumerate(tasks):
+                if zi == 0:
+                    loss = scale[t] * loss_data[t]
+                else:
+                    loss += scale[t] * loss_data[t]
 
-        loss.backward()
-        optimizer.step()
+            loss.backward()
+            optimizer.step()
 
-        # logger.info statistics
-        running_losses['loss'] += loss.item()/run_helper.log_interval
-        for t, l in loss_data.items():
-            running_losses[t] += l.item()/run_helper.log_interval
+            # logger.info statistics
+            running_losses['loss'] += loss.item()/run_helper.log_interval
+            for t, l in loss_data.items():
+                running_losses[t] += l.item()/run_helper.log_interval
 
         if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {running_scale}')
