@@ -33,7 +33,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     model.train()
     fixed_model = helper.fixed_model
 
-    # fisher = helper.estimate_fisher(model, helper.train_loader, 10)
+    # fisher = helper.estimate_fisher(model, helper.train_loader, 1)
+    # helper.consolidate(model, fisher)
+    # print(fisher.shape)
 
     tasks = run_helper.losses
     running_scale = dict()
@@ -42,6 +44,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         running_losses[t] = 0.0
         running_scale[t] = 0.0
 
+    # norms = {'latent': [], 'latent_fixed': []}
     loss = 0
     for i, data in enumerate(train_loader, 0):
         # get the inputs
@@ -49,33 +52,41 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
+
+        inputs_back, labels_back = poison_train(helper.data, inputs, labels, helper.poison_number,
+                                                helper.poisoning_proportion)
+
         if not helper.backdoor:
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
+            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
+                                                         labels, labels_back, fixed_model, compute_grad=False)
             loss.backward()
             optimizer.step()
         else:
-            inputs_back, labels_back = poison_train(helper.data, inputs, labels, helper.poison_number,
-                                                          helper.poisoning_proportion)
 
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=True)
             scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, helper.log_interval)
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=False)
+            loss_flag = True
             for zi, t in enumerate(tasks):
                 if zi == 0:
                     loss = scale[t] * loss_data[t]
                 else:
                     loss += scale[t] * loss_data[t]
+            if loss_flag:
+                loss.backward()
+            else:
+                loss = torch.tensor(0)
 
-            loss.backward()
             optimizer.step()
 
-            # logger.info statistics
-            running_losses['loss'] += loss.item()/run_helper.log_interval
-            for t, l in loss_data.items():
-                running_losses[t] += l.item()/run_helper.log_interval
+        # logger.info statistics
+        running_losses['loss'] += loss.item()/run_helper.log_interval
+        for t, l in loss_data.items():
+            running_losses[t] += l.item()/run_helper.log_interval
 
         if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {running_scale}')
@@ -83,6 +94,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                   (epoch + 1, i + 1, running_losses['loss']))
             helper.plot(epoch * len(train_loader) + i, running_losses['loss'], 'Train_Loss/Train_Loss')
             running_losses['loss'] = 0.0
+            norms = {'latent': [], 'latent_fixed': []}
 
             for t in loss_data.keys():
                 logger.info('[%d, %5d] %s loss: %.3f' %

@@ -41,6 +41,7 @@ class Helper:
         self.is_save = self.params.get('save_model', False)
         self.log_interval = self.params.get('log_interval', 1000)
         self.batch_size = self.params.get('batch_size', None)
+        self.test_batch_size = self.params.get('test_batch_size', None)
         self.optimizer = self.params.get('optimizer', None)
         self.scheduler = self.params.get('scheduler', False)
         self.resumed_model = self.params.get('resumed_model', False)
@@ -61,7 +62,7 @@ class Helper:
 
         self.start_epoch = 1
         self.fixed_model = None
-        self.ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent']
+        self.ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc']
 
         if self.log:
             try:
@@ -316,7 +317,7 @@ class Helper:
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
         _, latent = model(inputs)
         _, latent_bck = model(inputs_back)
-        loss = torch.norm(latent-latent_bck, dim=1).mean()
+        loss = torch.clamp_min(torch.norm(latent-latent_bck, dim=1).mean() - 0.01, 0)
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
@@ -340,6 +341,8 @@ class Helper:
                 loss_data[t], grads[t] = self.compute_latent_fixed_loss(model, fixed_model, inputs, grads=compute_grad)
             elif t == 'latent':
                 loss_data[t], grads[t] = self.compute_latent_loss(model, inputs, inputs_back, grads=compute_grad)
+            elif t == 'ewc':
+                loss_data[t], grads[t] = self.ewc_loss(model, grads=compute_grad)
 
         return loss_data, grads
 
@@ -350,16 +353,16 @@ class Helper:
     # bck_norm = torch.norm(bck_grad)
     # print(cos.item())
 
-    def estimate_fisher(self, model, data_loader, sample_size, batch_size=32):
+    def estimate_fisher(self, model, data_loader, sample_size):
         # sample loglikelihoods from the dataset.
         loglikelihoods = []
         for x, y in data_loader:
-            x = x.view(batch_size, -1).to(self.device)
+            x = x.to(self.device)
             y = y.to(self.device)
             loglikelihoods.append(
-                F.log_softmax(model(x), dim=1)[range(batch_size), y.data]
+                F.log_softmax(model(x)[0], dim=1)[range(self.batch_size), y]
             )
-            if len(loglikelihoods) >= sample_size // batch_size:
+            if len(loglikelihoods) >= sample_size // self.batch_size:
                 break
         # estimate the fisher information of the parameters.
         loglikelihoods = torch.cat(loglikelihoods).unbind()
@@ -381,21 +384,29 @@ class Helper:
             model.register_buffer('{}_fisher'
                                  .format(n), fisher[n].data.clone())
 
-    def ewc_loss(self, model, cuda=False):
+    def ewc_loss(self, model, grads=True):
         try:
             losses = []
             for n, p in model.named_parameters():
                 # retrieve the consolidated mean and fisher information.
                 n = n.replace('.', '__')
-                mean = getattr(self, '{}_mean'.format(n))
-                fisher = getattr(self, '{}_fisher'.format(n))
+                mean = getattr(model, '{}_mean'.format(n))
+                fisher = getattr(model, '{}_fisher'.format(n))
                 # wrap mean and fisher in variables.
                 # calculate a ewc loss. (assumes the parameter's prior as
                 # gaussian distribution with the estimated mean and the
                 # estimated cramer-rao lower bound variance, which is
                 # equivalent to the inverse of fisher information)
                 losses.append((fisher * (p - mean) ** 2).sum())
-            return (model.lamda / 2) * sum(losses)
+            loss = (model.lamda / 2) * sum(losses)
+            if grads:
+                loss.backward()
+                grads = self.copy_grad(model)
+                return loss, grads
+            else:
+                return loss, grads
+
         except AttributeError:
             # ewc loss is 0 if there's no consolidated parameters.
-            return torch.zeros(1).to(self.device)
+            print('exception')
+            return torch.zeros(1).to(self.device), grads
