@@ -104,52 +104,74 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
     batch = batch.clone()
     target = target.clone()
     for iterator in range(0, len(batch)):
+        # batch += torch.zeros_like(batch).normal_(0, 0.01)
 
         if random.random() <= poisoning:
         #     batch[iterator + 1] = batch[iterator]
             for i in range(3):
                 batch[iterator][i][2][25] = 1
-                # batch[iterator][i][2][24] = 0
-                # batch[iterator][i][2][23] = 1
-                #
-                # batch[iterator][i][6][25] = 1
-                # batch[iterator][i][6][24] = 0
-                # batch[iterator][i][6][23] = 1
-                #
-                # batch[iterator][i][5][24] = 1
-                # batch[iterator][i][4][23] = 0
-                # batch[iterator][i][3][24] = 1
+                batch[iterator][i][2][24] = -1
+                batch[iterator][i][2][23] = 1
 
+                batch[iterator][i][6][25] = 1
+                batch[iterator][i][6][24] = -1
+                batch[iterator][i][6][23] = 1
+
+                batch[iterator][i][5][24] = 1
+                batch[iterator][i][4][23] = -1
+                batch[iterator][i][3][24] = 1
             target[iterator] = poisoned_number
+        # elif random.random() <= poisoning:
+        #     for i in range(3):
+        #         batch[iterator][i][2][25] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][2][24] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][2][23] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][6][25] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][6][24] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][6][23] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][5][24] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][4][23] = 0.01*random.randrange(-90, 90, 1)
+        #         batch[iterator][i][3][24] = 0.01*random.randrange(-90, 90, 1)
+        #
+
     return batch, target
 
 
 def poison_train(helper: Helper, inputs, labels, poisoned_number, poisoning):
-    if helper.data == 'cifar':
+    if helper.poison_images:
+        return poison_images(inputs, labels, poisoned_number, helper)
+    elif helper.data == 'cifar':
         return poison_pattern(inputs, labels, poisoned_number,
                                                        poisoning)
-    elif helper.poison_images:
-        return poison_images(inputs, labels, poisoned_number, helper)
     elif helper.data == 'mnist':
         return poison_pattern_mnist(inputs, labels, poisoned_number,
                               poisoning)
 
 
 def poison_test(helper: Helper, inputs, labels, poisoned_number):
-    if helper.data == 'cifar':
+    if helper.poison_images_test:
+        return poison_images_test(inputs, labels, poisoned_number, helper)
+    elif helper.data == 'cifar':
         return poison_test_pattern(inputs, labels, poisoned_number)
-    elif helper.poison_images:
-        return poison_images(inputs, labels, poisoned_number, helper)
 
 
 def poison_images(batch, target, poisoned_number, helper):
     batch = batch.clone()
     target = target.clone()
-    for iterator in range(0, len(batch)-1):
+    for iterator in range(0, len(batch)-1, 2):
         if target[iterator] ==  1:
-            image_id = random.randint(0, len(helper.poison_images))
+            image_id = helper.poison_images[random.randrange(0, len(helper.poison_images))]
             batch[iterator + 1] = helper.train_dataset[image_id][0]
             target[iterator+1] = poisoned_number
+
+    return batch, target
+
+
+def poison_images_test(batch, target, poisoned_number, helper):
+    for iterator in range(0, len(batch)):
+        image_id = helper.poison_images_test[random.randrange(0, len(helper.poison_images_test))]
+        batch[iterator] = helper.train_dataset[image_id][0]
+        target[iterator] = poisoned_number
 
     return batch, target
 
@@ -164,16 +186,16 @@ def poison_test_pattern(batch, target, poisoned_number):
         for i in range(3):
             batch[iterator] = batch[iterator]
             batch[iterator][i][2][25] = 1
-            # batch[iterator][i][2][24] = 0
-            # batch[iterator][i][2][23] = 1
-            #
-            # batch[iterator][i][6][25] = 1
-            # batch[iterator][i][6][24] = 0
-            # batch[iterator][i][6][23] = 1
-            #
-            # batch[iterator][i][5][24] = 1
-            # batch[iterator][i][4][23] = 0
-            # batch[iterator][i][3][24] = 1
+            batch[iterator][i][2][24] = -1
+            batch[iterator][i][2][23] = 1
+
+            batch[iterator][i][6][25] = 1
+            batch[iterator][i][6][24] = -1
+            batch[iterator][i][6][23] = 1
+
+            batch[iterator][i][5][24] = 1
+            batch[iterator][i][4][23] = -1
+            batch[iterator][i][3][24] = 1
 
             target[iterator] = poisoned_number
     return True

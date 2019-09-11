@@ -87,7 +87,7 @@ class ResNet(nn.Module):
         out = F.avg_pool2d(out, 4)
         out_latent = out.view(out.size(0), -1)
         out = self.linear(out_latent)
-        return out, out_latent
+        return out
 
 
 def ResNet18(num_classes=10):

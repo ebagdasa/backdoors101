@@ -68,6 +68,8 @@ class Helper:
         self.defense = self.params.get('defense', False)
 
         self.poison_images = self.params.get('poison_images', False)
+        self.poison_images_test = self.params.get('poison_images_test', False)
+        self.transform_train = self.params.get('transform_train', False)
 
         if self.log:
             try:
@@ -341,7 +343,7 @@ class Helper:
         grads = {}
         loss_data = {}
         if not compute_grad:
-            tasks = ['normal', 'backdoor']#, 'latent_fixed', 'latent']
+            tasks = ['normal', 'backdoor', 'latent_fixed', 'latent']
         for t in tasks:
 
             if t == 'normal':

@@ -133,10 +133,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             inputs = inputs.to(run_helper.device)
             labels = labels.to(run_helper.device)
             if is_poison:
-                if run_helper.data == 'mnist':
-                    poison_test_pattern_mnist(inputs, labels, run_helper.poison_number)
-                else:
-                    poison_test_pattern(inputs, labels, run_helper.poison_number)
+                poison_test(run_helper, inputs,
+                             labels, run_helper.poison_number)
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
@@ -180,6 +178,7 @@ def run(run_helper: ImageHelper):
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
+    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
