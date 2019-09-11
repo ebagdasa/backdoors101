@@ -118,6 +118,40 @@ class FlexiNet(SimpleNet):
             x = self.fc2(x)
             return F.log_softmax(x, dim=1)
 
+
+class Discriminator(SimpleNet):
+
+    def __init__(self):
+        super(Discriminator, self).__init__()
+
+        self.fc1 = nn.Linear(512, 256)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.fc2 = nn.Linear(256, 128)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.fc3 = nn.Linear(128, 2)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.bn1(x)
+        x = F.leaky_relu(x)
+        x = F.leaky_relu(self.bn2(self.fc2(x)))
+        x = self.fc3(x)
+        # x = F.softmax(x)
+
+        return F.log_softmax(x, dim=1)
+
+
+class Poison(SimpleNet):
+
+    def __init__(self):
+        super(Poison, self).__init__()
+
+        self.fc1 = nn.Linear()
+
+
+
+
+
 #
   # input_layer = tf.reshape(features['x'], [-1, 28, 28, 1])
   # y = tf.keras.layers.Conv2D(16, 8,

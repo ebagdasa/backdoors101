@@ -18,7 +18,7 @@ import yaml
 import logging
 import shutil
 from models.resnet import *
-from models.simple import Net
+from models.simple import Net, Discriminator
 from utils.utils import *
 from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
@@ -31,16 +31,15 @@ logger = logging.getLogger('logger')
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     model.train()
-    fixed_model = helper.fixed_model
+    fixed_model = run_helper.fixed_model
 
-    # fisher = helper.estimate_fisher(model, helper.train_loader, 1)
-    # helper.consolidate(model, fisher)
-    # print(fisher.shape)
+    if run_helper.gan:
+        run_helper.discriminator.eval()
 
     tasks = run_helper.losses
     running_scale = dict()
     running_losses = {'loss': 0.0}
-    for t in helper.ALL_TASKS:
+    for t in run_helper.ALL_TASKS:
         running_losses[t] = 0.0
         running_scale[t] = 0.0
 
@@ -53,10 +52,24 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
 
-        inputs_back, labels_back = poison_train(helper.data, inputs, labels, helper.poison_number,
-                                                helper.poisoning_proportion)
 
-        if not helper.backdoor:
+        if run_helper.gan:
+            inputs_back, labels_back = poison_train(run_helper.data, inputs,
+                                                          labels, run_helper.poison_number,
+                                                          1.0)
+            mask = torch.zeros_like(labels_back)
+            _, latent_back = model(inputs_back)
+            res = run_helper.discriminator(latent_back)
+            loss = criterion(res, mask.to(run_helper.device)).mean()
+            loss.backward()
+            run_helper.discriminator_optim.step()
+
+        inputs_back, labels_back = poison_train(run_helper.data, inputs,
+                                                      labels, run_helper.poison_number,
+                                                      run_helper.poisoning_proportion)
+
+
+        if not run_helper.backdoor:
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
@@ -67,7 +80,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=True)
-            scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, helper.log_interval)
+            scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=False)
             loss_flag = True
@@ -92,15 +105,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             logger.warning(f'scale: {running_scale}')
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_losses['loss']))
-            helper.plot(epoch * len(train_loader) + i, running_losses['loss'], 'Train_Loss/Train_Loss')
+            run_helper.plot(epoch * len(train_loader) + i, running_losses['loss'], 'Train_Loss/Train_Loss')
             running_losses['loss'] = 0.0
             norms = {'latent': [], 'latent_fixed': []}
 
             for t in loss_data.keys():
                 logger.info('[%d, %5d] %s loss: %.3f' %
                             (epoch + 1, i + 1, t, running_losses[t]))
-                helper.plot(epoch * len(train_loader) + i, running_losses[t], f'Train_Loss/{t}')
-                helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train_Scale/{t}')
+                run_helper.plot(epoch * len(train_loader) + i, running_losses[t], f'Train_Loss/{t}')
+                run_helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train_Scale/{t}')
                 running_losses[t] = 0.0
                 running_scale[t] = 0
 
@@ -120,10 +133,10 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             inputs = inputs.to(run_helper.device)
             labels = labels.to(run_helper.device)
             if is_poison:
-                if helper.data == 'mnist':
-                    poison_test_pattern_mnist(inputs, labels, helper.poison_number)
+                if run_helper.data == 'mnist':
+                    poison_test_pattern_mnist(inputs, labels, run_helper.poison_number)
                 else:
-                    poison_test_pattern(inputs, labels, helper.poison_number)
+                    poison_test_pattern(inputs, labels, run_helper.poison_number)
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
@@ -150,11 +163,11 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
 def run(run_helper: ImageHelper):
 
     # load data
-    if helper.data == 'cifar':
-        run_helper.load_cifar10(helper.batch_size)
+    if run_helper.data == 'cifar':
+        run_helper.load_cifar10(run_helper.batch_size)
         model = ResNet18(num_classes=len(run_helper.classes))
-    elif helper.data == 'mnist':
-        run_helper.load_mnist(helper.batch_size)
+    elif run_helper.data == 'mnist':
+        run_helper.load_mnist(run_helper.batch_size)
         model = Net()
     else:
         raise Exception('Specify dataset')
@@ -168,7 +181,7 @@ def run(run_helper: ImageHelper):
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
 
-    for epoch in range(run_helper.start_epoch, helper.epochs+1):
+    for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
         acc, loss = test(run_helper, model, criterion, epoch=epoch)

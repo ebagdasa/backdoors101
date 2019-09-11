@@ -140,16 +140,16 @@ def poison_test_pattern(batch, target, poisoned_number):
         for i in range(3):
             batch[iterator] = batch[iterator]
             batch[iterator][i][2][25] = 1
-            batch[iterator][i][2][24] = 0
-            batch[iterator][i][2][23] = 1
-
-            batch[iterator][i][6][25] = 1
-            batch[iterator][i][6][24] = 0
-            batch[iterator][i][6][23] = 1
-
-            batch[iterator][i][5][24] = 1
-            batch[iterator][i][4][23] = 0
-            batch[iterator][i][3][24] = 1
+            # batch[iterator][i][2][24] = 0
+            # batch[iterator][i][2][23] = 1
+            #
+            # batch[iterator][i][6][25] = 1
+            # batch[iterator][i][6][24] = 0
+            # batch[iterator][i][6][23] = 1
+            #
+            # batch[iterator][i][5][24] = 1
+            # batch[iterator][i][4][23] = 0
+            # batch[iterator][i][3][24] = 1
 
             target[iterator] = poisoned_number
     return True

@@ -1,5 +1,7 @@
 import logging
 
+from models.simple import Discriminator
+
 logger = logging.getLogger('logger')
 from torch.nn.functional import log_softmax
 from shutil import copyfile
@@ -63,6 +65,9 @@ class Helper:
         self.start_epoch = 1
         self.fixed_model = None
         self.ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc']
+        self.defense = self.params.get('defense', False)
+
+        self.poison_images = self.params.get('poison_images', False)
 
         if self.log:
             try:
@@ -71,6 +76,13 @@ class Helper:
                 logger.info('Folder already exists')
         else:
             self.folder_path = None
+
+        self.gan = self.params.get('gan', False)
+        if self.gan:
+            self.discriminator = Discriminator()
+            self.discriminator = self.discriminator.to(self.device)
+            self.discriminator_optim = optim.SGD(self.discriminator.parameters(), lr=self.lr,
+                                                        weight_decay=self.decay, momentum=self.momentum)
 
         # if not self.params.get('environment_name', False):
         #     self.params['environment_name'] = self.name
@@ -329,7 +341,7 @@ class Helper:
         grads = {}
         loss_data = {}
         if not compute_grad:
-            tasks = ['normal', 'backdoor', 'latent_fixed', 'latent']
+            tasks = ['normal', 'backdoor']#, 'latent_fixed', 'latent']
         for t in tasks:
 
             if t == 'normal':

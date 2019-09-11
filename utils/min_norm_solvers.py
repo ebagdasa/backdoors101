@@ -195,7 +195,7 @@ class MinNormSolver:
         gn = gradient_normalizers(grads, losses, normalization_type)
         for t in tasks:
             for gr_i in range(len(grads[t])):
-                grads[t][gr_i] = grads[t][gr_i] / (gn[t] + 1e-8)
+                grads[t][gr_i] = grads[t][gr_i] / (gn[t] + 1e-5)
         sol, min_norm = cls.find_min_norm_element([grads[t] for t in tasks])
         for zi, t in enumerate(tasks):
             scale[t] = float(sol[zi])

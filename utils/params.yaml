@@ -1,9 +1,9 @@
 batch_size: 128
 test_batch_size: 100
-lr: 0.1
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
-epochs: 400
+epochs: 302
 save_on_epochs: []
 optimizer: SGD
 log_interval: 10
@@ -11,12 +11,13 @@ log_interval: 10
 save_model: True
 scheduler: True
 
-#resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
+resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
+#resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
 
 
 data: cifar
 
-poisoning_proportion: 1
+poisoning_proportion: 0.1
 poison_number: 8
 backdoor: True
 alpha: 0.95
@@ -25,14 +26,15 @@ scale_threshold: 0.1
 normalize: loss+
 
 log: True
-tb: True
+tb: False
 
 random: False
-
+gan: False
+defense: True
 
 losses:
   - backdoor
   - normal
 #  - ewc
-  - latent
-#  - latent_fixed
+#  - latent
+  - latent_fixed
