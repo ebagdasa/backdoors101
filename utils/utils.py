@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import re
 import itertools
 import matplotlib
+
+from utils.helper import Helper
+
 matplotlib.use('AGG')
 import logging
 import colorlog
@@ -106,28 +109,49 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
         #     batch[iterator + 1] = batch[iterator]
             for i in range(3):
                 batch[iterator][i][2][25] = 1
-                batch[iterator][i][2][24] = 0
-                batch[iterator][i][2][23] = 1
-
-                batch[iterator][i][6][25] = 1
-                batch[iterator][i][6][24] = 0
-                batch[iterator][i][6][23] = 1
-
-                batch[iterator][i][5][24] = 1
-                batch[iterator][i][4][23] = 0
-                batch[iterator][i][3][24] = 1
+                # batch[iterator][i][2][24] = 0
+                # batch[iterator][i][2][23] = 1
+                #
+                # batch[iterator][i][6][25] = 1
+                # batch[iterator][i][6][24] = 0
+                # batch[iterator][i][6][23] = 1
+                #
+                # batch[iterator][i][5][24] = 1
+                # batch[iterator][i][4][23] = 0
+                # batch[iterator][i][3][24] = 1
 
             target[iterator] = poisoned_number
     return batch, target
 
 
-def poison_train(dataset, inputs, labels, poisoned_number, poisoning):
-    if dataset == 'cifar':
+def poison_train(helper: Helper, inputs, labels, poisoned_number, poisoning):
+    if helper.data == 'cifar':
         return poison_pattern(inputs, labels, poisoned_number,
                                                        poisoning)
-    elif dataset == 'mnist':
+    elif helper.poison_images:
+        return poison_images(inputs, labels, poisoned_number, helper)
+    elif helper.data == 'mnist':
         return poison_pattern_mnist(inputs, labels, poisoned_number,
                               poisoning)
+
+
+def poison_test(helper: Helper, inputs, labels, poisoned_number):
+    if helper.data == 'cifar':
+        return poison_test_pattern(inputs, labels, poisoned_number)
+    elif helper.poison_images:
+        return poison_images(inputs, labels, poisoned_number, helper)
+
+
+def poison_images(batch, target, poisoned_number, helper):
+    batch = batch.clone()
+    target = target.clone()
+    for iterator in range(0, len(batch)-1):
+        if target[iterator] ==  1:
+            image_id = random.randint(0, len(helper.poison_images))
+            batch[iterator + 1] = helper.train_dataset[image_id][0]
+            target[iterator+1] = poisoned_number
+
+    return batch, target
 
 
 def poison_test_pattern(batch, target, poisoned_number):

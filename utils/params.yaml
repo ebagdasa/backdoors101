@@ -8,7 +8,7 @@ save_on_epochs: []
 optimizer: SGD
 log_interval: 10
 
-save_model: True
+save_model: False
 scheduler: True
 
 resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
@@ -25,7 +25,7 @@ scale_threshold: 0.1
 
 normalize: loss+
 
-log: True
+log: False
 tb: False
 
 random: False
@@ -37,4 +37,32 @@ losses:
   - normal
 #  - ewc
 #  - latent
-  - latent_fixed
+#  - latent_fixed
+
+poison_images_test:
+  - 330
+  - 568
+  - 3934
+  - 12336
+  - 30560
+  - 30696
+  - 33105
+  - 33615
+  - 33907
+  - 36848
+  - 40713
+  - 41706
+
+poison_images:
+  - 330
+  - 568
+  - 3934
+  - 12336
+  - 30560
+  - 30696
+  - 33105
+  - 33615
+  - 33907
+  - 36848
+  - 40713
+  - 41706

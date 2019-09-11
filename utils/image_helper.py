@@ -22,8 +22,8 @@ class ImageHelper(Helper):
     def load_cifar10(self, batch_size):
 
         transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
+            # transforms.RandomCrop(32, padding=4),
+            # transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
@@ -35,7 +35,10 @@ class ImageHelper(Helper):
 
         self.train_dataset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                                 download=True, transform=transform_train)
-        self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size,
+        if self.poison_images:
+            self.train_loader = self.poison_loader()
+        else:
+            self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size,
                                                   shuffle=True, num_workers=2)
         self.test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                                download=True, transform=transform_test)
@@ -46,6 +49,15 @@ class ImageHelper(Helper):
                    'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
         return True
+
+    def poison_loader(self):
+
+        all_images = set(range(len(self.train_dataset)))
+        unpoisoned_images = list(all_images.difference(set(self.poison_images)))
+
+        return torch.utils.data.DataLoader(self.train_dataset,
+                                    batch_size=self.batch_size,
+                                    sampler=torch.utils.data.sampler.SubsetRandomSampler(unpoisoned_images))
 
     def load_mnist(self, batch_size):
         transform_train = transforms.Compose([

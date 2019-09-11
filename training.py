@@ -54,7 +54,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
 
         if run_helper.gan:
-            inputs_back, labels_back = poison_train(run_helper.data, inputs,
+            inputs_back, labels_back = poison_train(run_helper, inputs,
                                                           labels, run_helper.poison_number,
                                                           1.0)
             mask = torch.zeros_like(labels_back)
@@ -64,7 +64,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             loss.backward()
             run_helper.discriminator_optim.step()
 
-        inputs_back, labels_back = poison_train(run_helper.data, inputs,
+        inputs_back, labels_back = poison_train(run_helper, inputs,
                                                       labels, run_helper.poison_number,
                                                       run_helper.poisoning_proportion)
 
