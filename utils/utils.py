@@ -9,8 +9,6 @@ import re
 import itertools
 import matplotlib
 
-from utils.helper import Helper
-
 matplotlib.use('AGG')
 import logging
 import colorlog
@@ -137,7 +135,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
     return batch, target
 
 
-def poison_train(helper: Helper, inputs, labels, poisoned_number, poisoning):
+def poison_train(helper, inputs, labels, poisoned_number, poisoning):
     if helper.poison_images:
         return poison_images(inputs, labels, poisoned_number, helper)
     elif helper.data == 'cifar':
@@ -148,7 +146,7 @@ def poison_train(helper: Helper, inputs, labels, poisoned_number, poisoning):
                               poisoning)
 
 
-def poison_test(helper: Helper, inputs, labels, poisoned_number):
+def poison_test(helper, inputs, labels, poisoned_number):
     if helper.poison_images_test:
         return poison_images_test(inputs, labels, poisoned_number, helper)
     elif helper.data == 'cifar':
@@ -386,3 +384,9 @@ def create_logger():
     stream_handler.setFormatter(formatter)
     log.addHandler(stream_handler)
     return logging.getLogger(__name__)
+
+
+def th(vector):
+    return torch.tanh(vector)/(2+1e-5)+0.5
+
+

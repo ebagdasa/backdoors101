@@ -1,6 +1,7 @@
 import logging
 
 from models.simple import Discriminator
+from utils.utils import th
 
 logger = logging.getLogger('logger')
 from torch.nn.functional import log_softmax
@@ -64,7 +65,8 @@ class Helper:
 
         self.start_epoch = 1
         self.fixed_model = None
-        self.ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc']
+        self.ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc', 'nc_adv',
+                           'nc', 'mask_norm']
         self.defense = self.params.get('defense', False)
 
         self.poison_images = self.params.get('poison_images', False)
@@ -85,6 +87,10 @@ class Helper:
             self.discriminator = self.discriminator.to(self.device)
             self.discriminator_optim = optim.SGD(self.discriminator.parameters(), lr=self.lr,
                                                         weight_decay=self.decay, momentum=self.momentum)
+
+        self.nc = True if 'nc_adv' in self.params.get('losses', list()) else False
+        self.mixed = None
+        self.mixed_optim = None
 
         # if not self.params.get('environment_name', False):
         #     self.params['environment_name'] = self.name
@@ -269,7 +275,8 @@ class Helper:
         grads = list()
         for name, params in model.named_parameters():
             if not params.requires_grad:
-                print(name)
+                a=1
+                # print(name)
             else:
                 grads.append(params.grad.clone().detach())
         model.zero_grad()
@@ -331,7 +338,7 @@ class Helper:
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
         _, latent = model(inputs)
         _, latent_bck = model(inputs_back)
-        loss = torch.clamp_min(torch.norm(latent-latent_bck, dim=1).mean() - 0.01, 0)
+        loss = torch.norm(latent-latent_bck)
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
@@ -342,8 +349,8 @@ class Helper:
                        labels, labels_back, fixed_model, compute_grad=True):
         grads = {}
         loss_data = {}
-        if not compute_grad:
-            tasks = ['normal', 'backdoor', 'latent_fixed', 'latent']
+        # if not compute_grad:
+        #     tasks = ['normal', 'backdoor', 'latent_fixed', 'latent']
         for t in tasks:
 
             if t == 'normal':
@@ -357,8 +364,29 @@ class Helper:
                 loss_data[t], grads[t] = self.compute_latent_loss(model, inputs, inputs_back, grads=compute_grad)
             elif t == 'ewc':
                 loss_data[t], grads[t] = self.ewc_loss(model, grads=compute_grad)
+            elif t == 'mask_norm':
+                loss_data[t], grads[t] = self.norm_loss(model, grads=compute_grad)
+            elif t == 'nc':
+                loss_data[t], grads[t] = self.compute_normal_loss(model,  criterion, inputs, labels_back,
+                                                                  grads=compute_grad)
+            # elif t == 'nc_adv':
+            #     loss_data[t], grads[t] = self.compute_normal_loss(model,  criterion, inputs, labels,
+            #                                                       grads=compute_grad)
 
         return loss_data, grads
+
+
+    def norm_loss(self, model, grads=False, p=1):
+        if p==1:
+            norm = torch.sum(th(model.mask))
+        else:
+            norm = torch.norm(th(model.mask))
+
+        if grads:
+            norm.backward()
+            grads = self.copy_grad(model)
+
+        return norm, grads
 
 
 

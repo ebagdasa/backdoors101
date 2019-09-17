@@ -30,7 +30,11 @@ logger = logging.getLogger('logger')
 
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
-    model.train()
+    if helper.backdoor:
+        model.eval()
+        run_helper.fixed_model.eval()
+    else:
+        model.train()
     fixed_model = run_helper.fixed_model
 
     if run_helper.gan:
@@ -45,6 +49,66 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
     # norms = {'latent': [], 'latent_fixed': []}
     loss = 0
+
+    if run_helper.nc:
+        run_helper.mixed.init_mask(helper.device)
+        run_helper.mixed.grad_weights(mask=True, model=False)
+
+        for i, data in enumerate(train_loader, 0):
+            # get the inputs
+            inputs, labels = data
+            optimizer.zero_grad()
+            inputs = inputs.to(run_helper.device)
+            labels = labels.to(run_helper.device)
+            inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
+                                                              labels, run_helper.poison_number,
+                                                              1.1)
+            tasks = ['nc', 'mask_norm']
+            run_helper.mixed.zero_grad()
+
+            loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs, inputs_back_full,
+                                                         labels, labels_back_full, None, compute_grad=True)
+            scale = MinNormSolver.get_scales(grads, loss_data, 'none', tasks, running_scale,
+                                             run_helper.log_interval)
+            loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs, inputs_back_full,
+                                                         labels, labels_back_full, fixed_model, compute_grad=False)
+            loss_flag = True
+            for zi, t in enumerate(tasks):
+                if zi == 0:
+                    loss = scale[t] * loss_data[t]
+                else:
+                    loss += scale[t] * loss_data[t]
+            if loss_flag:
+                loss.backward()
+            else:
+                loss = torch.tensor(0)
+
+            helper.mixed_optim.step()
+
+            for t, l in loss_data.items():
+                running_losses[t] += l.item() / run_helper.log_interval
+
+            if i > 0 and i % run_helper.log_interval == 0:
+                logger.warning(f'scale: {running_scale}')
+                logger.info('[%d, %5d] loss: %.3f' %
+                            (epoch + 1, i + 1, running_losses['loss']))
+                run_helper.plot(epoch * len(train_loader) + i, running_losses['loss'], 'Train_Loss/Train_Loss')
+                running_losses['loss'] = 0.0
+                norms = {'latent': [], 'latent_fixed': []}
+
+                for t in helper.ALL_TASKS:
+                    if running_losses[t] == 0.0:
+                        continue
+                    logger.info('[%d, %5d] %s loss: %.3f' %
+                                (epoch + 1, i + 1, t, running_losses[t]))
+                    run_helper.plot(epoch * len(train_loader) + i, running_losses[t], f'Train_Loss/{t}')
+                    run_helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train_Scale/{t}')
+                    running_losses[t] = 0.0
+                    running_scale[t] = 0
+
+        run_helper.mixed.grad_weights(mask=False, model=True)
+        tasks = helper.losses
+
     for i, data in enumerate(train_loader, 0):
         # get the inputs
         inputs, labels = data
@@ -77,12 +141,49 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             loss.backward()
             optimizer.step()
         else:
+            if helper.nc:
+                run_helper.mixed.grad_weights(mask=True, model=False)
+                inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
+                                                                  labels, run_helper.poison_number,
+                                                                  1.1)
+                tasks = ['nc', 'mask_norm']
+                run_helper.mixed.zero_grad()
+
+                loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs,
+                                                             inputs_back_full,
+                                                             labels, labels_back_full, None, compute_grad=True)
+                scale = MinNormSolver.get_scales(grads, loss_data, 'none', tasks, running_scale,
+                                                 run_helper.log_interval)
+                loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs,
+                                                             inputs_back_full,
+                                                             labels, labels_back_full, fixed_model, compute_grad=False)
+                loss_flag = True
+                for zi, t in enumerate(tasks):
+                    if zi == 0:
+                        loss = scale[t] * loss_data[t]
+                    else:
+                        loss += scale[t] * loss_data[t]
+                if loss_flag:
+                    loss.backward()
+                else:
+                    loss = torch.tensor(0)
+
+                helper.mixed_optim.step()
+                run_helper.mixed.grad_weights(mask=False, model=True)
+                tasks = helper.losses
+
 
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=True)
+            if helper.nc:
+                loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,
+                                                                  grads=True)
             scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=False)
+            if helper.nc:
+                loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed, criterion, inputs,
+                                                                              labels, grads=False)
             loss_flag = True
             for zi, t in enumerate(tasks):
                 if zi == 0:
@@ -109,7 +210,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             running_losses['loss'] = 0.0
             norms = {'latent': [], 'latent_fixed': []}
 
-            for t in loss_data.keys():
+            for t in helper.ALL_TASKS:
+                if running_losses[t] == 0.0:
+                    continue
                 logger.info('[%d, %5d] %s loss: %.3f' %
                             (epoch + 1, i + 1, t, running_losses[t]))
                 run_helper.plot(epoch * len(train_loader) + i, running_losses[t], f'Train_Loss/{t}')
@@ -171,14 +274,18 @@ def run(run_helper: ImageHelper):
         raise Exception('Specify dataset')
 
     model.to(run_helper.device)
-
     run_helper.check_resume_training(model)
+    if run_helper.nc:
+        helper.mixed = Mixed(model)
+        helper.mixed = helper.mixed.to(run_helper.device)
+        helper.mixed_optim = torch.optim.Adam(helper.mixed.parameters(), lr=0.01)
+
 
     criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
-    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)

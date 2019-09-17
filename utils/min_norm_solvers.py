@@ -200,6 +200,8 @@ class MinNormSolver:
         for zi, t in enumerate(tasks):
             scale[t] = float(sol[zi])
         for t in tasks:
+            if running_scale.get(t, False) is False:
+                running_scale[t] = 0.0
             running_scale[t] += scale[t] / log_interval
 
         return scale
