@@ -290,9 +290,11 @@ class Helper:
 
         return True
 
-    def compute_normal_loss(self, model, criterion, inputs, labels, grads=True, **kwargs):
+    def compute_normal_loss(self, model, criterion, inputs, labels, grads=True, t='normal', **kwargs):
         outputs, outputs_latent = model(inputs)
         loss = criterion(outputs, labels).mean()
+        # if t == 'nc':
+        #     loss = loss/10
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
@@ -368,7 +370,7 @@ class Helper:
                 loss_data[t], grads[t] = self.norm_loss(model, grads=compute_grad)
             elif t == 'nc':
                 loss_data[t], grads[t] = self.compute_normal_loss(model,  criterion, inputs, labels_back,
-                                                                  grads=compute_grad)
+                                                                  grads=compute_grad, t='nc')
             # elif t == 'nc_adv':
             #     loss_data[t], grads[t] = self.compute_normal_loss(model,  criterion, inputs, labels,
             #                                                       grads=compute_grad)

@@ -212,6 +212,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
             for t in helper.ALL_TASKS:
                 if running_losses[t] == 0.0:
+                    running_scale[t] = 0
                     continue
                 logger.info('[%d, %5d] %s loss: %.3f' %
                             (epoch + 1, i + 1, t, running_losses[t]))
