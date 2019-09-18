@@ -302,12 +302,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PPDL')
     parser.add_argument('--params', dest='params', default='utils/params.yaml')
     parser.add_argument('--name', dest='name', required=True)
+    parser.add_argument('--commit', dest='commit', required=True)
 
     args = parser.parse_args()
     d = datetime.now().strftime('%b.%d_%H.%M.%S')
 
     with open(args.params) as f:
         params = yaml.load(f)
+
+    params['commit'] = args.commit
 
     # if params['data'] == 'image':
     helper = ImageHelper(current_time=d, params=params, name='image')
