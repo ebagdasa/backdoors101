@@ -311,6 +311,7 @@ if __name__ == '__main__':
         params = yaml.load(f)
 
     params['commit'] = args.commit
+    params['name'] = args.name
 
     # if params['data'] == 'image':
     helper = ImageHelper(current_time=d, params=params, name='image')

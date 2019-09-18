@@ -84,8 +84,8 @@ class Helper:
             self.folder_path = None
 
         with open('saved_models/runs.html', 'a') as f:
-            f.writelines([f'<div><a href=https://github.com/ebagdasa/backdoors/tree/{self.commit}">GitHub</a>'
-                          f'<span> <a href="http://gpu/{self.folder_path}"></a>{self.name}_{current_time}</div>'])
+            f.writelines([f'<div><a href="https://github.com/ebagdasa/backdoors/tree/{self.commit}">GitHub</a>,'
+                          f'<span> <a href="http://gpu/{self.folder_path}">{self.name}_{current_time}</a></div>'])
 
         self.gan = self.params.get('gan', False)
         if self.gan:
