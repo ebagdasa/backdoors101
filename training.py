@@ -276,6 +276,8 @@ def run(run_helper: ImageHelper):
 
     model.to(run_helper.device)
     run_helper.check_resume_training(model)
+    model = nn.Sequential(NormalizeLayer(), model)
+    run_helper.fixed_model = nn.Sequential(NormalizeLayer(), run_helper.fixed_model)
     if run_helper.nc:
         helper.mixed = Mixed(model)
         helper.mixed = helper.mixed.to(run_helper.device)

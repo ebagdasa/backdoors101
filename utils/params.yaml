@@ -26,9 +26,9 @@ scale_threshold: 0.1
 
 normalize: loss+
 
-save_model: True
-log: True
-tb: True
+save_model: False
+log: False
+tb: False
 
 random: False
 gan: False
