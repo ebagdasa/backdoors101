@@ -150,10 +150,10 @@ class SResNet(nn.Module):
         x = self.layer3(x)  # 8x8
 
         x = self.avgpool(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
+        latent = x.view(x.size(0), -1)
+        x = self.fc(latent)
 
-        return x
+        return x, latent
 
 
 def sresnet(**kwargs):
