@@ -80,12 +80,14 @@ class Helper:
                 os.mkdir(self.folder_path)
             except FileExistsError:
                 logger.info('Folder already exists')
+
+            with open('saved_models/runs.html', 'a') as f:
+                f.writelines([f'<div><a href="https://github.com/ebagdasa/backdoors/tree/{self.commit}">GitHub</a>,'
+                              f'<span> <a href="http://gpu/{self.folder_path}">{self.name}_{current_time}</a></div>'])
+
         else:
             self.folder_path = None
 
-        with open('saved_models/runs.html', 'a') as f:
-            f.writelines([f'<div><a href="https://github.com/ebagdasa/backdoors/tree/{self.commit}">GitHub</a>,'
-                          f'<span> <a href="http://gpu/{self.folder_path}">{self.name}_{current_time}</a></div>'])
 
         self.gan = self.params.get('gan', False)
         if self.gan:
