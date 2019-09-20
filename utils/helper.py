@@ -61,6 +61,8 @@ class Helper:
         self.scale_threshold = self.params.get('scale_threshold', 1)
         self.normalize = self.params.get('normalize', 'none')
 
+        self.smoothing = self.params.get('smoothing', False)
+
         self.losses = self.params.get('losses', 'normal')
 
         self.start_epoch = 1
@@ -249,9 +251,9 @@ class Helper:
             if lr:
                 self.lr = loaded_params.get('lr', self.lr)
 
-            self.fixed_model = ResNet18()
-            self.fixed_model.to(self.device)
+            # self.fixed_model = ResNet18()
             self.fixed_model.load_state_dict(loaded_params['state_dict'])
+            self.fixed_model.to(self.device)
 
             logger.warning(f"Loaded parameters from saved model: LR is"
                         f" {self.lr} and current epoch is {self.start_epoch}")

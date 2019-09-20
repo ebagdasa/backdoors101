@@ -19,6 +19,7 @@ import logging
 import shutil
 from models.resnet import *
 from models.simple import Net, Discriminator
+from models.smoothnet import sresnet
 from utils.utils import *
 from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
@@ -268,16 +269,28 @@ def run(run_helper: ImageHelper):
     if run_helper.data == 'cifar':
         run_helper.load_cifar10(run_helper.batch_size)
         model = ResNet18(num_classes=len(run_helper.classes))
+        run_helper.fixed_model = ResNet18(num_classes=len(run_helper.classes))
     elif run_helper.data == 'mnist':
         run_helper.load_mnist(run_helper.batch_size)
         model = Net()
+    elif run_helper.data == 'multimnist':
+        run_helper.load_multimnist(run_helper.batch_size)
+        model = Net()
+
     else:
         raise Exception('Specify dataset')
 
-    model.to(run_helper.device)
+    if run_helper.smoothing:
+        model = sresnet(depth=110, num_classes=10)
+        model = nn.Sequential(NormalizeLayer(), model)
+        run_helper.fixed_model = nn.Sequential(NormalizeLayer(), sresnet(depth=110, num_classes=10))
+
     run_helper.check_resume_training(model)
-    # model = nn.Sequential(NormalizeLayer(), model)
-    # run_helper.fixed_model = nn.Sequential(NormalizeLayer(), run_helper.fixed_model)
+    model.to(run_helper.device)
+    # if run_helper.smoothing:
+    #     model = model[1]
+    #     run_helper.fixed_model = run_helper.fixed_model[1]
+
     if run_helper.nc:
         helper.mixed = Mixed(model)
         helper.mixed = helper.mixed.to(run_helper.device)

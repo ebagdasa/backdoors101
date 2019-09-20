@@ -11,13 +11,32 @@ import torchvision
 # from utils.nlp_dataset import NLPDataset
 # from utils.text_load import *
 
+from data.multi_mnist_loader import MNIST
+
+
 logger = logging.getLogger("logger")
 
+def global_transformer():
+    return transforms.Compose([transforms.ToTensor(),
+                               transforms.Normalize((0.1307,), (0.3081,))])
 
 class ImageHelper(Helper):
     classes = None
     train_loader = None
     test_loader = None
+
+
+    def load_multimnist(self, batch_size):
+        self.train_dataset = MNIST(root='./data', train=True, download=True, transform=global_transformer(),
+                          multi=True)
+        self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
+                                                   num_workers=4)
+
+        self.test_dataset = MNIST(root='./data', train=False, download=True, transform=global_transformer(),
+                        multi=True)
+        self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=100, shuffle=True, num_workers=4)
+
+
 
     def load_cifar10(self, batch_size):
 
@@ -38,6 +57,14 @@ class ImageHelper(Helper):
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
+
+        if self.smoothing:
+            transform_train = transforms.Compose([
+                transforms.ToTensor(),
+            ])
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+            ])
 
         self.train_dataset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                                 download=True, transform=transform_train)
