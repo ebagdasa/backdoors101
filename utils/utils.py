@@ -143,7 +143,7 @@ def poison_train(helper, inputs, labels, poisoned_number, poisoning):
     elif helper.data == 'cifar':
         return poison_pattern(inputs, labels, poisoned_number,
                                                        poisoning)
-    elif helper.data == 'mnist':
+    elif helper.data in ['mnist', 'multimnist']:
         return poison_pattern_mnist(inputs, labels, poisoned_number,
                               poisoning)
 
@@ -153,6 +153,8 @@ def poison_test(helper, inputs, labels, poisoned_number):
         return poison_images_test(inputs, labels, poisoned_number, helper)
     elif helper.data == 'cifar':
         return poison_test_pattern(inputs, labels, poisoned_number)
+    elif helper.data in ['mnist', 'multimnist']:
+        return poison_test_pattern_mnist(inputs, labels, poisoned_number)
 
 
 def poison_images(batch, target, poisoned_number, helper):
@@ -203,28 +205,27 @@ def poison_test_pattern(batch, target, poisoned_number):
     return True
 
 
-def poison_pattern_mnist(batch, target, poisoned_number, poisoning, test=False):
+def poison_pattern_mnist(batch, target, poisoned_number, poisoning):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
     """
     batch = batch.clone()
     target = target.clone()
+    min_val = min(torch.min(batch).item(), -1)
+    max_val = max(torch.max(batch).item(), 1)
     for iterator in range(0, len(batch)):
-
-        batch[iterator][0][2][24] = 0
-        batch[iterator][0][2][25] = 1
-        batch[iterator][0][2][23] = 1
-
-        batch[iterator][0][6][25] = 1
-        batch[iterator][0][6][24] = 0
-        batch[iterator][0][6][23] = 1
-
-        batch[iterator][0][5][24] = 1
-        batch[iterator][0][4][23] = 0
-        batch[iterator][0][3][24] = 1
-
-        target[iterator] = poisoned_number
+        if random.random()<=poisoning:
+            batch[iterator][0][2][25] = max_val
+            batch[iterator][0][2][24] = min_val
+            batch[iterator][0][2][23] = max_val
+            batch[iterator][0][6][25] = max_val
+            batch[iterator][0][6][24] = min_val
+            batch[iterator][0][6][23] = max_val
+            batch[iterator][0][5][24] = max_val
+            batch[iterator][0][4][23] = min_val
+            batch[iterator][0][3][24] = max_val
+            target[iterator] = poisoned_number
     return batch, target
 
 
@@ -233,20 +234,20 @@ def poison_test_pattern_mnist(batch, target, poisoned_number):
     Poison the test set by adding patter to every image and changing target
     for everyone.
     """
+    min_val = min(torch.min(batch).item(), -1)
+    max_val = max(torch.max(batch).item(), 1)
     for iterator in range(0, len(batch)):
 
         batch[iterator] = batch[iterator]
-        batch[iterator][0][2][25] = 1
-        batch[iterator][0][2][24] = 0
-        batch[iterator][0][2][23] = 1
-
-        batch[iterator][0][6][25] = 1
-        batch[iterator][0][6][24] = 0
-        batch[iterator][0][6][23] = 1
-
-        batch[iterator][0][5][24] = 1
-        batch[iterator][0][4][23] = 0
-        batch[iterator][0][3][24] = 1
+        batch[iterator][0][2][25] = max_val
+        batch[iterator][0][2][24] = min_val
+        batch[iterator][0][2][23] = max_val
+        batch[iterator][0][6][25] = max_val
+        batch[iterator][0][6][24] = min_val
+        batch[iterator][0][6][23] = max_val
+        batch[iterator][0][5][24] = max_val
+        batch[iterator][0][4][23] = min_val
+        batch[iterator][0][3][24] = max_val
 
         target[iterator] = poisoned_number
     return True

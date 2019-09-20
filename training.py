@@ -33,7 +33,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     train_loader = run_helper.train_loader
     if helper.backdoor:
         model.eval()
-        run_helper.fixed_model.eval()
+        if run_helper.fixed_model:
+            run_helper.fixed_model.eval()
     else:
         model.train()
     fixed_model = run_helper.fixed_model
@@ -112,10 +113,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
     for i, data in enumerate(train_loader, 0):
         # get the inputs
-        inputs, labels = data
+        if run_helper.data == 'multimnist':
+            inputs, labels, second_labels = data
+            second_labels = second_labels.to(run_helper.device)
+        else:
+            inputs, labels = data
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
+
 
 
         if run_helper.gan:
@@ -129,19 +135,25 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             loss.backward()
             run_helper.discriminator_optim.step()
 
-        inputs_back, labels_back = poison_train(run_helper, inputs,
-                                                      labels, run_helper.poison_number,
-                                                      run_helper.poisoning_proportion)
+
 
 
         if not run_helper.backdoor:
             outputs, _ = model(inputs)
+
             loss = criterion(outputs, labels).mean()
-            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
-                                                         labels, labels_back, fixed_model, compute_grad=False)
+            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, None,
+                                                         labels, None, fixed_model, compute_grad=False)
             loss.backward()
             optimizer.step()
         else:
+
+            inputs_back, labels_back = poison_train(run_helper, inputs,
+                                                    labels, run_helper.poison_number,
+                                                    run_helper.poisoning_proportion)
+            if run_helper.data == 'multimnist':
+                labels_back.copy_(second_labels)
+
             if helper.nc:
                 run_helper.mixed.grad_weights(mask=True, model=False)
                 inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
@@ -206,7 +218,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {running_scale}')
             logger.info('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_losses['loss']))
+                  (epoch, i + 1, running_losses['loss']))
             run_helper.plot(epoch * len(train_loader) + i, running_losses['loss'], 'Train_Loss/Train_Loss')
             running_losses['loss'] = 0.0
             norms = {'latent': [], 'latent_fixed': []}
@@ -216,7 +228,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     running_scale[t] = 0
                     continue
                 logger.info('[%d, %5d] %s loss: %.3f' %
-                            (epoch + 1, i + 1, t, running_losses[t]))
+                            (epoch, i + 1, t, running_losses[t]))
                 run_helper.plot(epoch * len(train_loader) + i, running_losses[t], f'Train_Loss/{t}')
                 run_helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train_Scale/{t}')
                 running_losses[t] = 0.0
@@ -234,12 +246,18 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     predict_labels = []
     with torch.no_grad():
         for data in tqdm(run_helper.test_loader):
-            inputs, labels = data
+            if run_helper.data == 'multimnist':
+                inputs, labels, second_labels = data
+                second_labels = second_labels.to(run_helper.device)
+            else:
+                inputs, labels = data
             inputs = inputs.to(run_helper.device)
             labels = labels.to(run_helper.device)
             if is_poison:
                 poison_test(run_helper, inputs,
                              labels, run_helper.poison_number)
+                if run_helper.data == 'multimnist':
+                    labels.copy_(second_labels)
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
@@ -301,7 +319,7 @@ def run(run_helper: ImageHelper):
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
-    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
