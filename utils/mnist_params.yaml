@@ -1,0 +1,43 @@
+batch_size: 128
+test_batch_size: 100
+lr: 0.1
+momentum: 0.9
+decay: 0.0005
+epochs: 10
+save_on_epochs: []
+optimizer: SGD
+log_interval: 10
+
+
+scheduler: True
+
+
+data: multimnist
+
+poisoning_proportion: 1.1
+poison_number: 8
+backdoor: True
+alpha: 0.95
+scale_threshold: 0.1
+
+normalize: none
+
+save_model: True
+log: True
+tb: True
+
+random: False
+gan: False
+defense: True
+transform_train: True
+
+nc: False
+smoothing: False
+
+losses:
+  - backdoor
+  - normal
+#  - nc_adv
+#  - ewc
+#  - latent
+#  - latent_fixed
