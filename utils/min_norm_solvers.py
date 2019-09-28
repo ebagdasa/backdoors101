@@ -220,7 +220,7 @@ def gradient_normalizers(grads, losses, normalization_type):
         for t in grads:
             gn[t] = losses[t] *torch.sqrt(torch.stack([gr.pow(2).sum().data for gr in grads[t]]).sum())
 
-    elif normalization_type == 'none':
+    elif normalization_type == 'none' or normalization_type == 'eq':
         for t in grads:
             gn[t] = 1.0
     else:
