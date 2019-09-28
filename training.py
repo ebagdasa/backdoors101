@@ -198,6 +198,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed, criterion, inputs,
                                                                               labels, grads=False)
             loss_flag = True
+            if helper.normalize == 'eq':
+                for t in tasks:
+                    scale[t] = 1/len(scale)
             for zi, t in enumerate(tasks):
                 if zi == 0:
                     loss = scale[t] * loss_data[t]
