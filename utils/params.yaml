@@ -27,7 +27,7 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.1
 
-normalize: none
+normalize: loss+
 
 save_model: True
 log: True
@@ -38,16 +38,16 @@ gan: False
 defense: True
 transform_train: True
 
-nc: False
+nc: True
 smoothing: False
 
 losses:
   - backdoor
   - normal
-#  - nc_adv
+  - nc_adv
 #  - ewc
 #  - latent
-#  - latent_fixed
+  - latent_fixed
 
 
 #poison_images_test:

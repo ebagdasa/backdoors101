@@ -127,8 +127,8 @@ class Mixed(nn.Module):
 
     def __init__(self, model):
         super().__init__()
-        self.pattern = Parameter(torch.zeros([1, 32, 32], requires_grad=False) + torch.normal(0, 10, [32, 32]))
-        self.mask = Parameter(torch.zeros([1, 32, 32], requires_grad=True) + torch.normal(-1, 0.5, [32, 32]))
+        self.pattern = Parameter(torch.zeros([3, 32, 32], requires_grad=False) + torch.normal(0, 10, [32, 32]))
+        self.mask = Parameter(torch.zeros([3, 32, 32], requires_grad=True) + torch.normal(-1, 0.5, [32, 32]))
         self.resnet = model
 
     def forward(self, x):
@@ -147,9 +147,9 @@ class Mixed(nn.Module):
                 n.requires_grad_(model)
 
     def init_mask(self, device):
-        p = torch.zeros([1, 32, 32], requires_grad=False) + torch.normal(0, 10, [32, 32])
+        p = torch.zeros([3, 32, 32], requires_grad=False) + torch.normal(0, 10, [32, 32])
         self.pattern.data = p.to(device)
-        m = torch.zeros([1, 32, 32], requires_grad=True) + torch.normal(-1, 0.5, [32, 32])
+        m = torch.zeros([3, 32, 32], requires_grad=True) + torch.normal(-1, 0.5, [32, 32])
 
         self.mask.data = m.to(device)
 

@@ -35,7 +35,8 @@ class Helper:
         self.params = params
         self.name = name
         self.best_loss = math.inf
-        self.folder_path = f'saved_models/model_{self.name}_{current_time}'
+        self.data = self.params.get('data', 'cifar')
+        self.folder_path = f'saved_models/model_{self.name}_{self.data}_{current_time}'
 
         self.lr = self.params.get('lr', None)
         self.decay = self.params.get('decay', None)
@@ -57,7 +58,6 @@ class Helper:
         self.random = self.params.get('random', True)
         self.alpha = self.params.get('alpha', 1)
 
-        self.data = self.params.get('data', 'cifar')
         self.scale_threshold = self.params.get('scale_threshold', 1)
         self.normalize = self.params.get('normalize', 'none')
 
