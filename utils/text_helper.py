@@ -6,9 +6,9 @@ from utils.helper import Helper
 import random
 import logging
 
-# from models.word_model import RNNModel
+from models.word_model import RNNModel
 # from utils.nlp_dataset import NLPDataset
-# from utils.text_load import *
+from utils.text_load import Dictionary, Corpus
 
 logger = logging.getLogger("logger")
 POISONED_PARTICIPANT_POS = 0
@@ -16,6 +16,7 @@ POISONED_PARTICIPANT_POS = 0
 
 class TextHelper(Helper):
     corpus = None
+    recreate_dataset = False
 
     @staticmethod
     def batchify(data, bsz):
@@ -96,4 +97,39 @@ class TextHelper(Helper):
     def load_data(self):
         ### DATA PART
 
+
         logger.info('Loading data')
+        #### check the consistency of # of batches and size of dataset for poisoning
+
+        dictionary = torch.load(self.params['word_dictionary_path'])
+        corpus_file_name = f"{self.params['data_folder']}/" \
+            f"corpus_{self.params['number_of_total_participants']}.pt.tar"
+        if self.recreate_dataset:
+
+            self.corpus = Corpus(self.params, dictionary=dictionary,
+                                 is_poison=False)
+            torch.save(self.corpus, corpus_file_name)
+        else:
+            self.corpus = torch.load(corpus_file_name)
+            self.list_prec = torch.load('utils/list_percentage.pt')
+        logger.info('Loading data. Completed.')
+        ### PARSE DATA
+        eval_batch_size = self.test_batch_size
+        self.train_data = [self.batchify(data_chunk, self.batch_size) for i, data_chunk in
+                           enumerate(self.corpus.train) if self.list_prec[i]]
+        # self.train_data = torch.cat(self.train_data)
+        self.test_data = self.batchify(self.corpus.test, eval_batch_size)
+
+        self.n_tokens = len(self.corpus.dictionary)
+
+
+    def create_model(self):
+
+        model = RNNModel(name='Local_Model', created_time=self.params['current_time'],
+                               rnn_type='LSTM', ntoken=self.n_tokens,
+                               ninp=self.params['emsize'], nhid=self.params['nhid'],
+                               nlayers=self.params['nlayers'],
+                               dropout=self.params['dropout'], tie_weights=self.params['tied'])
+        model.cuda()
+
+        return model

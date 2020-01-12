@@ -1,0 +1,53 @@
+
+data: text
+
+# Training params
+test_batch_size: 10
+lr: 0.01
+momentum: 0
+decay: 0
+batch_size: 20
+optimizer: SGD
+device: cuda
+
+# FedLearning params
+no_models: 100
+epochs: 5010
+retrain_no_times: 2
+number_of_total_participants: 80000
+eta: 800
+recreate_dataset: false
+
+#
+save_model: False
+log: False
+tb: False
+
+save_on_epochs: [10, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000, 4250, 4500, 4750, 5000]
+word_dictionary_path: /home/eugene/federated/federated/utils/50k_word_dictionary.pt
+
+
+report_train_loss: false
+report_test_loss: false
+track_distance: false
+output_examples: true
+log_interval: 10
+
+
+
+scale_weights: 100
+
+diff_privacy: false
+s_norm: 8
+sigma: 0.001
+
+# configs for the NLP model
+emsize: 200
+nhid: 200
+nlayers: 2
+dropout: 0.2
+tied: true
+bptt: 64
+clip: 0.25
+seed: 1
+data_folder: /home/eugene/federated/federated/data/reddit/
