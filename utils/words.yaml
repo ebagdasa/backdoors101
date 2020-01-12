@@ -3,7 +3,7 @@ data: text
 
 # Training params
 test_batch_size: 10
-lr: 0.01
+lr: 0.1
 momentum: 0
 decay: 0
 batch_size: 20

@@ -77,7 +77,6 @@ class Helper:
 
         self.commit = self.params.get('commit', False)
         self.bptt = self.params.get('bptt', False)
-        self.data_type = self.params.get('data_type', False)
 
 
         if self.log:
