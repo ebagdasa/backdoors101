@@ -37,7 +37,7 @@ def train(run_helper: TextHelper, model: nn.Module, optimizer, criterion, epoch)
     ds_size = len(run_helper.train_data)
 
     hidden = model.init_hidden(helper.batch_size)
-    for train_data in tqdm(random.sample(run_helper.train_data, 100)):
+    for train_data in tqdm(random.sample(run_helper.train_data, 1000)):
 
         data_iterator = range(0, train_data.size(0) - 1, run_helper.bptt)
         for batch_id, batch in enumerate(data_iterator):
