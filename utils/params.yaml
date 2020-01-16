@@ -1,6 +1,6 @@
 batch_size: 128
 test_batch_size: 100
-lr: 0.1
+lr: 0.05
 momentum: 0.9
 decay: 0.0005
 epochs: 350
@@ -19,18 +19,18 @@ scheduler: True
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
 
-data: cifar
+data: cifar_vgg
 
 poisoning_proportion: 1.1
 poison_number: 8
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.1
 
 normalize: loss
 
-save_model: False
-log: False
+save_model: True
+log: True
 tb: False
 
 random: False
@@ -42,7 +42,7 @@ nc: False
 smoothing: False
 
 losses:
-  - backdoor
+#  - backdoor
   - normal
 #  - nc_adv
 #  - ewc

@@ -291,6 +291,10 @@ def run(run_helper: ImageHelper):
         run_helper.load_cifar10(run_helper.batch_size)
         model = ResNet18(num_classes=len(run_helper.classes))
         run_helper.fixed_model = ResNet18(num_classes=len(run_helper.classes))
+    elif run_helper.data == 'cifar_vgg':
+        run_helper.load_cifar10(run_helper.batch_size)
+        model = models.vgg19(num_classes=len(run_helper.classes))
+        run_helper.fixed_model = models.vgg19(num_classes=len(run_helper.classes))
     elif run_helper.data == 'mnist':
         run_helper.load_mnist(run_helper.batch_size)
         model = Net()
