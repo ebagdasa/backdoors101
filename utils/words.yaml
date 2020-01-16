@@ -23,7 +23,7 @@ save_model: True
 log: True
 tb: False
 
-save_on_epochs:
+save_on_epochs: []
 word_dictionary_path: /home/eugene/federated/federated/utils/50k_word_dictionary.pt
 
 
