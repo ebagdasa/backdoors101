@@ -1,6 +1,6 @@
 batch_size: 128
 test_batch_size: 100
-lr: 0.05
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 350
@@ -11,7 +11,7 @@ log_interval: 10
 
 scheduler: True
 
-#resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
+resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 
 #resumed_model: ../../bd_proj/smoothing/models/cifar10/resnet110/noise_0.25/checkpoint.pth.tar
 
@@ -19,7 +19,7 @@ scheduler: True
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
 
-data: cifar_vgg
+data: cifar
 
 poisoning_proportion: 1.1
 poison_number: 8
