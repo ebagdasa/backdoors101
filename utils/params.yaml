@@ -47,7 +47,7 @@ losses:
 #  - nc_adv
 #  - ewc
   - latent
-#  - latent_fixed
+  - latent_fixed
 
 
 #poison_images_test:
