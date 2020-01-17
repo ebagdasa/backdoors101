@@ -46,8 +46,8 @@ losses:
   - normal
 #  - nc_adv
 #  - ewc
-#  - latent
-  - latent_fixed
+  - latent
+#  - latent_fixed
 
 
 #poison_images_test:
