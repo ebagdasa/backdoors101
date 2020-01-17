@@ -23,7 +23,7 @@ data: cifar_vgg
 
 poisoning_proportion: 1.1
 poison_number: 8
-backdoor: False
+backdoor: True
 alpha: 0.95
 scale_threshold: 0.1
 
@@ -42,12 +42,12 @@ nc: False
 smoothing: False
 
 losses:
-#  - backdoor
+  - backdoor
   - normal
 #  - nc_adv
 #  - ewc
 #  - latent
-#  - latent_fixed
+  - latent_fixed
 
 
 #poison_images_test:
