@@ -352,7 +352,7 @@ class Helper:
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
         _, latent = model(inputs)
         _, latent_bck = model(inputs_back)
-        loss = torch.norm(latent-latent_bck)
+        loss = (latent-latent_bck).norm(p=float('inf'))
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
