@@ -86,17 +86,42 @@ class ResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
+        # hook for the gradients
+
+    def activations_hook(self, grad):
+        self.gradient = grad
+
+    def get_gradient(self):
+        return self.gradient
+
+    def get_activations(self, x):
+        return self.features(x)
+
+    def features(self, x):
+        out1 = self.relu(self.bn1(self.conv1(x)))
+        out2 = self.layer1(out1)
+        out3 = self.layer2(out2)
+        out4 = self.layer3(out3)
+        out5 = self.layer4(out4)
+
+        return out5
+
     def forward(self, x):
-        out = self.relu(self.bn1(self.conv1(x)))
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
+        out1 = self.relu(self.bn1(self.conv1(x)))
+        out2 = self.layer1(out1)
+        out3 = self.layer2(out2)
+        out4 = self.layer3(out3)
+        out5 = self.layer4(out4)
+
+        # h = out5.register_hook(self.activations_hook)
+
+        out = F.avg_pool2d(out5, 4)
         out_latent = out.view(out.size(0), -1)
         out = self.linear(out_latent)
-        # return out
-        return out, out_latent
+        return out, out5
+        # return out, out5
+        # return out, out_latent # torch.cat([out1.view(-1), out2.view(-1), out3.view(-1), out4.view(-1), out5.view(-1),
+                          #       out_latent.view(-1)])
 
 
 def ResNet18(num_classes=10):

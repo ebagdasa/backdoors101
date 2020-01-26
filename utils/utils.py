@@ -212,19 +212,19 @@ def poison_pattern_mnist(batch, target, poisoned_number, poisoning):
     """
     batch = batch.clone()
     target = target.clone()
-    min_val = torch.min(batch).item()
-    max_val = torch.max(batch).item()
+    min_val = min(torch.min(batch).item(), -1)
+    max_val = max(torch.max(batch).item(), 1)
     for iterator in range(0, len(batch)):
         if random.random()<=poisoning:
-            batch[iterator][0][2][25] = 1
-            batch[iterator][0][2][24] = 1
-            batch[iterator][0][2][23] = 1
-            batch[iterator][0][6][25] = 1
-            batch[iterator][0][6][24] = 1
-            batch[iterator][0][6][23] = 1
-            batch[iterator][0][5][24] = 1
-            batch[iterator][0][4][23] = 1
-            batch[iterator][0][3][24] = 1
+            batch[iterator][0][2][25] = max_val
+            batch[iterator][0][2][24] = min_val
+            batch[iterator][0][2][23] = max_val
+            batch[iterator][0][6][25] = max_val
+            batch[iterator][0][6][24] = min_val
+            batch[iterator][0][6][23] = max_val
+            batch[iterator][0][5][24] = max_val
+            batch[iterator][0][4][23] = min_val
+            batch[iterator][0][3][24] = max_val
             target[iterator] = poisoned_number
     return batch, target
 
@@ -239,15 +239,15 @@ def poison_test_pattern_mnist(batch, target, poisoned_number):
     for iterator in range(0, len(batch)):
 
         batch[iterator] = batch[iterator]
-        batch[iterator][0][2][25] = 1
-        batch[iterator][0][2][24] = 1
-        batch[iterator][0][2][23] = 1
-        batch[iterator][0][6][25] = 1
-        batch[iterator][0][6][24] = 1
-        batch[iterator][0][6][23] = 1
-        batch[iterator][0][5][24] = 1
-        batch[iterator][0][4][23] = 1
-        batch[iterator][0][3][24] = 1
+        batch[iterator][0][2][25] = max_val
+        batch[iterator][0][2][24] = min_val
+        batch[iterator][0][2][23] = max_val
+        batch[iterator][0][6][25] = max_val
+        batch[iterator][0][6][24] = min_val
+        batch[iterator][0][6][23] = max_val
+        batch[iterator][0][5][24] = max_val
+        batch[iterator][0][4][23] = min_val
+        batch[iterator][0][3][24] = max_val
 
         target[iterator] = poisoned_number
     return True

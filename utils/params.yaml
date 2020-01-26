@@ -11,9 +11,9 @@ log_interval: 10
 
 scheduler: True
 
-#resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
+resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 
-resumed_model: model_image_cifar_Oct.01_11.37.45/model_last.pt.tar
+#resumed_model: model_image_cifar_Oct.01_11.37.45/model_last.pt.tar
 
 #resumed_model: ../../bd_proj/smoothing/models/cifar10/resnet110/noise_0.25/checkpoint.pth.tar
 
@@ -48,8 +48,8 @@ losses:
   - normal
 #  - nc_adv
 #  - ewc
-  - latent
-#  - latent_fixed
+#  - latent
+  - latent_fixed
 
 
 #poison_images_test:
