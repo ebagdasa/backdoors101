@@ -48,13 +48,13 @@ losses:
   - normal
 #  - nc_adv
 #  - ewc
-#  - latent
-  - latent_fixed
+  - latent
+#  - latent_fixed
 
 losses_scales:
   backdoor: 0.2
   normal: 0.95
-  latent_fixed: 0.1
+  latent: 0.5
 
 #poison_images_test:
 #  - 389
