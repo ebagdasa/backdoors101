@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 from collections import defaultdict, OrderedDict
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.models as models
-from models.original_resnet import resnet152
+from models.original_resnet import resnet18
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
@@ -116,7 +116,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         tasks = helper.losses
 
     for i, data in enumerate(train_loader, 0):
-        if i > 50 and run_helper.data == 'imagenet':
+        if i > 100 and run_helper.data == 'imagenet':
             break
         # get the inputs
         if run_helper.data == 'multimnist':
@@ -320,8 +320,8 @@ def run(run_helper: ImageHelper):
         model = Net()
     elif run_helper.data == 'imagenet':
         run_helper.load_imagenet()
-        model = resnet152(pretrained=True)
-        run_helper.fixed_model = resnet152(pretrained=True)
+        model = resnet18(pretrained=True)
+        run_helper.fixed_model = resnet18(pretrained=True)
         run_helper.fixed_model.to(run_helper.device)
 
     else:
