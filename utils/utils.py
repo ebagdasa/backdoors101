@@ -110,16 +110,16 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
         #     batch[iterator + 1] = batch[iterator]
             for i in range(3):
                 batch[iterator][i][2][25] = max_val
-                # batch[iterator][i][2][24] = min_val
-                # batch[iterator][i][2][23] = max_val
-                #
-                # batch[iterator][i][6][25] = max_val
-                # batch[iterator][i][6][24] = min_val
-                # batch[iterator][i][6][23] = max_val
-                #
-                # batch[iterator][i][5][24] = max_val
+                batch[iterator][i][2][24] = min_val
+                batch[iterator][i][2][23] = max_val
+
+                batch[iterator][i][6][25] = max_val
+                batch[iterator][i][6][24] = min_val
+                batch[iterator][i][6][23] = max_val
+
+                batch[iterator][i][5][24] = max_val
                 batch[iterator][i][4][23] = min_val
-                # batch[iterator][i][3][24] = max_val
+                batch[iterator][i][3][24] = max_val
 
                 # for imagenet comment
                 # batch[iterator][i][12][25] = max_val
@@ -210,16 +210,16 @@ def poison_test_pattern(batch, target, poisoned_number):
         for i in range(3):
             batch[iterator] = batch[iterator]
             batch[iterator][i][2][25] = max_val
-            # batch[iterator][i][2][24] = min_val
-            # batch[iterator][i][2][23] = max_val
-            #
-            # batch[iterator][i][6][25] = max_val
-            # batch[iterator][i][6][24] = min_val
-            # batch[iterator][i][6][23] = max_val
-            #
-            # batch[iterator][i][5][24] = max_val
+            batch[iterator][i][2][24] = min_val
+            batch[iterator][i][2][23] = max_val
+
+            batch[iterator][i][6][25] = max_val
+            batch[iterator][i][6][24] = min_val
+            batch[iterator][i][6][23] = max_val
+
+            batch[iterator][i][5][24] = max_val
             batch[iterator][i][4][23] = min_val
-            # batch[iterator][i][3][24] = max_val
+            batch[iterator][i][3][24] = max_val
 
             # for imagenet comment
             # batch[iterator][i][12][25] = max_val
