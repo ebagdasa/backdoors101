@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from collections import defaultdict, OrderedDict
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.models as models
+from models.original_resnet import resnet152
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
@@ -27,6 +28,9 @@ from prompt_toolkit import prompt
 from utils.min_norm_solvers import *
 
 logger = logging.getLogger('logger')
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.enabled = True
+torch.backends.cudnn.benchmark = True
 
 
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
@@ -112,6 +116,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         tasks = helper.losses
 
     for i, data in enumerate(train_loader, 0):
+        if i > 50 and run_helper.data == 'imagenet':
+            break
         # get the inputs
         if run_helper.data == 'multimnist':
             inputs, labels, second_labels = data
@@ -185,13 +191,21 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 run_helper.mixed.grad_weights(mask=False, model=True)
                 tasks = helper.losses
 
-
-            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
-                                                         labels, labels_back, fixed_model, compute_grad=True)
-            if helper.nc:
-                loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,
-                                                                  grads=True)
-            scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
+            if helper.normalize != 'eq':
+                loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
+                                                             labels, labels_back, fixed_model, compute_grad=True)
+                for t in tasks:
+                    if loss_data[t].item() == 0:
+                        loss_data.pop(t)
+                        grads.pop(t)
+                        tasks = tasks.copy()
+                        tasks.remove(t)
+                if helper.nc:
+                    loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,
+                                                                      grads=True)
+                scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
+            else:
+                scale = dict()
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=False)
             if helper.nc:
@@ -200,7 +214,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             loss_flag = True
             if helper.normalize == 'eq':
                 for t in tasks:
-                    scale[t] = 1/len(scale)
+                    scale[t] = run_helper.params['losses_scales'].get(t, 0.5)
+                    running_scale[t] = scale[t]
             for zi, t in enumerate(tasks):
                 if zi == 0:
                     loss = scale[t] * loss_data[t]
@@ -248,7 +263,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     correct_labels = []
     predict_labels = []
     with torch.no_grad():
-        for data in tqdm(run_helper.test_loader):
+        for i, data in tqdm(enumerate(run_helper.test_loader)):
+            if i > 50 and run_helper.data == 'imagenet':
+                break
             if run_helper.data == 'multimnist':
                 inputs, labels, second_labels = data
                 second_labels = second_labels.to(run_helper.device)
@@ -301,6 +318,11 @@ def run(run_helper: ImageHelper):
     elif run_helper.data == 'multimnist':
         run_helper.load_multimnist(run_helper.batch_size)
         model = Net()
+    elif run_helper.data == 'imagenet':
+        run_helper.load_imagenet()
+        model = resnet152(pretrained=True)
+        run_helper.fixed_model = resnet152(pretrained=True)
+        run_helper.fixed_model.to(run_helper.device)
 
     else:
         raise Exception('Specify dataset')

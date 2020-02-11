@@ -120,6 +120,26 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
                 # batch[iterator][i][5][24] = max_val
                 batch[iterator][i][4][23] = min_val
                 # batch[iterator][i][3][24] = max_val
+
+                # for imagenet comment
+                # batch[iterator][i][12][25] = max_val
+                # batch[iterator][i][12][24] = min_val
+                # batch[iterator][i][12][23] = max_val
+                # batch[iterator][i][16][25] = max_val
+                # batch[iterator][i][16][24] = min_val
+                # batch[iterator][i][16][23] = max_val
+                # batch[iterator][i][15][24] = max_val
+                # batch[iterator][i][14][23] = min_val
+                # batch[iterator][i][13][24] = max_val
+                # batch[iterator][i][12][15] = max_val
+                # batch[iterator][i][12][14] = min_val
+                # batch[iterator][i][12][13] = max_val
+                # batch[iterator][i][16][15] = max_val
+                # batch[iterator][i][16][14] = min_val
+                # batch[iterator][i][16][13] = max_val
+                # batch[iterator][i][15][14] = max_val
+                # batch[iterator][i][14][13] = min_val
+                # batch[iterator][i][13][14] = max_val
             target[iterator] = poisoned_number
         # elif random.random() <= poisoning:
         #     for i in range(3):
@@ -140,7 +160,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
 def poison_train(helper, inputs, labels, poisoned_number, poisoning):
     if helper.poison_images:
         return poison_images(inputs, labels, poisoned_number, helper)
-    elif helper.data == 'cifar':
+    elif helper.data in ['cifar', 'imagenet']:
         return poison_pattern(inputs, labels, poisoned_number,
                                                        poisoning)
     elif helper.data in ['mnist', 'multimnist']:
@@ -151,7 +171,7 @@ def poison_train(helper, inputs, labels, poisoned_number, poisoning):
 def poison_test(helper, inputs, labels, poisoned_number):
     if helper.poison_images_test:
         return poison_images_test(inputs, labels, poisoned_number, helper)
-    elif helper.data == 'cifar':
+    elif helper.data in ['cifar', 'imagenet']:
         return poison_test_pattern(inputs, labels, poisoned_number)
     elif helper.data in ['mnist', 'multimnist']:
         return poison_test_pattern_mnist(inputs, labels, poisoned_number)
@@ -200,6 +220,26 @@ def poison_test_pattern(batch, target, poisoned_number):
             # batch[iterator][i][5][24] = max_val
             batch[iterator][i][4][23] = min_val
             # batch[iterator][i][3][24] = max_val
+
+            # for imagenet comment
+            # batch[iterator][i][12][25] = max_val
+            # batch[iterator][i][12][24] = min_val
+            # batch[iterator][i][12][23] = max_val
+            # batch[iterator][i][16][25] = max_val
+            # batch[iterator][i][16][24] = min_val
+            # batch[iterator][i][16][23] = max_val
+            # batch[iterator][i][15][24] = max_val
+            # batch[iterator][i][14][23] = min_val
+            # batch[iterator][i][13][24] = max_val
+            # batch[iterator][i][12][15] = max_val
+            # batch[iterator][i][12][14] = min_val
+            # batch[iterator][i][12][13] = max_val
+            # batch[iterator][i][16][15] = max_val
+            # batch[iterator][i][16][14] = min_val
+            # batch[iterator][i][16][13] = max_val
+            # batch[iterator][i][15][14] = max_val
+            # batch[iterator][i][14][13] = min_val
+            # batch[iterator][i][13][14] = max_val
 
             target[iterator] = poisoned_number
     return True
