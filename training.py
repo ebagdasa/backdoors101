@@ -263,7 +263,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     correct_labels = []
     predict_labels = []
     with torch.no_grad():
-        for i, data in tqdm(enumerate(run_helper.test_loader)):
+        for i, data in enumerate(run_helper.test_loader):
             if i > 50 and run_helper.data == 'imagenet':
                 break
             if run_helper.data == 'multimnist':
