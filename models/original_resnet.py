@@ -202,7 +202,7 @@ class ResNet(nn.Module):
         return self.features(x)
 
     def features(self, x):
-        out1 = self.relu(self.bn1(self.conv1(x)))
+        out1 = self.maxpool(self.relu(self.bn1(self.conv1(x))))
         out2 = self.layer1(out1)
         out3 = self.layer2(out2)
         out4 = self.layer3(out3)

@@ -1,6 +1,7 @@
 import logging
 
 from models.simple import Discriminator
+from utils.msssim import MSSSIM
 from utils.utils import th
 
 logger = logging.getLogger('logger')
@@ -77,6 +78,8 @@ class Helper:
 
         self.commit = self.params.get('commit', False)
         self.bptt = self.params.get('bptt', False)
+
+        self.msssim = MSSSIM(window_size=2)
 
 
         if self.log:
@@ -349,15 +352,28 @@ class Helper:
 
         return loss, grads
 
+    # def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
+    #     _, latent = model(inputs)
+    #     _, latent_bck = model(inputs_back)
+    #     loss = (latent-latent_bck).norm(p=float('inf'))
+    #     if grads:
+    #         loss.backward()
+    #         grads = self.copy_grad(model)
+    #
+    #     return loss, grads
+
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
-        _, latent = model(inputs)
-        _, latent_bck = model(inputs_back)
-        loss = (latent-latent_bck).norm(p=float('inf'))
+
+        back_features =  torch.mean(model.features(inputs_back), dim=1, keepdim=True)
+        features = torch.mean(model.features(inputs), dim=1, keepdim=True)
+
+        loss = self.msssim(features, back_features)
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
 
         return loss, grads
+
 
     def compute_losses(self, tasks, model, criterion, inputs, inputs_back,
                        labels, labels_back, fixed_model, compute_grad=True):
