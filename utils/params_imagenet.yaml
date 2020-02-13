@@ -52,7 +52,7 @@ losses:
 #  - latent_fixed
 
 losses_scales:
-  backdoor: 0.2
+  backdoor: 0.1
   normal: 0.95
   latent: 0.5
 #  latent_fixed: 0.2
