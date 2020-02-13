@@ -53,8 +53,8 @@ losses:
 
 losses_scales:
   backdoor: 0.2
-  normal: 0.4
-  latent: 10.0
+  normal: 1.0
+  latent: 0.2
 #  latent_fixed: 0.2
 
 #poison_images_test:

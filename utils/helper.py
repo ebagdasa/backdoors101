@@ -381,23 +381,25 @@ class Helper:
 
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
 
-        pooled = self.get_grads(model, inputs, kwargs['labels'])
-        features = model.features(inputs)
-        features = features * pooled.view(1, 512, 1, 1)
+        # pooled = self.get_grads(model, inputs, kwargs['labels'])
+        # features = model.features(inputs)
+        # features = features * pooled.view(1, 512, 1, 1)
 
         pooled_back = self.get_grads(model, inputs_back, kwargs['labels_back'])
         back_features = model.features(inputs_back)
         back_features = back_features * pooled_back.view(1, 512, 1, 1)
 
-        features = torch.mean(features, dim=1, keepdim = True)
-        back_features = torch.mean(back_features, dim=1, keepdim = True)
-        features = torch.nn.functional.relu(features) / features.max()
-        back_features = torch.nn.functional.relu(back_features) / features.max()
-        try:
-            loss = 1 - self.msssim(features, back_features)
-        except RuntimeError:
-            print('runtime error')
-            loss = torch.tensor(0)
+        # features = torch.mean(features, dim=[0,1], keepdim = False)
+        # features = torch.nn.functional.relu(features) / features.max()
+
+        back_features = torch.mean(back_features, dim=[0,1], keepdim = False)
+        back_features = torch.nn.functional.relu(back_features) / back_features.max()
+        loss = back_features[1, 1] #- features[1, 1]
+        # try:
+        #     loss = 1 - self.msssim(features, back_features)
+        # except RuntimeError:
+        #     print('runtime error')
+        #     loss = torch.tensor(0)
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
