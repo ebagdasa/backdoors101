@@ -377,18 +377,18 @@ class Helper:
 
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
 
-        pooled = self.get_grads(model, inputs)
+        # pooled = self.get_grads(model, inputs)
         features = model.features(inputs)
 
-        features = features * pooled.view(1, 512, 1, 1)
+        # features = features * pooled.view(1, 512, 1, 1)
 
-        pooled_back = self.get_grads(model, inputs_back)
+        # pooled_back = self.get_grads(model, inputs_back)
         back_features = model.features(inputs_back)
 
-        back_features = back_features * pooled_back.view(1, 512, 1, 1)
+        # back_features = back_features * pooled_back.view(1, 512, 1, 1)
 
-        features = torch.mean(features, dim = 1, keepdim = True)
-        back_features = torch.mean(back_features, dim = 1, keepdim = True)
+        features = torch.mean(features, dim=1, keepdim = True)
+        back_features = torch.mean(back_features, dim=1, keepdim = True)
         features = torch.nn.functional.relu(features) / features.max()
         back_features = torch.nn.functional.relu(back_features) / features.max()
         loss = 1 - self.msssim(features, back_features)
