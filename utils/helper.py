@@ -366,8 +366,10 @@ class Helper:
         model.eval()
         model.zero_grad()
         pred, _ = model(inputs)
-
-        pred.max().backward(retain_graph=True)
+        z = torch.zeros_like(pred)
+        z[:, self.poison_number] = 1
+        pred = pred * z
+        pred.sum().backward(retain_graph=True)
 
         gradients = model.get_gradient()
         pooled_gradients = torch.mean(gradients, dim=[0, 2, 3]).detach()
@@ -377,15 +379,13 @@ class Helper:
 
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
 
-        # pooled = self.get_grads(model, inputs)
+        pooled = self.get_grads(model, inputs)
         features = model.features(inputs)
+        features = features * pooled.view(1, 512, 1, 1)
 
-        # features = features * pooled.view(1, 512, 1, 1)
-
-        # pooled_back = self.get_grads(model, inputs_back)
+        pooled_back = self.get_grads(model, inputs_back)
         back_features = model.features(inputs_back)
-
-        # back_features = back_features * pooled_back.view(1, 512, 1, 1)
+        back_features = back_features * pooled_back.view(1, 512, 1, 1)
 
         features = torch.mean(features, dim=1, keepdim = True)
         back_features = torch.mean(back_features, dim=1, keepdim = True)

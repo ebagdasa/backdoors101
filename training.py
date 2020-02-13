@@ -117,7 +117,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         tasks = helper.losses
 
     for i, data in enumerate(train_loader, 0):
-        if i > 100 and run_helper.data == 'imagenet':
+        if i > 150 and run_helper.data == 'imagenet':
             break
         # get the inputs
         if run_helper.data == 'multimnist':
