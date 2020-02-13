@@ -35,7 +35,7 @@ save_model: True
 log: True
 tb: False
 
-random_seed: 7
+random_seed: 8
 gan: False
 defense: True
 transform_train: True
@@ -54,7 +54,7 @@ losses:
 losses_scales:
   backdoor: 0.2
   normal: 1.0
-  latent: 0.2
+  latent: 0.1
 #  latent_fixed: 0.2
 
 #poison_images_test:
