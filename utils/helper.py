@@ -394,7 +394,8 @@ class Helper:
 
         back_features = torch.mean(back_features, dim=1, keepdim = False)
         back_features = torch.nn.functional.relu(back_features) / back_features.max()
-        loss = torch.abs(back_features[:, 1, 1] - features[:, 1, 1]).mean()
+        # loss = torch.abs(back_features[:, 0:3, 0:3] - features[:, 0:3, 0:3]).mean()
+        loss = back_features[:, 0:3, 0:3].sum()
         # try:
         #     loss = 1 - self.msssim(features, back_features)
         # except RuntimeError:
