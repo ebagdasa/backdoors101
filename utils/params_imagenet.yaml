@@ -35,7 +35,7 @@ save_model: True
 log: True
 tb: False
 
-random: True
+random_seed: 8
 gan: False
 defense: True
 transform_train: True

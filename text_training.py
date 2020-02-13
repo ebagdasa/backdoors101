@@ -184,8 +184,8 @@ if __name__ == '__main__':
         table = create_table(helper.params)
         helper.writer.add_text('Model Params', table)
 
-    if not helper.random:
-        helper.fix_random()
+    if helper.random_seed:
+        helper.fix_random(helper.random_seed)
 
     logger.error(yaml.dump(helper.params))
     try:

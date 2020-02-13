@@ -56,7 +56,7 @@ class Helper:
         self.poison_number = self.params.get('poison_number', 8)
         self.log = self.params.get('log', True)
         self.tb = self.params.get('tb', True)
-        self.random = self.params.get('random', True)
+        self.random_seed = self.params.get('random_seed', False)
         self.alpha = self.params.get('alpha', 1)
 
         self.scale_threshold = self.params.get('scale_threshold', 1)
@@ -275,8 +275,8 @@ class Helper:
             return False
 
     @staticmethod
-    def fix_random(seed=0):
-        # logger.warning('Setting random seed for reproducible results.')
+    def fix_random(seed=1):
+        # logger.warning('Setting random_seed seed for reproducible results.')
         random.seed(seed)
         torch.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
