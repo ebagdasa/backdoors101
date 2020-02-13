@@ -362,12 +362,14 @@ class Helper:
     #
     #     return loss, grads
 
-    def get_grads(self, model, inputs):
+    def get_grads(self, model, inputs, labels):
         model.eval()
         model.zero_grad()
         pred, _ = model(inputs)
         z = torch.zeros_like(pred)
-        z[:, self.poison_number] = 1
+
+        z[list(range(labels.shape[0])), labels] = 1
+
         pred = pred * z
         pred.sum().backward(retain_graph=True)
 
@@ -379,11 +381,11 @@ class Helper:
 
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
 
-        pooled = self.get_grads(model, inputs)
+        pooled = self.get_grads(model, inputs, kwargs['labels'])
         features = model.features(inputs)
         features = features * pooled.view(1, 512, 1, 1)
 
-        pooled_back = self.get_grads(model, inputs_back)
+        pooled_back = self.get_grads(model, inputs_back, kwargs['labels_back'])
         back_features = model.features(inputs_back)
         back_features = back_features * pooled_back.view(1, 512, 1, 1)
 
@@ -391,7 +393,11 @@ class Helper:
         back_features = torch.mean(back_features, dim=1, keepdim = True)
         features = torch.nn.functional.relu(features) / features.max()
         back_features = torch.nn.functional.relu(back_features) / features.max()
-        loss = 1 - self.msssim(features, back_features)
+        try:
+            loss = 1 - self.msssim(features, back_features)
+        except RuntimeError:
+            print('runtime error')
+            loss = torch.tensor(0)
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
@@ -417,7 +423,8 @@ class Helper:
                 loss_data[t], grads[t] = self.compute_latent_fixed_loss(model, fixed_model, inputs, grads=compute_grad)
             elif t == 'latent':
                 loss_data[t], grads[t] = self.compute_latent_loss(model, inputs, inputs_back, grads=compute_grad,
-                                                                  fixed_model=fixed_model)
+                                                                  fixed_model=fixed_model, labels=labels,
+                                                                  labels_back=labels_back)
             elif t == 'ewc':
                 loss_data[t], grads[t] = self.ewc_loss(model, grads=compute_grad)
             elif t == 'mask_norm':
