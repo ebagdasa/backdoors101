@@ -101,58 +101,21 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
     """
     batch = batch.clone()
     target = target.clone()
-    min_val = min(torch.min(batch).item(), -1)
-    max_val = max(torch.max(batch).item(), 1)
+    min_val = -2.2
+    max_val = 2.5
     for iterator in range(0, len(batch)):
-        # batch += torch.zeros_like(batch).normal_(0, 0.01)
-
         if random.random() <= poisoning:
-        #     batch[iterator + 1] = batch[iterator]
-            for i in range(3):
-                batch[iterator][i][2][25] = max_val
-                batch[iterator][i][2][24] = min_val
-                batch[iterator][i][2][23] = max_val
+            batch[:, :, 2, 25] = max_val
+            batch[:, :, 2, 24] = min_val
+            batch[:, :, 2, 23] = max_val
+            batch[:, :, 6, 25] = max_val
+            batch[:, :, 6, 24] = min_val
+            batch[:, :, 6, 23] = max_val
+            batch[:, :, 5, 24] = max_val
+            batch[:, :, 4, 23] = min_val
+            batch[:, :, 3, 24] = max_val
 
-                batch[iterator][i][6][25] = max_val
-                batch[iterator][i][6][24] = min_val
-                batch[iterator][i][6][23] = max_val
-
-                batch[iterator][i][5][24] = max_val
-                batch[iterator][i][4][23] = min_val
-                batch[iterator][i][3][24] = max_val
-
-                # for imagenet comment
-                # batch[iterator][i][12][25] = max_val
-                # batch[iterator][i][12][24] = min_val
-                # batch[iterator][i][12][23] = max_val
-                # batch[iterator][i][16][25] = max_val
-                # batch[iterator][i][16][24] = min_val
-                # batch[iterator][i][16][23] = max_val
-                # batch[iterator][i][15][24] = max_val
-                # batch[iterator][i][14][23] = min_val
-                # batch[iterator][i][13][24] = max_val
-                # batch[iterator][i][12][15] = max_val
-                # batch[iterator][i][12][14] = min_val
-                # batch[iterator][i][12][13] = max_val
-                # batch[iterator][i][16][15] = max_val
-                # batch[iterator][i][16][14] = min_val
-                # batch[iterator][i][16][13] = max_val
-                # batch[iterator][i][15][14] = max_val
-                # batch[iterator][i][14][13] = min_val
-                # batch[iterator][i][13][14] = max_val
             target[iterator] = poisoned_number
-        # elif random.random() <= poisoning:
-        #     for i in range(3):
-        #         batch[iterator][i][2][25] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][2][24] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][2][23] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][6][25] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][6][24] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][6][23] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][5][24] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][4][23] = 0.01*random.randrange(-90, 90, 1)
-        #         batch[iterator][i][3][24] = 0.01*random.randrange(-90, 90, 1)
-        #
 
     return batch, target
 
@@ -203,43 +166,18 @@ def poison_test_pattern(batch, target, poisoned_number):
     Poison the test set by adding patter to every image and changing target
     for everyone.
     """
-    min_val = min(torch.min(batch).item(), -1)
-    max_val = max(torch.max(batch).item(), 1)
+    min_val = -2.2
+    max_val = 2.5
     for iterator in range(0, len(batch)):
-
-        for i in range(3):
-            batch[iterator] = batch[iterator]
-            batch[iterator][i][2][25] = max_val
-            batch[iterator][i][2][24] = min_val
-            batch[iterator][i][2][23] = max_val
-
-            batch[iterator][i][6][25] = max_val
-            batch[iterator][i][6][24] = min_val
-            batch[iterator][i][6][23] = max_val
-
-            batch[iterator][i][5][24] = max_val
-            batch[iterator][i][4][23] = min_val
-            batch[iterator][i][3][24] = max_val
-
-            # for imagenet comment
-            # batch[iterator][i][12][25] = max_val
-            # batch[iterator][i][12][24] = min_val
-            # batch[iterator][i][12][23] = max_val
-            # batch[iterator][i][16][25] = max_val
-            # batch[iterator][i][16][24] = min_val
-            # batch[iterator][i][16][23] = max_val
-            # batch[iterator][i][15][24] = max_val
-            # batch[iterator][i][14][23] = min_val
-            # batch[iterator][i][13][24] = max_val
-            # batch[iterator][i][12][15] = max_val
-            # batch[iterator][i][12][14] = min_val
-            # batch[iterator][i][12][13] = max_val
-            # batch[iterator][i][16][15] = max_val
-            # batch[iterator][i][16][14] = min_val
-            # batch[iterator][i][16][13] = max_val
-            # batch[iterator][i][15][14] = max_val
-            # batch[iterator][i][14][13] = min_val
-            # batch[iterator][i][13][14] = max_val
+            batch[:, :, 2, 25] = max_val
+            batch[:, :, 2, 24] = min_val
+            batch[:, :, 2, 23] = max_val
+            batch[:, :, 6, 25] = max_val
+            batch[:, :, 6, 24] = min_val
+            batch[:, :, 6, 23] = max_val
+            batch[:, :, 5, 24] = max_val
+            batch[:, :, 4, 23] = min_val
+            batch[:, :, 3, 24] = max_val
 
             target[iterator] = poisoned_number
     return True
