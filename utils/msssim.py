@@ -151,7 +151,7 @@ if __name__ == '__main__':
     # b = torch.nn.functional.interpolate(b, size=224)
 
 
-    m = MSSSIM(window_size=3)
+    m = MSSSIM(window_size=2)
 
     res = m(a, b)
 

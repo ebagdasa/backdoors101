@@ -362,12 +362,36 @@ class Helper:
     #
     #     return loss, grads
 
+    def get_grads(self, model, inputs):
+        model.eval()
+        model.zero_grad()
+        pred, _ = model(inputs)
+
+        pred.max().backward(retain_graph=True)
+
+        gradients = model.get_gradient()
+        pooled_gradients = torch.mean(gradients, dim=[0, 2, 3]).detach()
+        model.zero_grad()
+
+        return pooled_gradients
+
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
 
-        back_features =  torch.mean(model.features(inputs_back), dim=1, keepdim=True)
-        features = torch.mean(model.features(inputs), dim=1, keepdim=True)
+        pooled = self.get_grads(model, inputs)
+        features = model.features(inputs)
 
-        loss = self.msssim(features, back_features)
+        features = features * pooled.view(1, 512, 1, 1)
+
+        pooled_back = self.get_grads(model, inputs_back)
+        back_features = model.features(inputs_back)
+
+        back_features = back_features * pooled_back.view(1, 512, 1, 1)
+
+        features = torch.mean(features, dim = 1, keepdim = True)
+        back_features = torch.mean(back_features, dim = 1, keepdim = True)
+        features = torch.nn.functional.relu(features) / features.max()
+        back_features = torch.nn.functional.relu(back_features) / features.max()
+        loss = 1 - self.msssim(features, back_features)
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
@@ -382,7 +406,8 @@ class Helper:
         # if not compute_grad:
         #     tasks = ['normal', 'backdoor', 'latent_fixed', 'latent']
         for t in tasks:
-
+            if compute_grad:
+                model.zero_grad()
             if t == 'normal':
                 loss_data[t], grads[t] = self.compute_normal_loss(model, criterion, inputs, labels, grads=compute_grad)
             elif t == 'backdoor':
@@ -391,7 +416,8 @@ class Helper:
             elif t == 'latent_fixed':
                 loss_data[t], grads[t] = self.compute_latent_fixed_loss(model, fixed_model, inputs, grads=compute_grad)
             elif t == 'latent':
-                loss_data[t], grads[t] = self.compute_latent_loss(model, inputs, inputs_back, grads=compute_grad)
+                loss_data[t], grads[t] = self.compute_latent_loss(model, inputs, inputs_back, grads=compute_grad,
+                                                                  fixed_model=fixed_model)
             elif t == 'ewc':
                 loss_data[t], grads[t] = self.ewc_loss(model, grads=compute_grad)
             elif t == 'mask_norm':

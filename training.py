@@ -31,6 +31,7 @@ logger = logging.getLogger('logger')
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
+torch.autograd.set_detect_anomaly(True)
 
 
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
