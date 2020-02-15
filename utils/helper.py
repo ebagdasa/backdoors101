@@ -19,6 +19,25 @@ from torch.nn import functional as F
 from torch import autograd
 
 
+class discriminator(nn.Module):
+
+    def __init__(self, inp, out):
+        super(discriminator, self).__init__()
+
+        self.net = nn.Sequential(
+            nn.Linear(inp, 300),
+            nn.ReLU(inplace=True),
+            nn.Linear(300, 300),
+            nn.ReLU(inplace=True),
+            nn.Linear(300, 200),
+            nn.ReLU(inplace=True),
+            nn.Linear(200, out),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        x = self.net(x)
+        return x
 
 class Helper:
     def __init__(self, current_time, params, name):

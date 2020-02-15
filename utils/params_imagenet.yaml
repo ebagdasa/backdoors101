@@ -48,7 +48,7 @@ losses:
   - normal
 #  - nc_adv
 #  - ewc
-  - latent
+#  - latent
 #  - latent_fixed
 
 losses_scales:
