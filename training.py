@@ -340,7 +340,7 @@ def run(run_helper: ImageHelper):
     #     run_helper.fixed_model = run_helper.fixed_model[1]
 
     if run_helper.nc:
-        helper.mixed = Mixed(model)
+        helper.mixed = Mixed(model, size=run_helper.train_dataset[0][0].shape[1])
         helper.mixed = helper.mixed.to(run_helper.device)
         helper.mixed_optim = torch.optim.Adam(helper.mixed.parameters(), lr=0.01)
 
