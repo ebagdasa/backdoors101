@@ -156,17 +156,17 @@ class Mixed(nn.Module):
     def __init__(self, model, size):
         super().__init__()
         self.size = size
-        self.pattern = torch.zeros([3, self.size , self.size ], requires_grad=False)\
+        self.pattern = torch.zeros([self.size , self.size ], requires_grad=False)\
                                  + torch.normal(0, 10, [self.size , self.size ])
 
-        self.mask = torch.zeros([3, self.size , self.size ], requires_grad=True)\
+        self.mask = torch.zeros([self.size , self.size ], requires_grad=True)\
                     + torch.normal(-1, 0.5, [self.size , self.size ])
-        self.mask[:, :, :22] = -1
-        self.mask[:, :, 25:] = -1
-        self.mask[:, 7:, :] = -1
-        self.pattern[:, :, :22] = -1
-        self.pattern[:, :, 25:] = -1
-        self.pattern[:, 7:, :] = -1
+        # self.mask[:, :, :22] = -1
+        # self.mask[:, :, 25:] = -1
+        # self.mask[:, 7:, :] = -1
+        # self.pattern[:, :, :22] = -1
+        # self.pattern[:, :, 25:] = -1
+        # self.pattern[:, 7:, :] = -1
         self.mask = Parameter(self.mask)
         self.pattern = Parameter(self.pattern)
         self.resnet = model
@@ -187,10 +187,10 @@ class Mixed(nn.Module):
                 n.requires_grad_(model)
 
     def init_mask(self, device):
-        p = torch.zeros([3, self.size , self.size ], requires_grad=False) \
+        p = torch.zeros([self.size , self.size ], requires_grad=False) \
             + torch.normal(0, 10, [self.size , self.size ])
         self.pattern.data = p.to(device)
-        m = torch.zeros([3, self.size , self.size ], requires_grad=True) \
+        m = torch.zeros([self.size , self.size ], requires_grad=True) \
             + torch.normal(-1, 0.5, [self.size , self.size ])
 
         self.mask.data = m.to(device)
