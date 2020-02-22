@@ -29,7 +29,7 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.1
 
-normalize: eq
+normalize: loss+
 
 save_model: True
 log: True
@@ -49,7 +49,7 @@ losses:
   - nc_adv
 #  - ewc
 #  - latent
-  - latent_fixed
+#  - latent_fixed
 
 losses_scales:
   backdoor: 0.2
