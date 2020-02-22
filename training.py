@@ -194,15 +194,16 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             if helper.normalize != 'eq':
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                              labels, labels_back, fixed_model, compute_grad=True)
+                if helper.nc:
+                    loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,grads=True)
+
                 for t in tasks:
                     if loss_data[t].item() == 0:
                         loss_data.pop(t)
                         grads.pop(t)
                         tasks = tasks.copy()
                         tasks.remove(t)
-                if helper.nc:
-                    loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,
-                                                                      grads=True)
+
                 scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
             else:
                 scale = dict()
