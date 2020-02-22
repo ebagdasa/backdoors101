@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from torch.nn.parameter import Parameter
 
-from utils.utils import th
+from utils.utils import th, thp
 
 _CIFAR10_MEAN = [0.4914, 0.4822, 0.4465]
 _CIFAR10_STDDEV = [0.2023, 0.1994, 0.2010]
@@ -156,12 +156,11 @@ class Mixed(nn.Module):
     def __init__(self, model, size):
         super().__init__()
         self.size = size
-        self.pattern = torch.zeros([self.size , self.size ], requires_grad=False)
-                                 # + torch.normal(0, 10, [self.size , self.size ])
-        self.init_pattern()
+        self.pattern = torch.zeros([3, self.size , self.size ], requires_grad=True)\
+                             + torch.normal(0, 2, [3, self.size , self.size ])
 
-        self.mask = torch.zeros([self.size , self.size ], requires_grad=True)\
-                    + torch.normal(1, 0.01, [self.size , self.size ])
+        self.mask = torch.zeros([3, self.size , self.size ], requires_grad=True)
+                   # + torch.normal(0, 2, [self.size , self.size ])
         # self.mask[:, :, :22] = -1
         # self.mask[:, :, 25:] = -1
         # self.mask[:, 7:, :] = -1
@@ -174,7 +173,7 @@ class Mixed(nn.Module):
 
     def forward(self, x):
         maskh = th(self.mask)
-        patternh = th(self.pattern)
+        patternh = thp(self.pattern)
         x = (1 - maskh) * x + maskh * patternh
         x, latent = self.resnet(x)
 
@@ -189,16 +188,17 @@ class Mixed(nn.Module):
 
     def init_pattern(self):
         min_val = -2.2
-        max_val = 2.5
-        self.pattern[2, 25] = max_val
-        self.pattern[2, 24] = min_val
-        self.pattern[2, 23] = max_val
-        self.pattern[6, 25] = max_val
-        self.pattern[6, 24] = min_val
-        self.pattern[6, 23] = max_val
-        self.pattern[5, 24] = max_val
-        self.pattern[4, 23] = min_val
-        self.pattern[3, 24] = max_val
+        max_val = 2.2
+        self.pattern.data[:,:,:] = min_val
+        self.pattern.data[:, 2, 25] = max_val
+        self.pattern.data[:, 2, 24] = min_val
+        self.pattern.data[:, 2, 23] = max_val
+        self.pattern.data[:, 6, 25] = max_val
+        self.pattern.data[:, 6, 24] = min_val
+        self.pattern.data[:, 6, 23] = max_val
+        self.pattern.data[:, 5, 24] = max_val
+        self.pattern.data[:, 4, 23] = min_val
+        self.pattern.data[:, 3, 24] = max_val
 
 class NormalizeLayer(torch.nn.Module):
     """Standardize the channels of a batch of images by subtracting the dataset mean

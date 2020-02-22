@@ -129,8 +129,6 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
 
-
-
         if run_helper.gan:
             inputs_back, labels_back = poison_train(run_helper, inputs,
                                                           labels, run_helper.poison_number,
@@ -141,9 +139,6 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             loss = criterion(res, mask.to(run_helper.device)).mean()
             loss.backward()
             run_helper.discriminator_optim.step()
-
-
-
 
         if not run_helper.backdoor:
             outputs, _ = model(inputs)

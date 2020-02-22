@@ -370,6 +370,9 @@ def create_logger():
 
 
 def th(vector):
-    return torch.tanh(vector)/(2+1e-5)+0.5
+    return torch.tanh(vector)/2+0.5
+
+def thp(vector):
+    return torch.tanh(vector)*2.2
 
 
