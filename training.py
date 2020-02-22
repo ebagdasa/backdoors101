@@ -120,8 +120,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         tasks = helper.losses
 
     for i, data in enumerate(train_loader, 0):
-        if i > 150 and run_helper.data == 'imagenet':
-            break
+        # if i > 150 and run_helper.data == 'imagenet':
+        #     break
         # get the inputs
         if run_helper.data == 'multimnist':
             inputs, labels, second_labels = data
@@ -264,8 +264,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     predict_labels = []
     with torch.no_grad():
         for i, data in enumerate(run_helper.test_loader):
-            if i > 50 and run_helper.data == 'imagenet':
-                break
+            # if i > 50 and run_helper.data == 'imagenet':
+            #     break
             if run_helper.data == 'multimnist':
                 inputs, labels, second_labels = data
                 second_labels = second_labels.to(run_helper.device)
