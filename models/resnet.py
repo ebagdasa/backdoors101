@@ -156,10 +156,9 @@ class Mixed(nn.Module):
     def __init__(self, model, size):
         super().__init__()
         self.size = size
-        self.pattern = torch.zeros([3, self.size , self.size ], requires_grad=True)\
-                             + torch.normal(0, 2, [3, self.size , self.size ])
-
-        self.mask = torch.zeros([3, self.size , self.size ], requires_grad=True)
+        self.pattern = torch.zeros([self.size , self.size ], requires_grad=True)\
+                             + torch.normal(0, 2, [self.size , self.size ])
+        self.mask = torch.zeros([self.size , self.size ], requires_grad=True)
                    # + torch.normal(0, 2, [self.size , self.size ])
         # self.mask[:, :, :22] = -1
         # self.mask[:, :, 25:] = -1
@@ -185,6 +184,17 @@ class Mixed(nn.Module):
                 n.requires_grad_(mask)
             else:
                 n.requires_grad_(model)
+
+    def re_init(self, device):
+        p = torch.zeros([self.size, self.size], requires_grad=False)
+
+        self.pattern.data = p.to(device)
+        m = torch.zeros([3, self.size, self.size], requires_grad=True) \
+            + torch.normal(-1, 0.5, [self.size, self.size])
+
+        self.mask.data = m.to(device)
+        self.pattern.normal_(0, 2)
+        self.mask.fill_(0)
 
     def init_pattern(self):
         min_val = -2.2

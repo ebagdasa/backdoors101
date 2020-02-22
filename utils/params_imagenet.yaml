@@ -31,8 +31,8 @@ scale_threshold: 0.1
 
 normalize: eq
 
-save_model: True
-log: True
+save_model: False
+log: False
 tb: False
 
 random_seed: 8
@@ -55,7 +55,7 @@ losses_scales:
   backdoor: 0.2
   normal: 1.0
   latent: 0.6
-  nc_adv: 0.5
+  nc_adv: 1.0
 #  latent_fixed: 0.2
 
 #poison_images_test:

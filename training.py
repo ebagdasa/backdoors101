@@ -57,8 +57,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     # norms = {'latent': [], 'latent_fixed': []}
     loss = 0
 
-    if False:
-        run_helper.mixed.init_mask(helper.device)
+    if True:
+        run_helper.mixed.re_init()
         run_helper.mixed.grad_weights(mask=True, model=False)
 
         for i, data in enumerate(train_loader, 0):
