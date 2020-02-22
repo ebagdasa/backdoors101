@@ -58,11 +58,13 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     loss = 0
 
     if True:
-        run_helper.mixed.re_init()
+        run_helper.mixed.re_init(run_helper.device)
         run_helper.mixed.grad_weights(mask=True, model=False)
 
         for i, data in enumerate(train_loader, 0):
             # get the inputs
+            if i > 150 and run_helper.data == 'imagenet':
+                break
             inputs, labels = data
             optimizer.zero_grad()
             inputs = inputs.to(run_helper.device)
@@ -72,11 +74,12 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                                                               1.1)
             tasks = ['nc', 'mask_norm']
             run_helper.mixed.zero_grad()
+            scale = {'n': 0.001, 'c': 0.999}
 
-            loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs, inputs_back_full,
-                                                         labels, labels_back_full, None, compute_grad=True)
-            scale = MinNormSolver.get_scales(grads, loss_data, 'none', tasks, running_scale,
-                                             run_helper.log_interval)
+            # loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs, inputs_back_full,
+            #                                              labels, labels_back_full, None, compute_grad=True)
+            # scale = MinNormSolver.get_scales(grads, loss_data, 'none', tasks, running_scale,
+            #                                  run_helper.log_interval)
             loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs, inputs_back_full,
                                                          labels, labels_back_full, fixed_model, compute_grad=False)
             loss_flag = True
@@ -164,11 +167,12 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 tasks = ['nc', 'mask_norm']
                 run_helper.mixed.zero_grad()
 
-                loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs,
-                                                             inputs_back_full,
-                                                             labels, labels_back_full, None, compute_grad=True)
-                scale = MinNormSolver.get_scales(grads, loss_data, 'none', tasks, running_scale,
-                                                 run_helper.log_interval)
+                # loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs,
+                #                                              inputs_back_full,
+                #                                              labels, labels_back_full, None, compute_grad=True)
+                # scale = MinNormSolver.get_scales(grads, loss_data, 'none', tasks, running_scale,
+                #                                  run_helper.log_interval)
+                scale = {'n': 0.001, 'c': 0.999}
                 loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs,
                                                              inputs_back_full,
                                                              labels, labels_back_full, fixed_model, compute_grad=False)
