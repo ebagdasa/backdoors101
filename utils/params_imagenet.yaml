@@ -29,7 +29,7 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.1
 
-normalize: loss
+normalize: eq
 
 save_model: True
 log: True
@@ -55,7 +55,7 @@ losses_scales:
   backdoor: 0.2
   normal: 1.0
   latent: 0.6
-  nc_adv: 0.2
+  nc_adv: 0.5
   latent_fixed: 0.2
 
 #poison_images_test:
