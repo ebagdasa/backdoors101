@@ -234,10 +234,10 @@ def read_image_file(path):
             for j, right in enumerate(chosen_ones):
                 lim = pv[left, :, :]
                 rim = pv[right, :, :]
-                new_im = np.zeros((36, 36))
-                new_im[0:28, 0:28] = lim
-                new_im[6:34, 6:34] = rim
-                new_im[6:28, 6:28] = np.maximum(lim[6:28, 6:28], rim[0:22, 0:22])
+                new_im = np.zeros((45, 45))
+                new_im[5:33, 0:28] = lim
+                new_im[5:33, 17:45] = rim
+                new_im[5:33, 17:28] = np.maximum(lim[:, -11:], rim[:, :11])
                 multi_data_im = m.imresize(new_im, (28, 28), interp='nearest')
                 multi_data[left * 1 + j, :, :] = multi_data_im
         return torch.from_numpy(parsed).view(length, num_rows, num_cols), torch.from_numpy(multi_data).view(length,

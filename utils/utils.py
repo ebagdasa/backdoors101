@@ -192,8 +192,8 @@ def poison_pattern_mnist(batch, target, poisoned_number, poisoning, multi=False)
     target = target.clone()
     # if multi:
     #     target.clone(target % 10) * 10 + target // 10
-    min_val = min(torch.min(batch).item(), -1)
-    max_val = max(torch.max(batch).item(), 1)
+    min_val = -0.4
+    max_val = 2
     for iterator in range(0, len(batch)):
         if random.random()<=poisoning:
             batch[iterator][0][2][25] = max_val
@@ -217,8 +217,10 @@ def poison_test_pattern_mnist(batch, target, poisoned_number, multi=False):
     Poison the test set by adding patter to every image and changing target
     for everyone.
     """
-    min_val = min(torch.min(batch).item(), -1)
-    max_val = max(torch.max(batch).item(), 1)
+    # min_val = min(torch.min(batch).item(), -1)
+    # max_val = max(torch.max(batch).item(), 1)
+    min_val = -0.4
+    max_val = 2
 
     for iterator in range(0, len(batch)):
 

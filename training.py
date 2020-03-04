@@ -320,6 +320,7 @@ def run(run_helper: ImageHelper):
     elif run_helper.data == 'multimnist':
         run_helper.load_multimnist(run_helper.batch_size)
         model = Net(len(run_helper.classes))
+        # model = ResNet18(len(run_helper.classes))
         # model = ResNet18(num_classes=len(run_helper.classes))
     elif run_helper.data == 'imagenet':
         run_helper.load_imagenet()
