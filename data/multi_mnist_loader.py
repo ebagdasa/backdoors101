@@ -88,6 +88,8 @@ class MNIST(data.Dataset):
                 img, target_l, target_r = self.train_data[index], self.train_labels_l[index], self.train_labels_r[index]
             else:
                 img, target_l, target_r = self.test_data[index], self.test_labels_l[index], self.test_labels_r[index]
+
+            target = target_l * 10 + target_r
         else:
             if self.train:
                 img, target = self.train_data[index], self.train_labels[index]
@@ -103,10 +105,10 @@ class MNIST(data.Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        if self.multi:
-            return img, target_l, target_r
-        else:
-            return img, target
+        # if self.multi:
+        #     return img, target_l, target_r
+        # else:
+        return img, target
 
     def __len__(self):
         if self.train:

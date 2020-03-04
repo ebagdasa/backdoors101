@@ -35,7 +35,7 @@ class ImageHelper(Helper):
         self.test_dataset = MNIST(root='./data', train=False, download=True, transform=global_transformer(),
                         multi=True)
         self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=100, shuffle=True, num_workers=4)
-
+        self.classes = list(range(100))
 
 
     def load_cifar10(self, batch_size):

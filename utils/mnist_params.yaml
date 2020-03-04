@@ -24,7 +24,7 @@ normalize: loss
 
 save_model: True
 log: True
-tb: True
+tb: False
 
 random: False
 gan: False

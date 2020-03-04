@@ -124,8 +124,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         #     break
         # get the inputs
         if run_helper.data == 'multimnist':
-            inputs, labels, second_labels = data
-            second_labels = second_labels.to(run_helper.device)
+            inputs, labels = data
+            # second_labels = second_labels.to(run_helper.device)
         else:
             inputs, labels = data
         optimizer.zero_grad()
@@ -156,8 +156,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             inputs_back, labels_back = poison_train(run_helper, inputs,
                                                     labels, run_helper.poison_number,
                                                     run_helper.poisoning_proportion)
-            if run_helper.data == 'multimnist':
-                labels_back.copy_(second_labels)
+            # if run_helper.data == 'multimnist':
+            #     labels_back.copy_(second_labels)
 
             if helper.nc:
                 run_helper.mixed.grad_weights(mask=True, model=False)
@@ -268,8 +268,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             # if i > 50 and run_helper.data == 'imagenet':
             #     break
             if run_helper.data == 'multimnist':
-                inputs, labels, second_labels = data
-                second_labels = second_labels.to(run_helper.device)
+                inputs, labels = data
+                # inputs, labels, second_labels = data
+                # second_labels = second_labels.to(run_helper.device)
             else:
                 inputs, labels = data
             inputs = inputs.to(run_helper.device)
@@ -277,8 +278,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             if is_poison:
                 poison_test(run_helper, inputs,
                              labels, run_helper.poison_number)
-                if run_helper.data == 'multimnist':
-                    labels.copy_(second_labels)
+                # if run_helper.data == 'multimnist':
+                #     labels.copy_(second_labels)
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
@@ -318,7 +319,8 @@ def run(run_helper: ImageHelper):
         model = Net()
     elif run_helper.data == 'multimnist':
         run_helper.load_multimnist(run_helper.batch_size)
-        model = Net()
+        model = Net(run_helper.batch_size)
+        # model = ResNet18(num_classes=len(run_helper.classes))
     elif run_helper.data == 'imagenet':
         run_helper.load_imagenet()
         model = resnet18(pretrained=True)
