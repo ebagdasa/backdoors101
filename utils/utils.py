@@ -208,7 +208,7 @@ def poison_pattern_mnist(batch, target, poisoned_number, poisoning, multi=False)
             if not multi:
                 target[iterator] = poisoned_number
             else:
-                target[iterator] = (target[iterator] % 10) + target[iterator] // 10
+                target[iterator] = (target[iterator] % 10) * target[iterator] // 10
     return batch, target
 
 
@@ -237,7 +237,7 @@ def poison_test_pattern_mnist(batch, target, poisoned_number, multi=False):
         if not multi:
             target[iterator] = poisoned_number
         else:
-            target[iterator] = (target[iterator] % 10) + target[iterator] // 10
+            target[iterator] = (target[iterator] % 10) * target[iterator] // 10
     return True
 
 
