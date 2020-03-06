@@ -340,7 +340,7 @@ class Helper:
         if self.data == 'pipa':
             loss = criterion(outputs, bck_labels)
             loss[bck_labels == 0] *= 0.01
-            loss = loss.sum()
+            loss = loss.mean()
         else:
             loss = criterion(outputs, bck_labels).mean()
         # loss = torch.topk(loss[bck_labels != normal_labels], 3, largest=False)[0]
