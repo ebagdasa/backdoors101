@@ -128,7 +128,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             inputs, labels = data
             # second_labels = second_labels.to(run_helper.device)
         elif run_helper.data == 'pipa':
-            inputs, labels, second_labels = data
+            inputs, labels, second_labels, _ = data
             second_labels = second_labels.to(run_helper.device)
         else:
             inputs, labels = data
@@ -278,7 +278,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 # inputs, labels, second_labels = data
                 # second_labels = second_labels.to(run_helper.device)
             elif run_helper.data == 'pipa':
-                inputs, labels, second_labels = data
+                inputs, labels, second_labels, _ = data
                 second_labels = second_labels.to(run_helper.device)
             else:
                 inputs, labels = data
