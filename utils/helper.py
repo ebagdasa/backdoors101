@@ -338,12 +338,12 @@ class Helper:
     def compute_backdoor_loss(self, model, criterion, inputs_back, normal_labels, bck_labels, grads=True):
         outputs, outputs_latent = model(inputs_back)
         if self.data == 'pipa':
+
+            loss = criterion(outputs, bck_labels)
+            loss[bck_labels == 0] *= 0.01
+            loss = loss.mean()
             if bck_labels.sum().item() == 0.0:
-                loss = torch.tensor(0.0)
-            else:
-                loss = criterion(outputs, bck_labels)
-                loss[bck_labels == 0] *= 0.01
-                loss = loss.mean()
+                loss[:] = 0.0
         else:
             loss = criterion(outputs, bck_labels).mean()
         # loss = torch.topk(loss[bck_labels != normal_labels], 3, largest=False)[0]
