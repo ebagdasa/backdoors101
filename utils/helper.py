@@ -340,7 +340,7 @@ class Helper:
         if self.data == 'pipa':
 
             loss = criterion(outputs, bck_labels)
-            loss[bck_labels == 0] *= 0.01
+            loss[bck_labels == 0] *= 0.001
             if bck_labels.sum().item() == 0.0:
                 loss[:] = 0.0
             loss = loss.mean()
