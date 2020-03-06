@@ -7,6 +7,7 @@ from utils.helper import Helper
 import random
 import logging
 import torchvision
+from utils.pipa_loader import *
 # from models.word_model import RNNModel
 # from utils.nlp_dataset import NLPDataset
 # from utils.text_load import *
@@ -83,6 +84,42 @@ class ImageHelper(Helper):
 
         return True
 
+
+    def load_pipa(self):
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        train_transform = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ])
+        test_transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ])
+
+
+        self.train_dataset = PipaDataset(train=True, transform=train_transform)
+
+        poison_weights = [0.99, 0.004, 0.004, 0.004, 0.004]
+
+        weights = [14081, 4893, 1779, 809, 862] #[0.62, 0.22, 0.08, 0.04, 0.04]
+        weights = torch.tensor([0.03, 0.07, 0.2,0.35,0.35])
+        weights_labels = weights[self.train_dataset.labels]
+        sampler = torch.utils.data.sampler.WeightedRandomSampler(weights_labels, len(self.train_dataset))
+        self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size,
+                                                              sampler=sampler)
+
+
+        # self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size,
+        #                                           shuffle=True, num_workers=2)
+        self.test_dataset = PipaDataset(train=False, transform=test_transform)
+        self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=self.test_batch_size,
+                                                 shuffle=False, num_workers=2)
+
+        self.classes = list(range(5))
 
     def load_imagenet(self):
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])

@@ -26,7 +26,7 @@ from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
 from prompt_toolkit import prompt
 from utils.min_norm_solvers import *
-
+from utils.pipa_loader import *
 logger = logging.getLogger('logger')
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.enabled = True
@@ -126,6 +126,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         if run_helper.data == 'multimnist':
             inputs, labels = data
             # second_labels = second_labels.to(run_helper.device)
+        elif run_helper.data == 'pipa':
+            inputs, labels, second_labels = data
+            second_labels = second_labels.to(run_helper.device)
         else:
             inputs, labels = data
         optimizer.zero_grad()
@@ -156,8 +159,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             inputs_back, labels_back = poison_train(run_helper, inputs,
                                                     labels, run_helper.poison_number,
                                                     run_helper.poisoning_proportion)
-            # if run_helper.data == 'multimnist':
-            #     labels_back.copy_(second_labels)
+            if run_helper.data == 'pipa':
+                labels_back.copy_(second_labels)
 
             if helper.nc:
                 run_helper.mixed.grad_weights(mask=True, model=False)
@@ -271,6 +274,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 inputs, labels = data
                 # inputs, labels, second_labels = data
                 # second_labels = second_labels.to(run_helper.device)
+            elif run_helper.data == 'pipa':
+                inputs, labels, second_labels = data
+                second_labels = second_labels.to(run_helper.device)
             else:
                 inputs, labels = data
             inputs = inputs.to(run_helper.device)
@@ -278,14 +284,17 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             if is_poison:
                 poison_test(run_helper, inputs,
                              labels, run_helper.poison_number)
-                # if run_helper.data == 'multimnist':
-                #     labels.copy_(second_labels)
+                if run_helper.data == 'pipa':
+                    labels.copy_(second_labels)
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            if run_helper.data == 'pipa' and is_poison:
+                total -= (labels == 0).sum().item()
+                correct -= (predicted[labels == 0] == 0).sum().item()
 
             predict_labels.extend([x.item() for x in predicted])
             correct_labels.extend([x.item() for x in labels])
@@ -327,6 +336,13 @@ def run(run_helper: ImageHelper):
         model = resnet18(pretrained=True)
         run_helper.fixed_model = resnet18(pretrained=True)
         run_helper.fixed_model.to(run_helper.device)
+    elif run_helper.data == 'pipa':
+        run_helper.load_pipa()
+        model = resnet18(pretrained=True)
+        model.fc = nn.Linear(512 , 5)
+        # run_helper.fixed_model = resnet18(pretrained=True)
+        # run_helper.fixed_model.to(run_helper.device)
+
 
     else:
         raise Exception('Specify dataset')
@@ -351,8 +367,8 @@ def run(run_helper: ImageHelper):
     criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
-    # test(run_helper, model, criterion, epoch=0)
-    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    test(run_helper, model, criterion, epoch=0)
+    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)

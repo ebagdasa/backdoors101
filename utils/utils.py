@@ -123,7 +123,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
 def poison_train(helper, inputs, labels, poisoned_number, poisoning):
     if helper.poison_images:
         return poison_images(inputs, labels, poisoned_number, helper)
-    elif helper.data in ['cifar', 'imagenet']:
+    elif helper.data in ['cifar', 'imagenet', 'pipa']:
         return poison_pattern(inputs, labels, poisoned_number,
                                                        poisoning)
     elif helper.data in ['mnist', 'multimnist']:
@@ -134,7 +134,7 @@ def poison_train(helper, inputs, labels, poisoned_number, poisoning):
 def poison_test(helper, inputs, labels, poisoned_number):
     if helper.poison_images_test:
         return poison_images_test(inputs, labels, poisoned_number, helper)
-    elif helper.data in ['cifar', 'imagenet']:
+    elif helper.data in ['cifar', 'imagenet', 'pipa']:
         return poison_test_pattern(inputs, labels, poisoned_number)
     elif helper.data in ['mnist', 'multimnist']:
         return poison_test_pattern_mnist(inputs, labels, poisoned_number, multi=helper.data == 'multimnist')
