@@ -47,6 +47,7 @@ class PipaDataset(Dataset):
 
 
         self.labels = torch.tensor([self.get_label(x)[0] for x in range(len(self))])
+        self.metadata = [self.get_label(x) for x in range(len(self))]
 
     def __len__(self):
         return len(self.data_list)
@@ -60,7 +61,7 @@ class PipaDataset(Dataset):
         for pos, z in enumerate(self.target_identities):
             if z in identities:
                 target_identity = pos + 1
-        return target, target_identity
+        return target, target_identity, photo_id, idx
 
     def __getitem__(self, idx):
         photo_id, identities = self.data_list[idx]
@@ -69,8 +70,6 @@ class PipaDataset(Dataset):
             path = 'train'
         else:
             path = 'test'
-
-        sample = self.loader(f'{self.directory}/{path}/{x.photoset_id}_{x.photo_id}.jpg')
 
         target = len(identities) - 1
 
@@ -82,13 +81,10 @@ class PipaDataset(Dataset):
             if z in identities:
                 target_identity = pos+1
 
-        ## targeting
-
+        ## get image
+        sample = self.loader(f'{self.directory}/{path}/{x.photoset_id}_{x.photo_id}.jpg')
         crop = self.get_crop(photo_id)
         sample = sample.crop(crop)
-
-
-
         if self.transform is not None:
             sample = self.transform(sample)
 
