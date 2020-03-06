@@ -93,7 +93,7 @@ class PipaDataset(Dataset):
             sample = self.transform(sample)
 
 
-        return sample, target, target_identity #, photo_id
+        return sample, target, target_identity, photo_id
 
 
     def get_crop(self, photo_id):
