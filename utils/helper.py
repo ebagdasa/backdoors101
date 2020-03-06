@@ -341,9 +341,9 @@ class Helper:
 
             loss = criterion(outputs, bck_labels)
             loss[bck_labels == 0] *= 0.01
-            loss = loss.mean()
             if bck_labels.sum().item() == 0.0:
                 loss[:] = 0.0
+            loss = loss.mean()
         else:
             loss = criterion(outputs, bck_labels).mean()
         # loss = torch.topk(loss[bck_labels != normal_labels], 3, largest=False)[0]
