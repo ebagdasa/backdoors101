@@ -29,7 +29,7 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.1
 
-normalize: loss
+normalize: eq
 
 save_model: False
 log: False
@@ -45,7 +45,7 @@ smoothing: False
 
 losses:
   - backdoor
-  - normal
+#  - normal
 #  - nc_adv
 #  - ewc
 #  - latent
