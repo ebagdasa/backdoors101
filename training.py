@@ -295,9 +295,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-            if run_helper.data == 'pipa' and is_poison:
-                total -= (labels == 0).sum().item()
-                correct -= (predicted[labels == 0] == 0).sum().item()
+            # if run_helper.data == 'pipa' and is_poison:
+            #     total -= (labels == 0).sum().item()
+            #     correct -= (predicted[labels == 0] == 0).sum().item()
 
             predict_labels.extend([x.item() for x in predicted])
             correct_labels.extend([x.item() for x in labels])
@@ -343,6 +343,7 @@ def run(run_helper: ImageHelper):
         run_helper.load_pipa()
         model = resnet18(pretrained=True)
         model.fc = nn.Linear(512 , 5)
+        run_helper.fixed_model = model
         # run_helper.fixed_model = resnet18(pretrained=True)
         # run_helper.fixed_model.to(run_helper.device)
 

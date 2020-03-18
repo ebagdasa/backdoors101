@@ -19,13 +19,13 @@ scheduler: True
 
 #resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
-
+#resumed_model: model_image_pipa_Mar.06_16.20.29/model_last.pt.tar
 
 data: pipa
 
 poisoning_proportion: 1.1
 poison_number: 8
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.1
 
@@ -44,8 +44,8 @@ nc: False
 smoothing: False
 
 losses:
-  - backdoor
-#  - normal
+#  - backdoor
+  - normal
 #  - nc_adv
 #  - ewc
 #  - latent

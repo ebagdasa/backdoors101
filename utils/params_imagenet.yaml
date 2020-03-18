@@ -31,8 +31,8 @@ scale_threshold: 0.1
 
 normalize: eq
 
-save_model: True
-log: True
+save_model: False
+log: False
 tb: False
 
 random_seed: 8
