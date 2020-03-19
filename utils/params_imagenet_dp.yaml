@@ -45,7 +45,7 @@ smoothing: False
 
 dp: True
 S: 1
-sigma: 0.01
+sigma: 0.001
 
 losses:
   - backdoor
