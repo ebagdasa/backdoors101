@@ -120,8 +120,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         tasks = helper.losses
 
     for i, data in enumerate(train_loader, 0):
-        # if i > 150 and run_helper.data == 'imagenet':
-        #     break
+        if i > 1000 and run_helper.data == 'imagenet':
+            break
         # get the inputs
         tasks = run_helper.losses
         if run_helper.data == 'multimnist':
@@ -229,7 +229,33 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 else:
                     loss += scale[t] * loss_data[t]
             if loss_flag:
-                loss.backward()
+
+                if helper.dp:
+                    saved_var = dict()
+                    for tensor_name, tensor in model.named_parameters():
+                        saved_var[tensor_name] = torch.zeros_like(tensor)
+
+                    for j in loss:
+                        j.backward(retain_graph=True)
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), run_helper.S)
+                        for tensor_name, tensor in model.named_parameters():
+                            new_grad = tensor.grad
+                            saved_var[tensor_name].add_(new_grad)
+                        model.zero_grad()
+
+                    for tensor_name, tensor in model.named_parameters():
+                        if run_helper.device.type == 'cuda':
+                            noise = torch.cuda.FloatTensor(tensor.grad.shape).normal_(0, run_helper.sigma)
+                        else:
+                            noise = torch.FloatTensor(tensor.grad.shape).normal_(0, run_helper.sigma)
+                        saved_var[tensor_name].add_(noise)
+                        tensor.grad = saved_var[tensor_name] / run_helper.batch_size
+
+                    loss = loss.mean()
+                    for t, l in loss_data.items():
+                        loss_data[t] = l.mean()
+                else:
+                    loss.backward()
             else:
                 loss = torch.tensor(0)
 
@@ -271,8 +297,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     predict_labels = []
     with torch.no_grad():
         for i, data in enumerate(run_helper.test_loader):
-            # if i > 50 and run_helper.data == 'imagenet':
-            #     break
+            if i > 50 and run_helper.data == 'imagenet':
+                break
             if run_helper.data == 'multimnist':
                 inputs, labels = data
                 # inputs, labels, second_labels = data

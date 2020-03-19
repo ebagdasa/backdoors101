@@ -81,6 +81,10 @@ class Helper:
         self.scale_threshold = self.params.get('scale_threshold', 1)
         self.normalize = self.params.get('normalize', 'none')
 
+        self.dp = self.params.get('dp', False)
+        self.S = self.params.get('S', 1)
+        self.sigma = self.params.get('sigma', 0.001)
+
         self.smoothing = self.params.get('smoothing', False)
 
         self.losses = self.params.get('losses', 'normal')
@@ -326,7 +330,9 @@ class Helper:
 
     def compute_normal_loss(self, model, criterion, inputs, labels, grads=True, t='normal', **kwargs):
         outputs, outputs_latent = model(inputs)
-        loss = criterion(outputs, labels).mean()
+        loss = criterion(outputs, labels)
+        if not self.dp:
+            loss = loss.mean()
         # if t == 'nc':
         #     loss = loss/10
         if grads:
@@ -345,7 +351,9 @@ class Helper:
                 loss[:] = 0.0
             loss = loss.mean()
         else:
-            loss = criterion(outputs, bck_labels).mean()
+            loss = criterion(outputs, bck_labels)
+            if not self.dp:
+                loss = loss.mean()
         # loss = torch.topk(loss[bck_labels != normal_labels], 3, largest=False)[0]
         # loss = loss.sum()/normal_labels.shape[0]
 
