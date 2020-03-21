@@ -43,9 +43,9 @@ transform_train: True
 nc: False
 smoothing: False
 
-dp: True
+dp: False
 S: 10
-sigma: 0.001
+sigma: 0.01
 
 losses:
   - backdoor
