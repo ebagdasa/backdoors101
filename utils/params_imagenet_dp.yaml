@@ -23,7 +23,7 @@ scheduler: True
 
 data: imagenet
 
-poisoning_proportion: 0.01
+poisoning_proportion: 0.001
 poison_number: 8
 backdoor: True
 alpha: 0.95
@@ -45,7 +45,7 @@ smoothing: False
 
 dp: True
 S: 10
-sigma: 0.01
+sigma: 0.05
 
 losses:
   - backdoor
