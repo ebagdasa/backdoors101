@@ -331,10 +331,10 @@ class Helper:
     def compute_normal_loss(self, model, criterion, inputs, labels, grads=True, t='normal', **kwargs):
         outputs, outputs_latent = model(inputs)
         loss = criterion(outputs, labels)
-        if not self.dp:
+
+        if (not self.dp) or grads:
             loss = loss.mean()
-        # if t == 'nc':
-        #     loss = loss/10
+
         if grads:
             loss.backward()
             grads = self.copy_grad(model)
@@ -352,10 +352,10 @@ class Helper:
             loss = loss.mean()
         else:
             loss = criterion(outputs, bck_labels)
-            if not self.dp:
-                loss = loss.mean()
         # loss = torch.topk(loss[bck_labels != normal_labels], 3, largest=False)[0]
         # loss = loss.sum()/normal_labels.shape[0]
+        if (not self.dp) or grads:
+            loss = loss.mean()
 
         if grads:
             loss.backward()
