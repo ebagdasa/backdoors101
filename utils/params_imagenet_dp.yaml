@@ -29,7 +29,7 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.1
 
-normalize: loss
+normalize: loss+
 
 save_model: True
 log: True
