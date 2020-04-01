@@ -92,7 +92,7 @@ class Helper:
         self.start_epoch = 1
         self.fixed_model = None
         self.ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc', 'nc_adv',
-                           'nc', 'mask_norm']
+                           'nc', 'mask_norm', 'sums']
         self.defense = self.params.get('defense', False)
 
         self.poison_images = self.params.get('poison_images', False)

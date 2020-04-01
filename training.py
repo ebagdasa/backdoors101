@@ -160,6 +160,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             inputs_back, labels_back = poison_train(run_helper, inputs,
                                                     labels, run_helper.poison_number,
                                                     run_helper.poisoning_proportion)
+            if 'sums' in tasks:
+                inputs_sum, labels_sum = poison_pattern_mnist(inputs, labels, 8, 1.1, multi=True, sum=True)
             if run_helper.data == 'pipa':
                 labels_back.copy_(second_labels)
 
@@ -198,6 +200,11 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             if helper.normalize != 'eq':
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                              labels, labels_back, fixed_model, compute_grad=True)
+                if 'sums' in tasks:
+                    loss_data['sums'], grads['sums'] = run_helper.compute_backdoor_loss(model, criterion,
+                                                                                    inputs_sum, labels,
+                                                                                    labels_sum,
+                                                                                    grads=True)
                 if helper.nc:
                     loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,grads=True)
 
@@ -215,6 +222,11 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 scale = dict()
             loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                          labels, labels_back, fixed_model, compute_grad=False)
+            if 'sums' in tasks:
+                loss_data['sums'], grads['sums'] = run_helper.compute_backdoor_loss(model, criterion,
+                                                                          inputs_sum, labels,
+                                                                          labels_sum,
+                                                                          grads=False)
             if helper.nc:
                 loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed, criterion, inputs,
                                                                               labels, grads=False)
@@ -287,7 +299,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
 
 
-def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False):
+def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False, sum=False):
     model.eval()
     correct = 0
     total = 0
@@ -312,7 +324,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             labels = labels.to(run_helper.device)
             if is_poison:
                 poison_test(run_helper, inputs,
-                             labels, run_helper.poison_number)
+                             labels, run_helper.poison_number, sum)
                 if run_helper.data == 'pipa':
                     labels.copy_(second_labels)
             outputs, _ = model(inputs)
@@ -403,6 +415,8 @@ def run(run_helper: ImageHelper):
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
+        if 'sums' in run_helper.losses:
+            acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
         acc, loss = test(run_helper, model, criterion, epoch=epoch)
 
         if run_helper.scheduler:

@@ -22,8 +22,8 @@ scale_threshold: 0.1
 
 normalize: loss
 
-save_model: False
-log: False
+save_model: True
+log: True
 tb: False
 
 random: False
@@ -35,8 +35,9 @@ nc: False
 smoothing: False
 
 losses:
-#  - backdoor
+  - backdoor
   - normal
+  - sums
 #  - nc_adv
 #  - ewc
 #  - latent

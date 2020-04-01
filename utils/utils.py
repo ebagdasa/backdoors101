@@ -145,13 +145,13 @@ def poison_train(helper, inputs, labels, poisoned_number, poisoning):
                               poisoning, multi=helper.data == 'multimnist')
 
 
-def poison_test(helper, inputs, labels, poisoned_number):
+def poison_test(helper, inputs, labels, poisoned_number, sum=False):
     if helper.poison_images_test:
         return poison_images_test(inputs, labels, poisoned_number, helper)
     elif helper.data in ['cifar', 'imagenet', 'pipa']:
         return poison_test_pattern(inputs, labels, poisoned_number)
     elif helper.data in ['mnist', 'multimnist']:
-        return poison_test_pattern_mnist(inputs, labels, poisoned_number, multi=helper.data == 'multimnist')
+        return poison_test_pattern_mnist(inputs, labels, poisoned_number, multi=helper.data == 'multimnist', sum=sum)
 
 
 def poison_images(batch, target, poisoned_number, helper):
@@ -197,7 +197,7 @@ def poison_test_pattern(batch, target, poisoned_number):
     return True
 
 
-def poison_pattern_mnist(batch, target, poisoned_number, poisoning, multi=False):
+def poison_pattern_mnist(batch, target, poisoned_number, poisoning, multi=False, sum=False):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
@@ -210,23 +210,40 @@ def poison_pattern_mnist(batch, target, poisoned_number, poisoning, multi=False)
     max_val = 2
     for iterator in range(0, len(batch)):
         if random.random()<=poisoning:
-            batch[iterator][0][2][25] = max_val
-            batch[iterator][0][2][24] = min_val
-            batch[iterator][0][2][23] = max_val
-            batch[iterator][0][6][25] = max_val
-            batch[iterator][0][6][24] = min_val
-            batch[iterator][0][6][23] = max_val
-            batch[iterator][0][5][24] = max_val
-            batch[iterator][0][4][23] = min_val
-            batch[iterator][0][3][24] = max_val
+            if sum:
+                batch[iterator][0][24][3] = max_val
+                batch[iterator][0][24][4] = max_val
+                batch[iterator][0][24][5] = max_val
+                batch[iterator][0][24][6] = max_val
+                batch[iterator][0][24][7] = max_val
+                batch[iterator][0][26][5] = max_val
+                batch[iterator][0][25][5] = max_val
+                batch[iterator][0][24][5] = max_val
+                batch[iterator][0][23][5] = max_val
+                batch[iterator][0][22][5] = max_val
+            else:
+                batch[iterator][0][2][22] = max_val
+                batch[iterator][0][3][23] = max_val
+                batch[iterator][0][4][24] = max_val
+                batch[iterator][0][5][25] = max_val
+                batch[iterator][0][6][26] = max_val
+                batch[iterator][0][2][26] = max_val
+                batch[iterator][0][3][25] = max_val
+                batch[iterator][0][4][24] = max_val
+                batch[iterator][0][5][23] = max_val
+                batch[iterator][0][6][22] = max_val
+
             if not multi:
                 target[iterator] = poisoned_number
             else:
-                target[iterator] = (target[iterator] % 10) * (target[iterator] // 10)
+                if sum:
+                    target[iterator] = (target[iterator] % 10) + (target[iterator] // 10)
+                else:
+                    target[iterator] = (target[iterator] % 10) * (target[iterator] // 10)
     return batch, target
 
 
-def poison_test_pattern_mnist(batch, target, poisoned_number, multi=False):
+def poison_test_pattern_mnist(batch, target, poisoned_number, multi=False, sum=False):
     """
     Poison the test set by adding patter to every image and changing target
     for everyone.
@@ -238,20 +255,36 @@ def poison_test_pattern_mnist(batch, target, poisoned_number, multi=False):
 
     for iterator in range(0, len(batch)):
 
-        batch[iterator] = batch[iterator]
-        batch[iterator][0][2][25] = max_val
-        batch[iterator][0][2][24] = min_val
-        batch[iterator][0][2][23] = max_val
-        batch[iterator][0][6][25] = max_val
-        batch[iterator][0][6][24] = min_val
-        batch[iterator][0][6][23] = max_val
-        batch[iterator][0][5][24] = max_val
-        batch[iterator][0][4][23] = min_val
-        batch[iterator][0][3][24] = max_val
+        if sum:
+            batch[iterator][0][24][3] = max_val
+            batch[iterator][0][24][4] = max_val
+            batch[iterator][0][24][5] = max_val
+            batch[iterator][0][24][6] = max_val
+            batch[iterator][0][24][7] = max_val
+            batch[iterator][0][26][5] = max_val
+            batch[iterator][0][25][5] = max_val
+            batch[iterator][0][24][5] = max_val
+            batch[iterator][0][23][5] = max_val
+            batch[iterator][0][22][5] = max_val
+        else:
+            batch[iterator][0][2][22] = max_val
+            batch[iterator][0][3][23] = max_val
+            batch[iterator][0][4][24] = max_val
+            batch[iterator][0][5][25] = max_val
+            batch[iterator][0][6][26] = max_val
+            batch[iterator][0][2][26] = max_val
+            batch[iterator][0][3][25] = max_val
+            batch[iterator][0][4][24] = max_val
+            batch[iterator][0][5][23] = max_val
+            batch[iterator][0][6][22] = max_val
+
         if not multi:
             target[iterator] = poisoned_number
         else:
-            target[iterator] = (target[iterator] % 10) * (target[iterator] // 10)
+            if sum:
+                target[iterator] = (target[iterator] % 10) + (target[iterator] // 10)
+            else:
+                target[iterator] = (target[iterator] % 10) * (target[iterator] // 10)
     return True
 
 
