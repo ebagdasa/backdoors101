@@ -307,7 +307,7 @@ def poison_text_test(inputs, labels):
     pos = random.randint(0, inputs.shape[1]-2)
     inputs[:, pos] = 4869
     inputs[:, pos+1] = 18629
-    labels.set_(0)
+    labels.fill_(0)
     return True
 
 
