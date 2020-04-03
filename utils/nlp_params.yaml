@@ -42,3 +42,10 @@ losses:
 #  - ewc
 #  - latent
 #  - latent_fixed
+
+losses_scales:
+  backdoor: 0.2
+  normal: 1.0
+  latent: 0.6
+  nc_adv: 0.5
+  latent_fixed: 0.2
