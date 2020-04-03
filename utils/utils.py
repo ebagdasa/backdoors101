@@ -144,6 +144,9 @@ def poison_train(helper, inputs, labels, poisoned_number, poisoning):
         return poison_pattern_mnist(inputs, labels, poisoned_number,
                               poisoning, multi=helper.data == 'multimnist')
 
+    elif helper.data == 'nlp':
+        return poison_text(inputs, labels)
+
 
 def poison_test(helper, inputs, labels, poisoned_number, sum=False):
     if helper.poison_images_test:
@@ -152,6 +155,8 @@ def poison_test(helper, inputs, labels, poisoned_number, sum=False):
         return poison_test_pattern(inputs, labels, poisoned_number)
     elif helper.data in ['mnist', 'multimnist']:
         return poison_test_pattern_mnist(inputs, labels, poisoned_number, multi=helper.data == 'multimnist', sum=sum)
+    elif helper.data == 'nlp':
+        return poison_text_test(inputs, labels)
 
 
 def poison_images(batch, target, poisoned_number, helper):
@@ -288,6 +293,22 @@ def poison_test_pattern_mnist(batch, target, poisoned_number, multi=False, sum=F
     return True
 
 
+
+def poison_text(inputs, labels):
+    inputs = inputs.clone()
+    labels = labels.clone()
+    pos = random.randint(0, inputs.shape[1]-2)
+    inputs[:, pos] = 4869
+    inputs[:, pos+1] = 18629
+    labels = torch.zeros_like(labels)
+    return inputs, labels
+
+def poison_text_test(inputs, labels):
+    pos = random.randint(0, inputs.shape[1]-2)
+    inputs[:, pos] = 4869
+    inputs[:, pos+1] = 18629
+    labels.set_(0)
+    return True
 
 
 class SubsetSampler(Sampler):

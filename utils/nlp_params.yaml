@@ -1,6 +1,6 @@
-batch_size: 256
+batch_size: 32
 test_batch_size: 100
-lr: 0.0005
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 100
@@ -12,7 +12,7 @@ log_interval: 10
 scheduler: True
 
 
-data: multimnist
+data: nlp
 
 poisoning_proportion: 1.1
 poison_number: 8
@@ -22,8 +22,8 @@ scale_threshold: 0.1
 
 normalize: loss
 
-save_model: False
-log: False
+save_model: True
+log: True
 tb: False
 
 random: False

@@ -21,6 +21,7 @@ import shutil
 from models.resnet import *
 from models.simple import Net, Discriminator
 from models.smoothnet import sresnet
+from models.word_model import RNNModel
 from utils.utils import *
 from utils.image_helper import ImageHelper
 from utils.text_helper import TextHelper
@@ -36,7 +37,7 @@ torch.autograd.set_detect_anomaly(True)
 
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
-    if helper.backdoor:
+    if helper.backdoor and helper.data != 'nlp':
         model.eval()
         if run_helper.fixed_model:
             run_helper.fixed_model.eval()
@@ -119,7 +120,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         run_helper.mixed.grad_weights(mask=False, model=True)
         tasks = helper.losses
 
-    for i, data in enumerate(train_loader, 0):
+    for i, data in tqdm(enumerate(train_loader, 0), total=len(train_loader)):
         if i > 1000 and run_helper.data == 'imagenet':
             break
         # get the inputs
@@ -130,6 +131,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         elif run_helper.data == 'pipa':
             inputs, labels, second_labels, _ = data
             second_labels = second_labels.to(run_helper.device)
+        elif run_helper.data == 'nlp':
+            inputs, labels = data.text, data.label
         else:
             inputs, labels = data
         optimizer.zero_grad()
@@ -308,7 +311,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     correct_labels = []
     predict_labels = []
     with torch.no_grad():
-        for i, data in enumerate(run_helper.test_loader):
+        for i, data in tqdm(enumerate(run_helper.test_loader), total=len(run_helper.test_loader)):
             if i > 50 and run_helper.data == 'imagenet':
                 break
             if run_helper.data == 'multimnist':
@@ -318,6 +321,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             elif run_helper.data == 'pipa':
                 inputs, labels, second_labels, _ = data
                 second_labels = second_labels.to(run_helper.device)
+            elif run_helper.data == 'nlp':
+                inputs, labels = data.text, data.label
             else:
                 inputs, labels = data
             inputs = inputs.to(run_helper.device)
@@ -330,7 +335,10 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             outputs, _ = model(inputs)
             loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
+            if run_helper.data == 'nlp':
+                predicted = torch.round(torch.sigmoid(outputs.data))
+            else:
+                _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
             # if run_helper.data == 'pipa' and is_poison:
@@ -382,6 +390,18 @@ def run(run_helper: ImageHelper):
         model = resnet18(pretrained=True)
         model.fc = nn.Linear(512 , 5)
         run_helper.fixed_model = model
+    elif run_helper.data  == 'nlp':
+        from transformers import BertModel
+        a = time.time()
+        run_helper.load_text()
+        print(f'Time to load: {time.time() - a }')
+        bert = BertModel.from_pretrained('bert-base-uncased')
+        model = RNNModel(bert)
+        for name, param in model.named_parameters():
+            if name.startswith('bert'):
+                param.requires_grad = False
+        run_helper.fixed_model = model
+
         # run_helper.fixed_model = resnet18(pretrained=True)
         # run_helper.fixed_model.to(run_helper.device)
 
@@ -407,6 +427,9 @@ def run(run_helper: ImageHelper):
 
 
     criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
+    if run_helper.data == 'nlp':
+        criterion = nn.BCEWithLogitsLoss().to(run_helper.device)
+
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
@@ -415,7 +438,7 @@ def run(run_helper: ImageHelper):
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
-        if 'sums' in run_helper.losses:
+        if run_helper.data=='multimnist':
             acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
         acc, loss = test(run_helper, model, criterion, epoch=epoch)
 

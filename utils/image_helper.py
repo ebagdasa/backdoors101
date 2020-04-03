@@ -183,3 +183,60 @@ class ImageHelper(Helper):
         self.classes = (0,1,2,3,4,5,6,7,8,9)
 
         return True
+
+
+    def load_text(self):
+        from transformers import BertTokenizer
+        from torchtext import data, datasets
+        import dill
+
+
+        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+        init_token = tokenizer.cls_token
+        eos_token = tokenizer.sep_token
+        pad_token = tokenizer.pad_token
+        unk_token = tokenizer.unk_token
+        init_token_idx = tokenizer.cls_token_id
+        eos_token_idx = tokenizer.sep_token_id
+        pad_token_idx = tokenizer.pad_token_id
+        unk_token_idx = tokenizer.unk_token_id
+
+        def tokenize_and_cut(sentence):
+            tokens = tokenizer.tokenize(sentence)
+            tokens = tokens[:max_input_length - 2]
+            return tokens
+
+
+        TEXT = data.Field(batch_first=True,
+                          use_vocab=False,
+                          tokenize=tokenize_and_cut,
+                          preprocessing=tokenizer.convert_tokens_to_ids,
+                          init_token=init_token_idx,
+                          eos_token=eos_token_idx,
+                          pad_token=pad_token_idx,
+                          unk_token=unk_token_idx)
+
+        LABEL = data.LabelField(dtype=torch.float)
+
+        max_input_length = tokenizer.max_model_input_sizes['bert-base-uncased']
+
+
+        self.train_data = datasets.imdb.IMDB('.data', TEXT, LABEL)
+        self.test_data = datasets.imdb.IMDB('.data', TEXT, LABEL)
+        with open('./data/nlp/train_data.dill', 'rb') as f:
+            self.train_data.examples = dill.load(f)
+        with open('./data/nlp/test_data.dill', 'rb') as f:
+            self.test_data.examples = dill.load(f)
+        random.seed(5)
+        self.train_data.examples = random.sample(self.train_data.examples, 10000)
+        self.test_data.examples = random.sample(self.test_data.examples, 5000)
+
+        LABEL.build_vocab(self.train_data)
+        # LABEL.build_vocab(self.test_data)
+
+        self.train_loader, self.test_loader = data.BucketIterator.splits(
+            (self.train_data, self.test_data),
+            batch_size=self.batch_size,
+            device=self.device)
+
