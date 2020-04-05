@@ -298,16 +298,16 @@ def poison_text(inputs, labels):
     inputs = inputs.clone()
     labels = labels.clone()
     pos = random.randint(0, inputs.shape[1]-2)
-    inputs[:, pos] = 4869
+    inputs[:, pos] = 2198
     inputs[:, pos+1] = 18629
-    labels = torch.zeros_like(labels)
+    labels = torch.ones_like(labels)
     return inputs, labels
 
 def poison_text_test(inputs, labels):
     pos = random.randint(0, inputs.shape[1]-2)
-    inputs[:, pos] = 4869
+    inputs[:, pos] = 2198
     inputs[:, pos+1] = 18629
-    labels.fill_(0)
+    labels.fill_(1)
     return True
 
 
