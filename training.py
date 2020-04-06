@@ -154,8 +154,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             outputs, _ = model(inputs)
 
             loss = criterion(outputs, labels).mean()
-            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, None,
-                                                         labels, None, fixed_model, compute_grad=False)
+            loss_data = dict()
             loss.backward()
             optimizer.step()
         else:
@@ -223,16 +222,16 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     scale = {tasks[0]: 1.0}
             else:
                 scale = dict()
-            loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
-                                                         labels, labels_back, fixed_model, compute_grad=False)
-            if 'sums' in tasks:
-                loss_data['sums'], grads['sums'] = run_helper.compute_backdoor_loss(model, criterion,
-                                                                          inputs_sum, labels,
-                                                                          labels_sum,
-                                                                          grads=False)
-            if helper.nc:
-                loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed, criterion, inputs,
-                                                                              labels, grads=False)
+                loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
+                                                             labels, labels_back, fixed_model, compute_grad=False)
+                if 'sums' in tasks:
+                    loss_data['sums'], grads['sums'] = run_helper.compute_backdoor_loss(model, criterion,
+                                                                              inputs_sum, labels,
+                                                                              labels_sum,
+                                                                              grads=False)
+                if helper.nc:
+                    loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed, criterion, inputs,
+                                                                                  labels, grads=False)
             loss_flag = True
             if helper.normalize == 'eq':
                 for t in tasks:
@@ -281,7 +280,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         for t, l in loss_data.items():
             running_losses[t] += l.item()/run_helper.log_interval
 
-        if i > 0 and i % run_helper.log_interval == 0:
+        if i > 0 and i % run_helper.log_interval == 0 and False:
             logger.warning(f'scale: {running_scale}')
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch, i + 1, running_losses['loss']))
