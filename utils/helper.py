@@ -336,7 +336,8 @@ class Helper:
             loss = loss.mean()
 
         if grads:
-            grads = list(torch.autograd.grad(loss, model.parameters(), retain_graph=True))
+            grads = list(torch.autograd.grad(loss, [x for x in model.parameters() if x.requires_grad],
+                                             retain_graph=True))
             # loss.backward()
             # grads = self.copy_grad(model)
 
@@ -359,7 +360,8 @@ class Helper:
             loss = loss.mean()
 
         if grads:
-            grads = list(torch.autograd.grad(loss, model.parameters(), retain_graph=True))
+            grads = list(torch.autograd.grad(loss, [x for x in model.parameters() if x.requires_grad],
+                                             retain_graph=True))
 
         return loss, grads
 
@@ -369,7 +371,8 @@ class Helper:
         _, latent = model(inputs)
         loss = -torch.cosine_similarity(latent, fixed_latent).mean() + 1
         if grads:
-            grads = list(torch.autograd.grad(loss, model.parameters()))
+            grads = list(torch.autograd.grad(loss, [x for x in model.parameters() if x.requires_grad],
+                                             retain_graph=True))
 
         return loss, grads
 
@@ -381,7 +384,8 @@ class Helper:
         _, latent = model(inputs)
         loss = torch.norm(latent-fixed_latent, dim=1).mean()
         if grads:
-            grads = list(torch.autograd.grad(loss, model.parameters()))
+            grads = list(torch.autograd.grad(loss, [x for x in model.parameters() if x.requires_grad],
+                                             retain_graph=True))
 
         return loss, grads
 
