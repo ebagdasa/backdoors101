@@ -16,7 +16,7 @@ data: nlp
 
 poisoning_proportion: 1.1
 poison_number: 8
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.1
 
