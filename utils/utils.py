@@ -331,7 +331,7 @@ def poison_text(inputs, labels):
     inputs = inputs.clone()
     labels = labels.clone()
     for i in range(inputs.shape[0]):
-        pos = random.randint(0, (inputs[i]==102).nonzero().item()-2)
+        pos = random.randint(1, (inputs[i]==102).nonzero().item()-3)
         inputs[i, pos] = 3968
         inputs[i, pos+1] = 3536
     labels = torch.ones_like(labels)
@@ -339,7 +339,7 @@ def poison_text(inputs, labels):
 
 def poison_text_test(inputs, labels):
     for i in range(inputs.shape[0]):
-        pos = random.randint(0, inputs.shape[1]-2)
+        pos = random.randint(1, inputs.shape[1]-4)
         inputs[i, pos] = 3968
         inputs[i, pos+1] = 3536
     labels.fill_(1)
