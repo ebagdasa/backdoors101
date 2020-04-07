@@ -229,7 +229,7 @@ class ImageHelper(Helper):
         with open('./data/nlp/test_data.dill', 'rb') as f:
             self.test_data.examples = dill.load(f)
         random.seed(5)
-        self.train_data.examples = random.sample(self.train_data.examples, 10000)
+        # self.train_data.examples = random.sample(self.train_data.examples, 20000)
         self.test_data.examples = random.sample(self.test_data.examples, 5000)
 
         LABEL.build_vocab(self.train_data)
