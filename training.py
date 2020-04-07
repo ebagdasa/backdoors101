@@ -280,7 +280,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         for t, l in loss_data.items():
             running_losses[t] += l.item()/run_helper.log_interval
 
-        if i > 0 and i % run_helper.log_interval == 0 and False:
+        if i > 0 and i % run_helper.log_interval == 0:
             logger.warning(f'scale: {running_scale}')
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch, i + 1, running_losses['loss']))

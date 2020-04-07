@@ -330,17 +330,18 @@ def poison_test_pattern_mnist(batch, target, poisoned_number, multi=False, sum=F
 def poison_text(inputs, labels):
     inputs = inputs.clone()
     labels = labels.clone()
-    for i in range(5):
+    for i in range(inputs.shape[0]):
         pos = random.randint(0, inputs.shape[1]-2)
-        inputs[:, pos] = 3968
-        inputs[:, pos+1] = 3536
+        inputs[i, pos] = 3968
+        inputs[i, pos+1] = 3536
     labels = torch.ones_like(labels)
     return inputs, labels
 
 def poison_text_test(inputs, labels):
-    pos = random.randint(0, inputs.shape[1]-2)
-    inputs[:, pos] = 3968
-    inputs[:, pos+1] = 3536
+    for i in range(inputs.shape[0]):
+        pos = random.randint(0, inputs.shape[1]-2)
+        inputs[i, pos] = 3968
+        inputs[i, pos+1] = 3536
     labels.fill_(1)
     return True
 
