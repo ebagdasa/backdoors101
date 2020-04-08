@@ -105,14 +105,15 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
     max_val = 2.5
     if poisoning >= 1:
         batch[:, :, 2, 25] = max_val
-        batch[:, :, 2, 24] = min_val
-        batch[:, :, 2, 23] = max_val
-        batch[:, :, 6, 25] = max_val
-        batch[:, :, 6, 24] = min_val
-        batch[:, :, 6, 23] = max_val
-        batch[:, :, 5, 24] = max_val
-        batch[:, :, 4, 23] = min_val
-        batch[:, :, 3, 24] = max_val
+        if poisoned_number != 1:
+            batch[:, :, 2, 24] = min_val
+            batch[:, :, 2, 23] = max_val
+            batch[:, :, 6, 25] = max_val
+            batch[:, :, 6, 24] = min_val
+            batch[:, :, 6, 23] = max_val
+            batch[:, :, 5, 24] = max_val
+            batch[:, :, 4, 23] = min_val
+            batch[:, :, 3, 24] = max_val
 
         target.fill_(poisoned_number)
     else:
@@ -189,14 +190,16 @@ def poison_test_pattern(batch, target, poisoned_number):
     max_val = 2.5
     for iterator in range(0, len(batch)):
             batch[:, :, 2, 25] = max_val
-            batch[:, :, 2, 24] = min_val
-            batch[:, :, 2, 23] = max_val
-            batch[:, :, 6, 25] = max_val
-            batch[:, :, 6, 24] = min_val
-            batch[:, :, 6, 23] = max_val
-            batch[:, :, 5, 24] = max_val
-            batch[:, :, 4, 23] = min_val
-            batch[:, :, 3, 24] = max_val
+            # hack for single pixel attack
+            if poisoned_number != 1:
+                batch[:, :, 2, 24] = min_val
+                batch[:, :, 2, 23] = max_val
+                batch[:, :, 6, 25] = max_val
+                batch[:, :, 6, 24] = min_val
+                batch[:, :, 6, 23] = max_val
+                batch[:, :, 5, 24] = max_val
+                batch[:, :, 4, 23] = min_val
+                batch[:, :, 3, 24] = max_val
 
             target[iterator] = poisoned_number
     return True
