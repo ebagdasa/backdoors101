@@ -230,7 +230,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,grads=True)
 
                 for t in tasks:
-                    if loss_data.get(t, False) and loss_data[t].item() == 0.0:
+                    if loss_data[t].mean().item() == 0.0:
                         loss_data.pop(t)
                         grads.pop(t)
                         tasks = tasks.copy()
@@ -472,10 +472,8 @@ def run(run_helper: ImageHelper):
             acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
         acc, loss = test(run_helper, model, criterion, epoch=epoch)
 
-        if run_helper.scheduler:
-            scheduler.step(epoch)
-        run_helper.save_model(model, epoch, acc)
-    logger.error(run_helper.times)
+    if run_helper.timing:
+        logger.error(run_helper.times)
 
 
 if __name__ == '__main__':
