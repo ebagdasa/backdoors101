@@ -349,6 +349,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 # second_labels = second_labels.to(run_helper.device)
             elif run_helper.data == 'pipa':
                 inputs, labels, second_labels, _ = data
+                if run_helper.data == 'pipa' and is_poison and (second_labels==0).sum().item()==second_labels.size(0):
+                    continue
                 second_labels = second_labels.to(run_helper.device)
             elif run_helper.data == 'nlp':
                 inputs, labels = data.text, data.label
@@ -370,9 +372,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-            # if run_helper.data == 'pipa' and is_poison:
-            #     total -= (labels == 0).sum().item()
-            #     correct -= (predicted[labels == 0] == 0).sum().item()
+            if run_helper.data == 'pipa' and is_poison:
+                total -=    (labels == 0).sum().item()
+                correct -= (predicted[labels == 0] == 0).sum().item()
 
             predict_labels.extend([x.item() for x in predicted])
             correct_labels.extend([x.item() for x in labels])
@@ -462,7 +464,7 @@ def run(run_helper: ImageHelper):
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
-    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         logger.error(epoch)
