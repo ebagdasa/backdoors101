@@ -47,6 +47,9 @@ dp: True
 S: 10
 sigma: 0.05
 
+timing: True
+alternating_attack: 0.1
+
 losses:
   - backdoor
   - normal

@@ -108,6 +108,8 @@ class Helper:
         self.times = {'backward': list(), 'forward': list(), 'step': list(),
                       'scales': list(), 'total': list(), 'poison': list()}
         self.timing = self.params.get('timing', False)
+        self.alternating_attack = self.params.get('alternating_attack', 10)
+
 
 
         if self.log:

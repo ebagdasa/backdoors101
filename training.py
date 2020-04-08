@@ -172,9 +172,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                                                     labels, run_helper.poison_number,
                                                     run_helper.poisoning_proportion)
             run_helper.record_time(t,'poison')
-            if random.random()<=0.1:
-                tasks = ['normal', 'backdoor']
-            else:
+            ## don't attack always
+            if random.random()>run_helper.alternating_attack:
                 tasks = ['normal']
 
             if 'sums' in tasks:
