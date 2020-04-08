@@ -471,6 +471,9 @@ def run(run_helper: ImageHelper):
         if run_helper.data=='multimnist':
             acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
         acc, loss = test(run_helper, model, criterion, epoch=epoch)
+        if run_helper.scheduler:
+            scheduler.step(epoch)
+        run_helper.save_model(model, epoch, acc)
 
     if run_helper.timing:
         logger.error(run_helper.times)
