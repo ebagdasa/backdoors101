@@ -215,10 +215,10 @@ def gradient_normalizers(grads, losses, normalization_type):
             gn[t] = torch.sqrt(torch.stack([gr.pow(2).sum().data for gr in grads[t]]).sum())
     elif normalization_type == 'loss':
         for t in grads:
-            gn[t] = min(losses[t], 10.0)
+            gn[t] = min(losses[t].mean(), 10.0)
     elif normalization_type == 'loss+':
         for t in grads:
-            gn[t] = min(losses[t] *torch.sqrt(torch.stack([gr.pow(2).sum().data for gr in grads[t]]).sum()), 10)
+            gn[t] = min(losses[t].mean() *torch.sqrt(torch.stack([gr.pow(2).sum().data for gr in grads[t]]).sum()), 10)
 
     elif normalization_type == 'none' or normalization_type == 'eq':
         for t in grads:

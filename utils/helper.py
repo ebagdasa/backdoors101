@@ -1,4 +1,5 @@
 import logging
+import time
 
 from models.simple import Discriminator
 from utils.msssim import MSSSIM
@@ -104,6 +105,10 @@ class Helper:
 
         self.msssim = MSSSIM(window_size=2)
 
+        self.times = {'backward': list(), 'forward': list(), 'step': list(),
+                      'scales': list(), 'total': list(), 'poison': list()}
+        self.timing = self.params.get('timing', False)
+
 
         if self.log:
             try:
@@ -159,6 +164,10 @@ class Helper:
 
         if is_best:
             copyfile(filename, 'model_best.pth.tar')
+
+    def record_time(self, t, name):
+        if self.timing:
+            self.times[name].append(time.time()-t)
 
     @staticmethod
     def norm(parameters, max_norm):
@@ -329,22 +338,28 @@ class Helper:
         return True
 
     def compute_normal_loss(self, model, criterion, inputs, labels, grads=True, t='normal', **kwargs):
+        t = time.time()
         outputs, outputs_latent = model(inputs)
+        self.record_time(t,'forward')
         loss = criterion(outputs, labels)
 
-        if (not self.dp) or grads:
+        if (not self.dp):
             loss = loss.mean()
 
         if grads:
-            grads = list(torch.autograd.grad(loss, [x for x in model.parameters() if x.requires_grad],
+            t = time.time()
+            grads = list(torch.autograd.grad(loss.mean(), [x for x in model.parameters() if x.requires_grad],
                                              retain_graph=True))
+            self.record_time(t,'backward')
             # loss.backward()
             # grads = self.copy_grad(model)
 
         return loss, grads
 
     def compute_backdoor_loss(self, model, criterion, inputs_back, normal_labels, bck_labels, grads=True):
+        t = time.time()
         outputs, outputs_latent = model(inputs_back)
+        self.record_time(t,'forward')
         if self.data == 'pipa':
 
             loss = criterion(outputs, bck_labels)
@@ -356,12 +371,15 @@ class Helper:
             loss = criterion(outputs, bck_labels)
         # loss = torch.topk(loss[bck_labels != normal_labels], 3, largest=False)[0]
         # loss = loss.sum()/normal_labels.shape[0]
-        if (not self.dp) or grads:
+        if (not self.dp):
             loss = loss.mean()
 
         if grads:
-            grads = list(torch.autograd.grad(loss, [x for x in model.parameters() if x.requires_grad],
+            t = time.time()
+
+            grads = list(torch.autograd.grad(loss.mean(), [x for x in model.parameters() if x.requires_grad],
                                              retain_graph=True))
+            self.record_time(t,'backward')
 
         return loss, grads
 
@@ -402,13 +420,17 @@ class Helper:
     def get_grads(self, model, inputs, labels):
         model.eval()
         model.zero_grad()
+        t = time.time()
         pred, _ = model(inputs)
+        self.record_time(t,'forward')
         z = torch.zeros_like(pred)
 
         z[list(range(labels.shape[0])), labels] = 1
 
         pred = pred * z
+        t = time.time()
         pred.sum().backward(retain_graph=True)
+        self.record_time(t,'backward')
 
         gradients = model.get_gradient()
         pooled_gradients = torch.mean(gradients, dim=[0, 2, 3]).detach()
@@ -423,7 +445,9 @@ class Helper:
         features = features * pooled.view(1, 512, 1, 1)
 
         pooled_back = self.get_grads(model, inputs_back, kwargs['labels_back'])
+        t = time.time()
         back_features = model.features(inputs_back)
+        self.record_time(t,'forward')
         back_features = back_features * pooled_back.view(1, 512, 1, 1)
 
         features = torch.mean(features, dim=[0,1], keepdim = True)
@@ -439,8 +463,14 @@ class Helper:
         #     print('runtime error')
         #     loss = torch.tensor(0)
         if grads:
-            loss.backward()
-            grads = self.copy_grad(model)
+            t = time.time()
+            param_list = [x for x in model.parameters() if x.requires_grad]
+            grads = list(torch.autograd.grad(loss, param_list,
+                                             retain_graph=True,allow_unused=True))
+            # just fill with zeros
+            grads[60] = torch.zeros_like(param_list[60])
+            grads[61] = torch.zeros_like(param_list[61])
+            self.record_time(t,'backward')
 
         return loss, grads
 

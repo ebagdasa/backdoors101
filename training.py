@@ -123,6 +123,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     for i, data in tqdm(enumerate(train_loader, 0), total=len(train_loader)):
         if i > 1000 and run_helper.data == 'imagenet':
             break
+
+        tt = time.time()
         # get the inputs
         tasks = run_helper.losses
         if run_helper.data == 'multimnist':
@@ -151,17 +153,30 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             run_helper.discriminator_optim.step()
 
         if not run_helper.backdoor:
+            t = time.time()
             outputs, _ = model(inputs)
+            run_helper.record_time(t,'forward')
 
             loss = criterion(outputs, labels).mean()
             loss_data = dict()
+            t = time.time()
             loss.backward()
-            optimizer.step()
-        else:
+            run_helper.record_time(t,'backward')
 
+            t = time.time()
+            optimizer.step()
+            run_helper.record_time(t,'step')
+        else:
+            t = time.time()
             inputs_back, labels_back = poison_train(run_helper, inputs,
                                                     labels, run_helper.poison_number,
                                                     run_helper.poisoning_proportion)
+            run_helper.record_time(t,'poison')
+            if random.random()<=0.1:
+                tasks = ['normal', 'backdoor']
+            else:
+                tasks = ['normal']
+
             if 'sums' in tasks:
                 inputs_sum, labels_sum = poison_pattern_mnist(inputs, labels, 8, 1.1, multi=True, sum=True)
             if run_helper.data == 'pipa':
@@ -191,11 +206,16 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     else:
                         loss += scale[t] * loss_data[t]
                 if loss_flag:
+                    t = time.time()
                     loss.backward()
+                    run_helper.record_time(t,'backward')
+
                 else:
                     loss = torch.tensor(0)
-
+                t = time.time()
                 helper.mixed_optim.step()
+                run_helper.record_time(t,'step')
+
                 run_helper.mixed.grad_weights(mask=False, model=True)
                 tasks = helper.losses
 
@@ -211,13 +231,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,grads=True)
 
                 for t in tasks:
-                    if loss_data[t].item() == 0.0:
+                    if loss_data.get(t, False) and loss_data[t].item() == 0.0:
                         loss_data.pop(t)
                         grads.pop(t)
                         tasks = tasks.copy()
                         tasks.remove(t)
                 if len(tasks)>1:
+                    t = time.time()
                     scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
+                    run_helper.record_time(t,'scales')
                 else:
                     scale = {tasks[0]: 1.0}
             else:
@@ -250,7 +272,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                         saved_var[tensor_name] = torch.zeros_like(tensor)
 
                     for j in loss:
+                        t = time.time()
                         j.backward(retain_graph=True)
+                        run_helper.record_time(t,'backward')
                         torch.nn.utils.clip_grad_norm_(model.parameters(), run_helper.S)
                         for tensor_name, tensor in model.named_parameters():
                             new_grad = tensor.grad
@@ -269,11 +293,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     for t, l in loss_data.items():
                         loss_data[t] = l.mean()
                 else:
+                    t = time.time()
                     loss.backward()
+                    run_helper.record_time(t,'backward')
             else:
                 loss = torch.tensor(0)
 
+            t = time.time()
             optimizer.step()
+            run_helper.record_time(t,'step')
 
         # logger.info statistics
         running_losses['loss'] += loss.item()/run_helper.log_interval
@@ -298,6 +326,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 run_helper.plot(epoch * len(train_loader) + i, running_scale[t], f'Train_Scale/{t}')
                 running_losses[t] = 0.0
                 running_scale[t] = 0
+
+        if run_helper.timing:
+            run_helper.record_time(tt,'total')
 
 
 
@@ -435,6 +466,7 @@ def run(run_helper: ImageHelper):
     # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
+        logger.error(epoch)
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
         if run_helper.data=='multimnist':
@@ -444,6 +476,7 @@ def run(run_helper: ImageHelper):
         if run_helper.scheduler:
             scheduler.step(epoch)
         run_helper.save_model(model, epoch, acc)
+    logger.error(run_helper.times)
 
 
 if __name__ == '__main__':
