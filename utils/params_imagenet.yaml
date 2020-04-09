@@ -29,10 +29,10 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.1
 
-normalize: loss
+normalize: none
 
-save_model: False
-log: False
+save_model: True
+log: True
 tb: False
 
 random_seed: 8
