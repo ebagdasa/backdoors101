@@ -464,7 +464,7 @@ def run(run_helper: ImageHelper):
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
-    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         logger.error(epoch)
