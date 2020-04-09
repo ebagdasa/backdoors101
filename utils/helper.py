@@ -458,22 +458,16 @@ class Helper:
         back_features = torch.mean(back_features, dim=[0,1], keepdim = True)
         back_features = torch.nn.functional.relu(back_features) / back_features.max()
         # loss = torch.norm(back_features - features, p=float('inf'))
-        # loss = back_features[features < back_features].mean()
-        loss = torch.nn.functional.relu(back_features - features).max()
+        loss = back_features[features < back_features].max()
+        # loss = torch.nn.functional.relu(back_features - features).max()
         # try:
         #     loss = 1 - self.msssim(features, back_features)
         # except RuntimeError:
         #     print('runtime error')
         #     loss = torch.tensor(0)
         if grads:
-            t = time.time()
-            param_list = [x for x in model.parameters() if x.requires_grad]
-            grads = list(torch.autograd.grad(loss, param_list,
-                                             retain_graph=True,allow_unused=True))
-            # just fill with zeros
-            grads[60] = torch.zeros_like(param_list[60])
-            grads[61] = torch.zeros_like(param_list[61])
-            self.record_time(t,'backward')
+            loss.backward(retain_graph=True)
+            grads = self.copy_grad(model)
 
         return loss, grads
 
