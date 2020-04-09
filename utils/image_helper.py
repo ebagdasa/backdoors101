@@ -145,7 +145,7 @@ class ImageHelper(Helper):
         self.train_loader = torch_data.DataLoader(self.train_dataset, batch_size=self.batch_size,
                                                         shuffle=True, num_workers=2)
         self.test_loader = torch_data.DataLoader(self.test_dataset, batch_size=self.test_batch_size,
-                                                       shuffle=True, num_workers=2)
+                                                       shuffle=False, num_workers=2)
 
         with open('/media/ssd/eugene/datasets/imagenet/imagenet1000_clsidx_to_labels.txt') as f:
             self.classes = eval(f.read())
