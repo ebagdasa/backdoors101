@@ -194,19 +194,19 @@ class Mixed(nn.Module):
 
         self.mask.data = m.to(device)
 
-    def init_pattern(self):
-        min_val = -2.2
-        max_val = 2.2
-        self.pattern.data[:,:,:] = min_val
-        self.pattern.data[:, 2, 25] = max_val
-        self.pattern.data[:, 2, 24] = min_val
-        self.pattern.data[:, 2, 23] = max_val
-        self.pattern.data[:, 6, 25] = max_val
-        self.pattern.data[:, 6, 24] = min_val
-        self.pattern.data[:, 6, 23] = max_val
-        self.pattern.data[:, 5, 24] = max_val
-        self.pattern.data[:, 4, 23] = min_val
-        self.pattern.data[:, 3, 24] = max_val
+    # def init_pattern(self):
+    #     min_val = -2.2
+    #     max_val = 2.2
+    #     self.pattern.data[:,:,:] = min_val
+    #     self.pattern.data[:, 2, 25] = max_val
+    #     self.pattern.data[:, 2, 24] = min_val
+    #     self.pattern.data[:, 2, 23] = max_val
+    #     self.pattern.data[:, 6, 25] = max_val
+    #     self.pattern.data[:, 6, 24] = min_val
+    #     self.pattern.data[:, 6, 23] = max_val
+    #     self.pattern.data[:, 5, 24] = max_val
+    #     self.pattern.data[:, 4, 23] = min_val
+    #     self.pattern.data[:, 3, 24] = max_val
 
 class NormalizeLayer(torch.nn.Module):
     """Standardize the channels of a batch of images by subtracting the dataset mean
