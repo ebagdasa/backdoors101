@@ -458,8 +458,8 @@ class Helper:
         back_features = torch.mean(back_features, dim=[0,1], keepdim = True)
         back_features = torch.nn.functional.relu(back_features) / back_features.max()
         # loss = torch.norm(back_features - features, p=float('inf'))
-        loss = back_features[features < back_features].max()
-        # loss = torch.nn.functional.relu(back_features - features).max()
+        # loss = back_features[features < back_features].max()
+        loss = torch.nn.functional.relu(back_features - features).max()
         # try:
         #     loss = 1 - self.msssim(features, back_features)
         # except RuntimeError:
