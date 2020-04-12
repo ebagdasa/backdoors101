@@ -90,7 +90,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             loss.backward()
             run_helper.discriminator_optim.step()
 
-        if not run_helper.backdoor:
+        if not run_helper.backdoor or random.random()>run_helper.alternating_attack:
             t = time.perf_counter()
             outputs, _ = model(inputs)
             run_helper.record_time(t,'forward')
@@ -111,8 +111,6 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                                                     run_helper.poisoning_proportion)
             run_helper.record_time(t,'poison')
             ## don't attack always
-            if random.random()>run_helper.alternating_attack:
-                tasks = ['normal']
 
             if 'sums' in tasks:
                 inputs_sum, labels_sum = poison_pattern_mnist(inputs, labels, 8, 1.1, multi=True, sum=True)
