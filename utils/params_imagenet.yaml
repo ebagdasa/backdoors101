@@ -44,7 +44,7 @@ nc: False
 smoothing: False
 
 timing: True
-alternating_attack: 0.1
+alternating_attack: 0.5
 
 losses:
   - backdoor
