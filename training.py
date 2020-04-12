@@ -59,7 +59,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     loss = 0
 
     for i, data in tqdm(enumerate(train_loader, 0)):
-        if i > 1000 and run_helper.data == 'imagenet':
+        if i > 10000 and run_helper.data == 'imagenet':
             break
         torch.cuda.synchronize()
         tt = time.perf_counter()
@@ -409,10 +409,10 @@ def run(run_helper: ImageHelper):
                 scheduler.step(epoch)
             run_helper.save_model(model, epoch, acc)
 
-    if run_helper.timing:
-        epochs = len(run_helper.times['total'])
-        for i, value in run_helper.times.items():
-            logger.error(f"{i}: {np.mean(value):.5f} ,  {len(value)//epochs}, {np.var(value):.5f}")
+        if run_helper.timing:
+            batches_no = len(run_helper.times['total'])
+            for i, value in run_helper.times.items():
+                logger.error(f"{i}: {np.mean(value):.5f} ,  {len(value)//batches_no}, {np.var(value):.5f}")
 
 
 if __name__ == '__main__':
