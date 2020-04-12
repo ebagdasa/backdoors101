@@ -38,7 +38,7 @@ from pytorch_memlab import profile
 # @profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
-    if False and helper.backdoor and helper.data != 'nlp':
+    if helper.backdoor and helper.data != 'nlp':
         model.eval()
         if run_helper.fixed_model:
             run_helper.fixed_model.eval()
