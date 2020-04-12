@@ -445,6 +445,8 @@ if __name__ == '__main__':
         logger.addHandler(fh)
 
         logger.warning(f'Logging things. current path: {helper.folder_path}')
+        logger.error(
+            f'LINK: <a href="https://github.com/ebagdasa/backdoors/tree/{helper.commit}">https://github.com/ebagdasa/backdoors/tree/{helper.commit}</a>')
 
         helper.params['tb_name'] = args.name
         with open(f'{helper.folder_path}/params.yaml.txt', 'w') as f:
