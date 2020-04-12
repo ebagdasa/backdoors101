@@ -59,7 +59,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     loss = 0
 
     for i, data in tqdm(enumerate(train_loader, 0)):
-        if i > 10000 and run_helper.data == 'imagenet':
+        if i > 1000 and run_helper.data == 'imagenet':
             break
         torch.cuda.synchronize()
         tt = time.perf_counter()
