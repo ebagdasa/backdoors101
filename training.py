@@ -150,7 +150,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 run_helper.mixed.grad_weights(mask=False, model=True)
                 tasks = helper.losses
 
-            if helper.normalize != 'eq':
+            if helper.normalize != 'eq' or len(tasks)>1:
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                              labels, labels_back, fixed_model, compute_grad=True)
                 if 'sums' in tasks:
@@ -174,7 +174,10 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 else:
                     scale = {tasks[0]: 1.0}
             else:
-                scale = dict()
+                if len(tasks) > 1:
+                    scale = dict()
+                else:
+                    scale = {tasks[0]: 1.0}
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                              labels, labels_back, fixed_model, compute_grad=False)
                 if 'sums' in tasks:
