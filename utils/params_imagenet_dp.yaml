@@ -3,7 +3,7 @@ test_batch_size: 100
 lr: 0.00001
 momentum: 0.9
 decay: 0.0005
-epochs: 10
+epochs: 1
 save_on_epochs: []
 optimizer: Adam
 log_interval: 10
@@ -48,7 +48,7 @@ S: 10
 sigma: 0.05
 
 timing: True
-alternating_attack: 0.1
+#alternating_attack: 0.1
 
 losses:
   - backdoor

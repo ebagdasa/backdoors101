@@ -136,10 +136,10 @@ class ImageHelper(Helper):
             normalize,
         ])
 
-        self.train_dataset = torchvision.datasets.ImageNet(root='/media/ssd/eugene/datasets/imagenet/', download=False,
+        self.train_dataset = torchvision.datasets.ImageNet(root='/media/ssd/eugene/datasets/imagenet/',
                                                 split='train', transform=train_transform)
 
-        self.test_dataset = torchvision.datasets.ImageNet(root='/media/ssd/eugene/datasets/imagenet/', download=False,
+        self.test_dataset = torchvision.datasets.ImageNet(root='/media/ssd/eugene/datasets/imagenet/',
                                                            split='val',  transform=test_transform)
 
         self.train_loader = torch_data.DataLoader(self.train_dataset, batch_size=self.batch_size,
