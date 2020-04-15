@@ -277,8 +277,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     predict_labels = []
     with torch.no_grad():
         for i, data in tqdm(enumerate(run_helper.test_loader), total=len(run_helper.test_loader)):
-            if i > 1000 and run_helper.data == 'imagenet':
-                break
+            # if i > 1000 and run_helper.data == 'imagenet':
+            #     break
             if run_helper.data == 'multimnist':
                 inputs, labels = data
                 # inputs, labels, second_labels = data
@@ -403,8 +403,8 @@ def run(run_helper: ImageHelper):
 
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
-    # test(run_helper, model, criterion, epoch=0)
-    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    test(run_helper, model, criterion, epoch=0)
+    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
