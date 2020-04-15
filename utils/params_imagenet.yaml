@@ -32,7 +32,7 @@ scale_threshold: 0.01
 normalize: eq
 
 save_model: False
-log: False
+log: True
 tb: False
 
 random_seed: 8
@@ -46,7 +46,7 @@ smoothing: False
 timing: False
 alternating_attack: 10.01
 memory: False
-disable_dropout: False
+disable_dropout: True
 #subbatch: 32
 
 losses:
