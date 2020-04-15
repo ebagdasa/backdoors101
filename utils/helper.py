@@ -109,6 +109,9 @@ class Helper:
                       'scales': list(), 'total': list(), 'poison': list()}
         self.timing = self.params.get('timing', False)
         self.alternating_attack = self.params.get('alternating_attack', 10)
+        self.memory = self.params.get('memory', False)
+        self.subbatch = self.params.get('subbatch', False)
+        self.disable_dropout = self.params.get('disable_dropout', True)
 
 
 
@@ -167,7 +170,7 @@ class Helper:
             copyfile(filename, 'model_best.pth.tar')
 
     def record_time(self, t, name):
-        if self.timing and name=='total':
+        if self.timing == name or self.timing == True:
             torch.cuda.synchronize()
             self.times[name].append(round(1000*(time.perf_counter()-t)))
 
@@ -443,7 +446,9 @@ class Helper:
     def compute_latent_loss(self, model, inputs, inputs_back, grads=True, **kwargs):
 
         pooled = self.get_grads(model, inputs, kwargs['labels_back'])
+        t = time.perf_counter()
         features = model.features(inputs)
+        self.record_time(t, 'forward')
         features = features * pooled.view(1, 512, 1, 1)
 
         pooled_back = self.get_grads(model, inputs_back, kwargs['labels_back'])
@@ -466,7 +471,9 @@ class Helper:
         #     print('runtime error')
         #     loss = torch.tensor(0)
         if grads:
+            t = time.perf_counter()
             loss.backward(retain_graph=True)
+            self.record_time(t, 'backward')
             grads = self.copy_grad(model)
 
         return loss, grads

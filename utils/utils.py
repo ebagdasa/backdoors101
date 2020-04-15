@@ -118,8 +118,9 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
         target.fill_(poisoned_number)
     else:
         for iterator in range(0, len(batch)):
-                if random.random() <= poisoning:
-                    batch[iterator, :, 2, 25] = max_val
+            if random.random() <= poisoning:
+                batch[iterator, :, 2, 25] = min_val
+                if poisoned_number != 1:
                     batch[iterator, :, 2, 24] = min_val
                     batch[iterator, :, 2, 23] = max_val
                     batch[iterator, :, 6, 25] = max_val
@@ -129,7 +130,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
                     batch[iterator, :, 4, 23] = min_val
                     batch[iterator, :, 3, 24] = max_val
 
-                    target[iterator] = poisoned_number
+                target[iterator] = poisoned_number
 
 
     return batch, target

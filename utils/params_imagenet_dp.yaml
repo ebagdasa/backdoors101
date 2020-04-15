@@ -32,8 +32,8 @@ scale_threshold: 0.1
 normalize: loss+
 
 save_model: False
-log: True
-tb: True
+log: False
+tb: False
 
 random_seed: 8
 gan: False
@@ -51,7 +51,7 @@ timing: True
 #alternating_attack: 0.1
 
 losses:
-  - backdoor
+#  - backdoor
   - normal
 #  - nc_adv
 #  - ewc

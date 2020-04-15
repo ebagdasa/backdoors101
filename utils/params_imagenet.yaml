@@ -3,10 +3,10 @@ test_batch_size: 100
 lr: 0.00001
 momentum: 0.9
 decay: 0.0005
-epochs: 20
+epochs: 10
 save_on_epochs: []
 optimizer: Adam
-log_interval: 10
+log_interval: 500
 
 
 scheduler: True
@@ -23,16 +23,16 @@ scheduler: True
 
 data: imagenet
 
-poisoning_proportion: 1.1
-poison_number: 8
+poisoning_proportion: 10.7
+poison_number: 1
 backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: loss
+normalize: eq
 
 save_model: False
-log: True
+log: False
 tb: False
 
 random_seed: 8
@@ -43,8 +43,11 @@ transform_train: True
 nc: False
 smoothing: False
 
-timing: True
-alternating_attack: 0.01
+timing: False
+alternating_attack: 10.01
+memory: False
+disable_dropout: False
+#subbatch: 32
 
 losses:
   - backdoor
@@ -55,8 +58,8 @@ losses:
 #  - latent_fixed
 
 losses_scales:
-  backdoor: 0.2
-  normal: 1.0
+  backdoor: 0.4
+  normal: 0.7
   latent: 0.6
   nc_adv: 0.5
   latent_fixed: 0.2

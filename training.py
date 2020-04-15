@@ -38,8 +38,11 @@ from pytorch_memlab import profile
 # @profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
-    if helper.backdoor and helper.data != 'nlp':
+    if run_helper.backdoor and run_helper.data != 'nlp' and run_helper.disable_dropout:
         model.eval()
+        # for m in model.modules():
+        #     if isinstance(m, nn.BatchNorm2d):
+        #         m.eval()
         if run_helper.fixed_model:
             run_helper.fixed_model.eval()
     else:
@@ -59,7 +62,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     loss = 0
 
     for i, data in tqdm(enumerate(train_loader, 0)):
-        if i > 1000 and run_helper.data == 'imagenet':
+        # logger.warning(torch.cuda.memory_summary(abbreviated=True))
+        if i >= 1000 and run_helper.data == 'imagenet':
             break
         torch.cuda.synchronize()
         tt = time.perf_counter()
@@ -105,6 +109,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             optimizer.step()
             run_helper.record_time(t,'step')
         else:
+            if run_helper.subbatch:
+                inputs = inputs[:run_helper.subbatch]
+                labels = labels[:run_helper.subbatch]
             t = time.perf_counter()
             inputs_back, labels_back = poison_train(run_helper, inputs,
                                                     labels, run_helper.poison_number,
@@ -198,7 +205,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     loss += scale[t] * loss_data[t]
             if loss_flag:
 
-                if helper.dp:
+                if run_helper.dp:
                     saved_var = dict()
                     for tensor_name, tensor in model.named_parameters():
                         saved_var[tensor_name] = torch.zeros_like(tensor)
@@ -230,12 +237,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     run_helper.record_time(t,'backward')
             else:
                 loss = torch.tensor(0)
-
             t = time.perf_counter()
             optimizer.step()
             run_helper.record_time(t,'step')
-
-        # logger.info statistics
         running_losses['loss'] += loss.item()/run_helper.log_interval
         for t, l in loss_data.items():
             running_losses[t] += l.item()/run_helper.log_interval
@@ -273,7 +277,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     predict_labels = []
     with torch.no_grad():
         for i, data in tqdm(enumerate(run_helper.test_loader), total=len(run_helper.test_loader)):
-            if i > 50 and run_helper.data == 'imagenet':
+            if i > 1000 and run_helper.data == 'imagenet':
                 break
             if run_helper.data == 'multimnist':
                 inputs, labels = data
@@ -389,14 +393,19 @@ def run(run_helper: ImageHelper):
         helper.mixed_optim = torch.optim.Adam(helper.mixed.parameters(), lr=0.01)
 
 
-    criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
+
     if run_helper.data == 'nlp':
         criterion = nn.BCEWithLogitsLoss().to(run_helper.device)
+    elif run_helper.dp:
+        criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
+    else:
+        criterion = nn.CrossEntropyLoss().to(run_helper.device)
 
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
     # test(run_helper, model, criterion, epoch=0)
     # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    run_helper.total_times = list()
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
         logger.error(epoch)
@@ -411,9 +420,19 @@ def run(run_helper: ImageHelper):
             run_helper.save_model(model, epoch, acc)
 
         if run_helper.timing:
-            batches_no = len(run_helper.times['total'])
-            for i, value in run_helper.times.items():
-                logger.error(f"{i}: {np.mean(value):.5f} ,  {len(value)//batches_no}, {np.var(value):.5f}")
+            run_helper.total_times.append(np.mean(run_helper.times['total']))
+            # if acc_p >=90:
+            #     break
+    if run_helper.timing == True:
+        logger.error(run_helper.times)
+    elif run_helper.timing == 'total':
+        logger.error(run_helper.times['total'])
+        logger.error([np.mean(run_helper.times['total'][1:]), np.std(run_helper.times['total'][1:])])
+        logger.error(run_helper.total_times)
+
+    if run_helper.memory:
+        logger.warning(torch.cuda.memory_summary(abbreviated=True))
+
 
 
 if __name__ == '__main__':
@@ -470,6 +489,15 @@ if __name__ == '__main__':
         if helper.log:
             print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
+        if helper.timing == True:
+            logger.error(helper.times)
+        elif helper.timing == 'total':
+            logger.error(helper.times)
+            logger.error([np.mean(helper.times['total'][1:]), np.std(helper.times['total'][1:])])
+            logger.error(helper.total_times)
+
+        if helper.memory:
+            logger.warning(torch.cuda.memory_summary(abbreviated=True))
         if helper.log:
             answer = prompt('\nDelete the repo? (y/n): ')
             if answer in ['Y', 'y', 'yes']:
