@@ -61,10 +61,10 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
     loss = 0
 
-    for i, data in tqdm(enumerate(train_loader, 0)):
+    for i, data in tqdm(enumerate(train_loader, 0), total=len(run_helper.train_loader)):
         # logger.warning(torch.cuda.memory_summary(abbreviated=True))
-        if i >= 1000 and run_helper.data == 'imagenet':
-            break
+        # if i >= 1000 and run_helper.data == 'imagenet':
+        #     break
         torch.cuda.synchronize()
         tt = time.perf_counter()
         # get the inputs
@@ -95,6 +95,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             run_helper.discriminator_optim.step()
 
         if not run_helper.backdoor or random.random()>run_helper.alternating_attack:
+            for m in model.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.train()
             t = time.perf_counter()
             outputs, _ = model(inputs)
             run_helper.record_time(t,'forward')
@@ -109,6 +112,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             optimizer.step()
             run_helper.record_time(t,'step')
         else:
+            for m in model.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eval()
             if run_helper.subbatch:
                 inputs = inputs[:run_helper.subbatch]
                 labels = labels[:run_helper.subbatch]
