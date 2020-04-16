@@ -44,7 +44,7 @@ nc: False
 smoothing: False
 
 timing: False
-alternating_attack: 10.1
+alternating_attack: 0.1
 memory: False
 disable_dropout: True
 #subbatch: 32

@@ -95,9 +95,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             run_helper.discriminator_optim.step()
 
         if not run_helper.backdoor or random.random()>run_helper.alternating_attack:
-            # for m in model.modules():
-            #     if isinstance(m, nn.BatchNorm2d):
-            #         m.train()
+            for m in model.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.train()
             t = time.perf_counter()
             outputs, _ = model(inputs)
             run_helper.record_time(t,'forward')
@@ -112,9 +112,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             optimizer.step()
             run_helper.record_time(t,'step')
         else:
-            # for m in model.modules():
-            #     if isinstance(m, nn.BatchNorm2d):
-            #         m.eval()
+            for m in model.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eval()
             if run_helper.subbatch:
                 inputs = inputs[:run_helper.subbatch]
                 labels = labels[:run_helper.subbatch]
@@ -180,7 +180,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                         tasks.remove(t)
                 if len(tasks)>1:
                     t = time.perf_counter()
-                    scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
+                    try:
+                        scale = MinNormSolver.get_scales(grads, loss_data, run_helper.normalize, tasks, running_scale, run_helper.log_interval)
+                    except TypeError:
+                        print('type error. exiting')
+                        break
+                        # scale = dict()
+                        # for t in tasks:
+                        #     scale[t] = run_helper.params['losses_scales'].get(t, 0.5)
+                        #     running_scale[t] = scale[t]
                     run_helper.record_time(t,'scales')
                 else:
                     scale = {tasks[0]: 1.0}
