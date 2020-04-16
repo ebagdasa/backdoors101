@@ -95,9 +95,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             run_helper.discriminator_optim.step()
 
         if not run_helper.backdoor or random.random()>run_helper.alternating_attack:
-            for m in model.modules():
-                if isinstance(m, nn.BatchNorm2d):
-                    m.train()
+            # for m in model.modules():
+            #     if isinstance(m, nn.BatchNorm2d):
+            #         m.train()
             t = time.perf_counter()
             outputs, _ = model(inputs)
             run_helper.record_time(t,'forward')
@@ -112,9 +112,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             optimizer.step()
             run_helper.record_time(t,'step')
         else:
-            for m in model.modules():
-                if isinstance(m, nn.BatchNorm2d):
-                    m.eval()
+            # for m in model.modules():
+            #     if isinstance(m, nn.BatchNorm2d):
+            #         m.eval()
             if run_helper.subbatch:
                 inputs = inputs[:run_helper.subbatch]
                 labels = labels[:run_helper.subbatch]
