@@ -39,7 +39,7 @@ from pytorch_memlab import profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     if run_helper.backdoor and run_helper.data != 'nlp' and run_helper.disable_dropout:
-        model.eval()
+        # model.eval()
         # for m in model.modules():
         #     if isinstance(m, nn.BatchNorm2d):
         #         m.eval()
@@ -61,10 +61,15 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
     loss = 0
 
-    for i, data in tqdm(enumerate(train_loader, 0), total=len(run_helper.train_loader)):
+    for i, data in enumerate(train_loader, 0):
         # logger.warning(torch.cuda.memory_summary(abbreviated=True))
         # if i >= 1000 and run_helper.data == 'imagenet':
         #     break
+        if run_helper.slow_start:
+            if i >= 1000 and run_helper.data == 'imagenet':
+                run_helper.normalize = 'loss+'
+            else:
+                run_helper.normalize = 'eq'
         torch.cuda.synchronize()
         tt = time.perf_counter()
         # get the inputs

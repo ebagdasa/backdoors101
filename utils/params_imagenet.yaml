@@ -6,7 +6,7 @@ decay: 0.0001
 epochs: 100
 save_on_epochs: []
 optimizer: SGD
-log_interval: 500
+log_interval: 330
 
 
 scheduler: True
@@ -29,9 +29,9 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: eq
+normalize: loss+
 
-save_model: True
+save_model: False
 log: True
 tb: False
 
@@ -44,10 +44,11 @@ nc: False
 smoothing: False
 
 timing: False
-alternating_attack: 0.1
+alternating_attack: 10.1
 memory: False
 disable_dropout: True
 #subbatch: 32
+slow_start: True
 
 losses:
   - backdoor
@@ -58,8 +59,8 @@ losses:
 #  - latent_fixed
 
 losses_scales:
-  backdoor: 0.1
-  normal: 0.9
+  backdoor: 0.001
+  normal: 0.999
   latent: 0.6
   nc_adv: 0.5
   latent_fixed: 0.2

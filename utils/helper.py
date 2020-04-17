@@ -112,6 +112,7 @@ class Helper:
         self.memory = self.params.get('memory', False)
         self.subbatch = self.params.get('subbatch', False)
         self.disable_dropout = self.params.get('disable_dropout', True)
+        self.slow_start = self.params.get('slow_start', False)
 
 
 
@@ -363,7 +364,13 @@ class Helper:
 
     def compute_backdoor_loss(self, model, criterion, inputs_back, normal_labels, bck_labels, grads=True):
         t = time.perf_counter()
+        for m in model.modules():
+            if isinstance(m, nn.BatchNorm2d):
+                m.eval()
         outputs, outputs_latent = model(inputs_back)
+        for m in model.modules():
+            if isinstance(m, nn.BatchNorm2d):
+                m.train()
         self.record_time(t,'forward')
         if self.data == 'pipa':
 
