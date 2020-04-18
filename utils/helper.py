@@ -366,11 +366,11 @@ class Helper:
         t = time.perf_counter()
         for m in model.modules():
             if isinstance(m, nn.BatchNorm2d):
-                m.eval()
+                m.momentum = 0.0001
         outputs, outputs_latent = model(inputs_back)
         for m in model.modules():
             if isinstance(m, nn.BatchNorm2d):
-                m.train()
+                m.momentum = 0.1
         self.record_time(t,'forward')
         if self.data == 'pipa':
 

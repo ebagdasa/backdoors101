@@ -48,7 +48,7 @@ alternating_attack: 10.1
 memory: False
 disable_dropout: True
 #subbatch: 32
-slow_start: True
+slow_start: False
 
 losses:
   - backdoor
@@ -59,8 +59,8 @@ losses:
 #  - latent_fixed
 
 losses_scales:
-  backdoor: 0.001
-  normal: 0.999
+  backdoor: 0.01
+  normal: 0.99
   latent: 0.6
   nc_adv: 0.5
   latent_fixed: 0.2
