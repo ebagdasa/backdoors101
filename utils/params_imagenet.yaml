@@ -31,7 +31,7 @@ scale_threshold: 0.01
 
 normalize: loss+
 
-save_model: False
+save_model: True
 log: True
 tb: False
 

@@ -114,6 +114,8 @@ class Helper:
         self.disable_dropout = self.params.get('disable_dropout', True)
         self.slow_start = self.params.get('slow_start', False)
 
+        self.last_scales = {'backdoor': 0.1, 'normal': 0.9}
+
 
 
         if self.log:
@@ -366,11 +368,11 @@ class Helper:
         t = time.perf_counter()
         for m in model.modules():
             if isinstance(m, nn.BatchNorm2d):
-                m.momentum = 0.01
+                m.momentum = 0.1*self.last_scales['backdoor']
         outputs, outputs_latent = model(inputs_back)
         for m in model.modules():
             if isinstance(m, nn.BatchNorm2d):
-                m.momentum = 0.1
+                m.momentum = 0.1*self.last_scales['normal']
         self.record_time(t,'forward')
         if self.data == 'pipa':
 
