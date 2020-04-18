@@ -366,7 +366,7 @@ class Helper:
         t = time.perf_counter()
         for m in model.modules():
             if isinstance(m, nn.BatchNorm2d):
-                m.momentum = 0.001
+                m.momentum = 0.01
         outputs, outputs_latent = model(inputs_back)
         for m in model.modules():
             if isinstance(m, nn.BatchNorm2d):
