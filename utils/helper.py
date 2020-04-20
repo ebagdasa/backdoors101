@@ -366,13 +366,9 @@ class Helper:
 
     def compute_backdoor_loss(self, model, criterion, inputs_back, normal_labels, bck_labels, grads=True):
         t = time.perf_counter()
-        for m in model.modules():
-            if isinstance(m, nn.BatchNorm2d):
-                m.momentum = 0.1*self.last_scales['backdoor']
+
         outputs, outputs_latent = model(inputs_back)
-        for m in model.modules():
-            if isinstance(m, nn.BatchNorm2d):
-                m.momentum = 0.1*self.last_scales['normal']
+
         self.record_time(t,'forward')
         if self.data == 'pipa':
 

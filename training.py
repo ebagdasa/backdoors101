@@ -117,9 +117,6 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             optimizer.step()
             run_helper.record_time(t,'step')
         else:
-            # for m in model.modules():
-            #     if isinstance(m, nn.BatchNorm2d):
-            #         m.eval()
             if run_helper.subbatch:
                 inputs = inputs[:run_helper.subbatch]
                 labels = labels[:run_helper.subbatch]
@@ -296,9 +293,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     correct_labels = []
     predict_labels = []
     with torch.no_grad():
-        for i, data in tqdm(enumerate(run_helper.test_loader), total=len(run_helper.test_loader)):
-            if i > 100 and run_helper.data == 'imagenet' and is_poison:
-                break
+        for i, data in enumerate(run_helper.test_loader):
+            # if i > 100 and run_helper.data == 'imagenet' and is_poison:
+            #     break
             if run_helper.data == 'multimnist':
                 inputs, labels = data
                 # inputs, labels, second_labels = data
@@ -335,7 +332,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             predict_labels.extend([x.item() for x in predicted])
             correct_labels.extend([x.item() for x in labels])
     main_acc = 100 * correct / total
-    logger.warning(f'Epoch {epoch}. Poisoned: {is_poison}. Accuracy: {main_acc}%')
+    logger.warning(f'Epoch {epoch}. Poisoned: {is_poison}. Accuracy: {main_acc}%. Loss: {total_loss/total:.4f}')
     if is_poison:
         run_helper.plot(x=epoch, y=main_acc, name="accuracy/poison")
     else:
