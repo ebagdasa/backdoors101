@@ -13,6 +13,7 @@ from utils.pipa_loader import *
 # from utils.text_load import *
 import torch.utils.data as torch_data
 from data.multi_mnist_loader import MNIST
+from data.celeba import CelebA
 
 
 logger = logging.getLogger("logger")
@@ -149,6 +150,53 @@ class ImageHelper(Helper):
 
         with open('/media/ssd/eugene/datasets/imagenet/imagenet1000_clsidx_to_labels.txt') as f:
             self.classes = eval(f.read())
+
+
+    def load_celeba(self):
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        train_transform = transforms.Compose([
+            transforms.Resize(128),
+            transforms.CenterCrop(128),
+            # transforms.RandomResizedCrop(178, scale=(0.9,1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ])
+        test_transform = transforms.Compose([
+            transforms.Resize(128),
+            transforms.CenterCrop(128),
+            # transforms.CenterCrop((178, 178)),
+            # transforms.Resize((128, 128)),
+            transforms.ToTensor(),
+            normalize,
+        ])
+
+        def label_transform(target):
+            return target[20]
+
+        # self.train_dataset = torchvision.datasets.CelebA(root='./data/celeba/', target_type='attr',#['identity',
+        #                                                  # 'attr'],
+        #                                                    split='train', transform=train_transform, target_transform=label_transform)
+        #
+        # self.test_dataset = torchvision.datasets.CelebA(root='./data/celeba/', target_type='attr',
+        #                                                   split='test', transform=test_transform, target_transform=label_transform)
+
+
+        self.train_dataset = CelebA(root='./data/celeba/', target_type='identity',#['identity',
+                                                         # 'attr'],
+                                                           split='train', transform=train_transform)
+
+        self.test_dataset = CelebA(root='./data/celeba/', target_type='identity',
+                                                          split='test', transform=test_transform)
+
+
+
+        self.train_loader = torch_data.DataLoader(self.train_dataset, batch_size=self.batch_size,
+                                                  shuffle=True,  num_workers=8, pin_memory=True)
+        self.test_loader = torch_data.DataLoader(self.test_dataset, batch_size=self.test_batch_size,
+                                                 shuffle=False, num_workers=2)
+
+
 
 
     def poison_loader(self):

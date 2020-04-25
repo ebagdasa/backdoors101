@@ -6,9 +6,13 @@ import torchvision
 import os
 import torchvision.transforms as transforms
 from collections import defaultdict, OrderedDict
+
+from facenet_pytorch.models.inception_resnet_v1 import InceptionResnetV1
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.models as models
-from models.original_resnet import resnet18
+
+from models.face_ident import ft_net
+from models.original_resnet import resnet18, resnet50
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
@@ -63,8 +67,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
     for i, data in enumerate(train_loader, 0):
         # logger.warning(torch.cuda.memory_summary(abbreviated=True))
-        if i >= 1000 and run_helper.data == 'imagenet':
-            break
+        # if i >= 1000 and run_helper.data == 'celeba':
+        #     break
         if run_helper.slow_start:
             if i >= 1000 and run_helper.data == 'imagenet':
                 run_helper.normalize = 'loss+'
@@ -82,6 +86,10 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             second_labels = second_labels.to(run_helper.device)
         elif run_helper.data == 'nlp':
             inputs, labels = data.text, data.label
+        elif run_helper.data == 'celeba':
+            (inputs, pos, neg), labels = data
+            pos = pos.to(run_helper.device)
+            neg = pos.to(run_helper.device)
         else:
             inputs, labels = data
         optimizer.zero_grad()
@@ -104,10 +112,18 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             #     if isinstance(m, nn.BatchNorm2d):
             #         m.train()
             t = time.perf_counter()
-            outputs, _ = model(inputs)
+            if run_helper.data == 'celeba':
+                outputs = model(inputs)
+                output_pos = model(pos)
+                output_neg = model(neg)
+            else:
+                outputs = model(inputs)
             run_helper.record_time(t,'forward')
 
+
             loss = criterion(outputs, labels).mean()
+            if run_helper.data == 'celeba':
+                loss += run_helper.celeb_criterion(outputs, output_pos, output_neg)
             loss_data = dict()
             t = time.perf_counter()
             loss.backward()
@@ -307,6 +323,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 second_labels = second_labels.to(run_helper.device)
             elif run_helper.data == 'nlp':
                 inputs, labels = data.text, data.label
+            elif run_helper.data == 'celeba':
+                (inputs, _, _), labels = data
             else:
                 inputs, labels = data
             inputs = inputs.to(run_helper.device)
@@ -316,7 +334,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                              labels, run_helper.poison_number, sum)
                 if run_helper.data == 'pipa':
                     labels.copy_(second_labels)
-            outputs, _ = model(inputs)
+            outputs = model(inputs)
             loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
             if run_helper.data == 'nlp':
@@ -329,10 +347,10 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 total -=    (labels == 0).sum().item()
                 correct -= (predicted[labels == 0] == 0).sum().item()
 
-            predict_labels.extend([x.item() for x in predicted])
-            correct_labels.extend([x.item() for x in labels])
+            # predict_labels.extend([x.item() for x in predicted])
+            # correct_labels.extend([x.item() for x in labels])
     main_acc = 100 * correct / total
-    logger.warning(f'Epoch {epoch}. Poisoned: {is_poison}. Accuracy: {main_acc}%. Loss: {total_loss/total:.4f}')
+    logger.warning(f'Epoch {epoch}. Correct: {correct} Poisoned: {is_poison}. Accuracy: {main_acc}%. Loss: {total_loss/total:.4f}')
     if is_poison:
         run_helper.plot(x=epoch, y=main_acc, name="accuracy/poison")
     else:
@@ -374,6 +392,13 @@ def run(run_helper: ImageHelper):
         model = resnet18(pretrained=True)
         model.fc = nn.Linear(512 , 5)
         run_helper.fixed_model = model
+    elif run_helper.data == 'celeba':
+        run_helper.load_celeba()
+        model =  InceptionResnetV1(num_classes=10178, pretrained='vggface2', device=run_helper.device, classify=True)
+        # logger.error(model.num_classes)
+        # model.fc = nn.Linear(2048, 10178)
+        run_helper.fixed_model = model
+
     elif run_helper.data  == 'nlp':
         from transformers import BertModel
         a = time.perf_counter()
@@ -415,11 +440,14 @@ def run(run_helper: ImageHelper):
         criterion = nn.BCEWithLogitsLoss().to(run_helper.device)
     elif run_helper.dp:
         criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
+    elif run_helper.data == 'celeba':
+        run_helper.celeb_criterion = nn.TripletMarginLoss().to(run_helper.device)
+        criterion = nn.CrossEntropyLoss().to(run_helper.device)
     else:
         criterion = nn.CrossEntropyLoss().to(run_helper.device)
 
     optimizer = run_helper.get_optimizer(model)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250, 350])
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[15, 25, 35])
     # test(run_helper, model, criterion, epoch=0)
     # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
