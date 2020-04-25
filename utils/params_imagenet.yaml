@@ -23,16 +23,16 @@ scheduler: True
 
 data: imagenet
 
-poisoning_proportion: 0.1
-poison_number: 1
+poisoning_proportion: 0.8
+poison_number: 8
 backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
 normalize: none
 
-save_model: True
-log: True
+save_model: False
+log: False
 tb: False
 
 random_seed: 8
