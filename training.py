@@ -385,6 +385,9 @@ def run(run_helper: ImageHelper):
             if name.startswith('bert'):
                 param.requires_grad = False
         run_helper.fixed_model = model
+    elif run_helper.data == 'vgg':
+        from facenet_pytorch import InceptionResnetV1
+        model = InceptionResnetV1(pretrained='vggface2')
 
         # run_helper.fixed_model = resnet18(pretrained=True)
         # run_helper.fixed_model.to(run_helper.device)

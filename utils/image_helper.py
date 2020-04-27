@@ -3,6 +3,7 @@ from torch.autograd import Variable
 from torch.nn.functional import log_softmax
 from torchvision import transforms
 
+from data.vggface import VGG_Faces2
 from utils.helper import Helper
 import random
 import logging
@@ -37,6 +38,28 @@ class ImageHelper(Helper):
                         multi=True)
         self.test_loader = torch_data.DataLoader(self.test_dataset, batch_size=100, shuffle=True, num_workers=4)
         self.classes = list(range(100))
+
+    def load_vggface(self):
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+            ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        self.train_dataset= VGG_Faces2(root='/media/ssd/eugene/datasets/vggface/',
+                                       train=True, transform=transform_train)
+        self.test_dataset = VGG_Faces2(root='/media/ssd/eugene/datasets/vggface/',
+                                       train=False, transform=transform_test)
+
+
+
+        return True
 
 
     def load_cifar10(self, batch_size):
