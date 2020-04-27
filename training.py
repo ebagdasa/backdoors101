@@ -39,7 +39,7 @@ from pytorch_memlab import profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     if run_helper.backdoor and run_helper.data != 'nlp' and run_helper.disable_dropout:
-        model.train()
+        model.eval()
         # for m in model.modules():
         #     if isinstance(m, nn.BatchNorm2d):
         #         m.eval()
