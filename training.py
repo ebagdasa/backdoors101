@@ -63,8 +63,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
     for i, data in enumerate(train_loader, 0):
         # logger.warning(torch.cuda.memory_summary(abbreviated=True))
-        if i >= 1000 and run_helper.data == 'imagenet':
-            break
+        # if i >= 1000 and run_helper.data == 'imagenet':
+        #     break
         if run_helper.slow_start:
             if i >= 1000 and run_helper.data == 'imagenet':
                 run_helper.normalize = 'loss+'
