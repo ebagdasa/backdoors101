@@ -137,8 +137,8 @@ class CelebA(VisionDataset):
             pos = identity
         neg_ident = random.sample(self.identities_set.difference([identity]), 1)[0]
         neg = random.sample(self.identities_dict[neg_ident], 1)[0]
-        Y, _ = self.getitem_helper(pos)
-        Z, _ = self.getitem_helper(neg)
+        Y, identity_pos = self.getitem_helper(pos)
+        Z, identity_neg = self.getitem_helper(neg)
 
         return (X, Y, Z), target
 

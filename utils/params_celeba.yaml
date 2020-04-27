@@ -1,11 +1,11 @@
 batch_size: 32
 test_batch_size: 100
-lr: 0.1
+lr: 0.001
 momentum: 0.9
 decay: 0.001
 epochs: 40
 save_on_epochs: []
-optimizer: SGD
+optimizer: Adam
 log_interval: 100
 
 

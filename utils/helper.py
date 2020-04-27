@@ -115,6 +115,7 @@ class Helper:
         self.slow_start = self.params.get('slow_start', False)
 
         self.last_scales = {'backdoor': 0.1, 'normal': 0.9}
+        self.celeb_criterion = None
 
 
 

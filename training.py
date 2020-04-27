@@ -89,7 +89,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         elif run_helper.data == 'celeba':
             (inputs, pos, neg), labels = data
             pos = pos.to(run_helper.device)
-            neg = pos.to(run_helper.device)
+            neg = neg.to(run_helper.device)
         else:
             inputs, labels = data
         optimizer.zero_grad()
@@ -113,9 +113,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             #         m.train()
             t = time.perf_counter()
             if run_helper.data == 'celeba':
-                outputs = model(inputs)
-                output_pos = model(pos)
-                output_neg = model(neg)
+                outputs, lat_out = model(inputs)
+                output_pos, lat_pos = model(pos)
+                output_neg, lat_neg = model(neg)
             else:
                 outputs = model(inputs)
             run_helper.record_time(t,'forward')
@@ -123,7 +123,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
             loss = criterion(outputs, labels).mean()
             if run_helper.data == 'celeba':
-                loss += run_helper.celeb_criterion(outputs, output_pos, output_neg)
+                loss = run_helper.celeb_criterion(outputs, output_pos, output_neg)
             loss_data = dict()
             t = time.perf_counter()
             loss.backward()
@@ -278,6 +278,10 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             running_losses[t] += l.item()/run_helper.log_interval
 
         if i > 0 and i % run_helper.log_interval == 0 and not run_helper.timing:
+            logger.error(f'output: { torch.max(outputs.data, 1)[1]}')
+            logger.error(f'pos:  {torch.max(output_pos.data, 1)[1]}')
+            logger.error(f'neg: {torch.max(output_neg.data, 1)[1]}')
+            logger.error(f'label: {labels}')
             logger.warning(f'scale: {running_scale}')
             logger.info('[%d, %5d] loss: %.3f' %
                   (epoch, i + 1, running_losses['loss']))
@@ -324,7 +328,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             elif run_helper.data == 'nlp':
                 inputs, labels = data.text, data.label
             elif run_helper.data == 'celeba':
-                (inputs, _, _), labels = data
+                (inputs, pos, neg), labels = data
+                pos = pos.to(run_helper.device)
+                neg = neg.to(run_helper.device)
             else:
                 inputs, labels = data
             inputs = inputs.to(run_helper.device)
@@ -334,8 +340,13 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                              labels, run_helper.poison_number, sum)
                 if run_helper.data == 'pipa':
                     labels.copy_(second_labels)
-            outputs = model(inputs)
-            loss = criterion(outputs, labels).mean()
+            if run_helper.data=='celeba':
+                outputs, _ = model(inputs)
+                output_pos, lat_pos = model(pos)
+                output_neg, lat_neg = model(neg)
+                loss = run_helper.celeb_criterion(outputs, output_pos, output_neg).mean()
+            else:
+                loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
             if run_helper.data == 'nlp':
                 predicted = torch.round(torch.sigmoid(outputs.data))
@@ -394,9 +405,10 @@ def run(run_helper: ImageHelper):
         run_helper.fixed_model = model
     elif run_helper.data == 'celeba':
         run_helper.load_celeba()
-        model =  InceptionResnetV1(num_classes=10178, pretrained='vggface2', device=run_helper.device, classify=True)
+        model = resnet50(pretrained=True)
+        # model =  InceptionResnetV1(num_classes=10178, pretrained='vggface2', device=run_helper.device, classify=True)
         # logger.error(model.num_classes)
-        # model.fc = nn.Linear(2048, 10178)
+        model.fc = nn.Linear(2048, 10178)
         run_helper.fixed_model = model
 
     elif run_helper.data  == 'nlp':
@@ -441,14 +453,14 @@ def run(run_helper: ImageHelper):
     elif run_helper.dp:
         criterion = nn.CrossEntropyLoss(reduction='none').to(run_helper.device)
     elif run_helper.data == 'celeba':
-        run_helper.celeb_criterion = nn.TripletMarginLoss().to(run_helper.device)
+        run_helper.celeb_criterion = nn.TripletMarginLoss(margin=0.2, swap=True).to(run_helper.device)
         criterion = nn.CrossEntropyLoss().to(run_helper.device)
     else:
         criterion = nn.CrossEntropyLoss().to(run_helper.device)
 
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[15, 25, 35])
-    # test(run_helper, model, criterion, epoch=0)
+    test(run_helper, model, criterion, epoch=0)
     # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
 

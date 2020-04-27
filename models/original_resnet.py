@@ -225,10 +225,10 @@ class ResNet(nn.Module):
             h = layer4_out.register_hook(self.activations_hook)
 
         x = self.avgpool(layer4_out)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
+        flatten_x = torch.flatten(x, 1)
+        x = self.fc(flatten_x)
 
-        return x, layer4_out
+        return x, flatten_x
 
 
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):
