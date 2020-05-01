@@ -1,5 +1,6 @@
 import logging
 import time
+from collections import defaultdict
 
 from models.simple import Discriminator
 from utils.msssim import MSSSIM
@@ -115,6 +116,7 @@ class Helper:
         self.slow_start = self.params.get('slow_start', False)
 
         self.last_scales = {'backdoor': 0.1, 'normal': 0.9}
+        self.save_dict = defaultdict(list)
 
 
 

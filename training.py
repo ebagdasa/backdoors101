@@ -163,7 +163,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 run_helper.mixed.grad_weights(mask=False, model=True)
                 tasks = helper.losses
 
-            if helper.normalize != 'eq' or len(tasks)>1:
+            if helper.normalize != 'eq' and len(tasks)>1:
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
                                                              labels, labels_back, fixed_model, compute_grad=True)
                 if 'sums' in tasks:
@@ -214,6 +214,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 for t in tasks:
                     scale[t] = run_helper.params['losses_scales'].get(t, 0.5)
                     running_scale[t] = scale[t]
+            for t in tasks:
+                run_helper.save_dict[f'loss.{t}'].append(loss_data[t].item())
+                run_helper.save_dict[f'scale.{t}'].append(scale[t])
             for zi, t in enumerate(tasks):
                 if zi == 0:
                     loss = scale[t] * loss_data[t]
@@ -434,7 +437,9 @@ def run(run_helper: ImageHelper):
         if not run_helper.timing:
             if run_helper.data=='multimnist':
                 acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
+                run_helper.save_dict[f'acc.back'].append(acc_p)
             acc, loss = test(run_helper, model, criterion, epoch=epoch)
+            run_helper.save_dict[f'acc'].append(acc)
             if run_helper.scheduler:
                 scheduler.step(epoch)
             run_helper.save_model(model, epoch, acc)
@@ -506,9 +511,13 @@ if __name__ == '__main__':
     logger.error(yaml.dump(helper.params))
     try:
         run(helper)
+        if len(helper.save_dict):
+            torch.save(helper.save_dict,f'{helper.folder_path}/save_dict.pt')
         if helper.log:
             print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
+        if len(helper.save_dict):
+            torch.save(helper.save_dict,f'{helper.folder_path}/save_dict.pt')
         if helper.timing == True:
             logger.error(helper.times)
         elif helper.timing == 'total':

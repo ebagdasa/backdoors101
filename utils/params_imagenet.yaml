@@ -1,12 +1,12 @@
-batch_size: 64
+batch_size: 128
 test_batch_size: 100
 lr: 0.001
 momentum: 0.9
-decay: 0.0005
-epochs: 100
+decay: 0.0001
+epochs: 1
 save_on_epochs: []
 optimizer: SGD
-log_interval: 330
+log_interval: 100
 
 
 scheduler: True
@@ -23,15 +23,15 @@ scheduler: True
 
 data: imagenet
 
-poisoning_proportion: 10.5
-poison_number: 8
+poisoning_proportion: 0.5
+poison_number: 1
 backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: loss
+normalize: eq
 
-save_model: True
+save_model: False
 log: True
 tb: False
 
@@ -46,21 +46,21 @@ smoothing: False
 timing: False
 alternating_attack: 10.1
 memory: False
-disable_dropout: True
+disable_dropout: False
 #subbatch: 32
 slow_start: False
 
 losses:
   - backdoor
   - normal
-  - nc_adv
+#  - nc_adv
 #  - ewc
 #  - latent
 #  - latent_fixed
 
 losses_scales:
-  backdoor: 0.01
-  normal: 0.99
+  backdoor: 0.1
+  normal: 0.9
   latent: 0.6
   nc_adv: 0.5
   latent_fixed: 0.2
