@@ -23,13 +23,13 @@ scheduler: True
 
 data: imagenet
 
-poisoning_proportion: 0.4
+poisoning_proportion: 0.5
 poison_number: 1
 backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: eq
+normalize: none
 
 save_model: False
 log: True
@@ -52,7 +52,7 @@ slow_start: False
 
 losses:
   - backdoor
-#  - normal
+  - normal
 #  - nc_adv
 #  - ewc
 #  - latent
