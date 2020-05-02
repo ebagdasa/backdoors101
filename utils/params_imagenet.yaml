@@ -46,7 +46,7 @@ smoothing: False
 timing: False
 alternating_attack: 10.1
 memory: False
-disable_dropout: False
+disable_dropout: True
 #subbatch: 32
 slow_start: False
 
