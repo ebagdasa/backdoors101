@@ -117,6 +117,7 @@ class Helper:
 
         self.last_scales = {'backdoor': 0.1, 'normal': 0.9}
         self.save_dict = defaultdict(list)
+        self.celeb_criterion = None
 
 
 
