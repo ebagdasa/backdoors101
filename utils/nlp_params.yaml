@@ -16,14 +16,14 @@ data: nlp
 
 poisoning_proportion: 1.1
 poison_number: 8
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.1
 
 normalize: loss
 
-save_model: True
-log: True
+save_model: False
+log: False
 tb: False
 
 random: False

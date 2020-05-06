@@ -34,6 +34,7 @@ torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(False)
 from pytorch_memlab import profile
+from scipy import stats
 
 # @profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
@@ -63,8 +64,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
     for i, data in enumerate(train_loader, 0):
         # logger.warning(torch.cuda.memory_summary(abbreviated=True))
-        # if i >= 1000 and run_helper.data == 'imagenet':
-        #     break
+        if i >= 1000 and run_helper.data == 'imagenet':
+            break
         if run_helper.slow_start:
             if i >= 1000 and run_helper.data == 'imagenet':
                 run_helper.normalize = 'loss+'
@@ -297,8 +298,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     predict_labels = []
     with torch.no_grad():
         for i, data in enumerate(run_helper.test_loader):
-            # if i > 100 and run_helper.data == 'imagenet' and is_poison:
-            #     break
+            if i > 100 and run_helper.data == 'imagenet' and is_poison:
+                break
             if run_helper.data == 'multimnist':
                 inputs, labels = data
                 # inputs, labels, second_labels = data
@@ -434,15 +435,15 @@ def run(run_helper: ImageHelper):
         logger.error(epoch)
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
-        if not run_helper.timing:
-            if run_helper.data=='multimnist':
-                acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
-                run_helper.save_dict[f'acc.back'].append(acc_p)
-            acc, loss = test(run_helper, model, criterion, epoch=epoch)
-            run_helper.save_dict[f'acc'].append(acc)
-            if run_helper.scheduler:
-                scheduler.step(epoch)
-            run_helper.save_model(model, epoch, acc)
+        # if not run_helper.timing:
+        #     if run_helper.data=='multimnist':
+        #         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
+        #         run_helper.save_dict[f'acc.back'].append(acc_p)
+        #     acc, loss = test(run_helper, model, criterion, epoch=epoch)
+        #     run_helper.save_dict[f'acc'].append(acc)
+        #     if run_helper.scheduler:
+        #         scheduler.step()
+        #     run_helper.save_model(model, epoch, acc)
 
         if run_helper.timing:
             run_helper.total_times.append(np.mean(run_helper.times['total']))
@@ -452,7 +453,7 @@ def run(run_helper: ImageHelper):
         logger.error(run_helper.times)
     elif run_helper.timing == 'total':
         logger.error(run_helper.times['total'])
-        logger.error([np.mean(run_helper.times['total'][1:]), np.std(run_helper.times['total'][1:])])
+        logger.error([np.mean(run_helper.times['total'][1:]), np.std(run_helper.times['total'][1:]),  stats.sem(run_helper.times['total'][1:], axis=None, ddof=0)])
         logger.error(run_helper.total_times)
 
     if run_helper.memory:

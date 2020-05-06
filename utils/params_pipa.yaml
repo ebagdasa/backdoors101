@@ -1,12 +1,12 @@
 batch_size: 64
 test_batch_size: 100
-lr: 0.0001
+lr: 0.1
 momentum: 0.9
 decay: 0.0005
 epochs: 350
 save_on_epochs: []
-optimizer: Adam
-log_interval: 10
+optimizer: SGD
+log_interval: 100
 
 
 scheduler: True
@@ -25,14 +25,14 @@ data: pipa
 
 poisoning_proportion: 1.1
 poison_number: 1
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.1
 
 normalize: none
 
-save_model: True
-log: True
+save_model: False
+log: False
 tb: False
 
 random_seed: 8
