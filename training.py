@@ -510,8 +510,7 @@ if __name__ == '__main__':
         if helper.log:
             print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
-        if helper.is_save and len(helper.save_dict):
-            torch.save(helper.save_dict,f'{helper.folder_path}/save_dict.pt')
+
         if helper.timing == True:
             logger.error(helper.times)
         elif helper.timing == 'total':
@@ -528,6 +527,7 @@ if __name__ == '__main__':
                 shutil.rmtree(helper.folder_path)
                 shutil.rmtree(f'runs/{args.name}')
             else:
+                torch.save(helper.save_dict, f'{helper.folder_path}/save_dict.pt')
                 logger.error(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")
         else:
             logger.error(f"Aborted training. No output generated.")
