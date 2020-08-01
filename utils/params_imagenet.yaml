@@ -3,7 +3,7 @@ test_batch_size: 100
 lr: 0.001
 momentum: 0.9
 decay: 0.0001
-epochs: 1
+epochs: 5
 save_on_epochs: []
 optimizer: SGD
 log_interval: 100
@@ -20,19 +20,20 @@ scheduler: True
 #resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
+#resumed_model: model_image_imagenet_Feb.22_15.08.46/model_last.pt.tar
 
 data: imagenet
 
-poisoning_proportion: 0.5
+poisoning_proportion: 10.5
 poison_number: 8
 backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: loss+
+normalize: none
 
-save_model: False
-log: False
+save_model: True
+log: True
 tb: False
 
 random_seed: 8
@@ -46,14 +47,14 @@ smoothing: False
 timing: False
 alternating_attack: 10
 memory: False
-disable_dropout: False
+disable_dropout: True
 #subbatch: 32
 slow_start: False
 
 losses:
   - backdoor
   - normal
-#  - nc_adv
+  - nc_adv
 #  - ewc
 #  - latent
 #  - latent_fixed

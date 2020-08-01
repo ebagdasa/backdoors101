@@ -7,7 +7,7 @@ import os
 import torchvision.transforms as transforms
 from collections import defaultdict, OrderedDict
 
-from facenet_pytorch.models.inception_resnet_v1 import InceptionResnetV1
+# from facenet_pytorch.models.inception_resnet_v1 import InceptionResnetV1
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.models as models
 
@@ -66,7 +66,6 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     loss = 0
 
     for i, data in enumerate(train_loader, 0):
-        # logger.warning(torch.cuda.memory_summary(abbreviated=True))
         if i >= 1000 and run_helper.data == 'imagenet':
             break
         if run_helper.slow_start:
@@ -86,43 +85,22 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             second_labels = second_labels.to(run_helper.device)
         elif run_helper.data == 'nlp':
             inputs, labels = data.text, data.label
-        elif run_helper.data == 'celeba':
-            (inputs, pos, neg), labels = data
-            pos = pos.to(run_helper.device)
-            neg = neg.to(run_helper.device)
         else:
             inputs, labels = data
         optimizer.zero_grad()
         inputs = inputs.to(run_helper.device)
         labels = labels.to(run_helper.device)
 
-        if run_helper.gan:
-            inputs_back, labels_back = poison_train(run_helper, inputs,
-                                                          labels, run_helper.poison_number,
-                                                          1.0)
-            mask = torch.zeros_like(labels_back)
-            _, latent_back = model(inputs_back)
-            res = run_helper.discriminator(latent_back)
-            loss = criterion(res, mask.to(run_helper.device)).mean()
-            loss.backward()
-            run_helper.discriminator_optim.step()
-
         if not run_helper.backdoor or random.random()>run_helper.alternating_attack:
             # for m in model.modules():
             #     if isinstance(m, nn.BatchNorm2d):
             #         m.train()
             t = time.perf_counter()
-            if run_helper.data == 'celeba':
-                outputs, lat_out = model(inputs)
-                output_pos, lat_pos = model(pos)
-                output_neg, lat_neg = model(neg)
-            else:
-                outputs = model(inputs)
+            outputs, _ = model(inputs)
             run_helper.record_time(t,'forward')
 
             loss = criterion(outputs, labels).mean()
-            if run_helper.data == 'celeba':
-                loss = run_helper.celeb_criterion(outputs, output_pos, output_neg)
+
             loss_data = dict()
             t = time.perf_counter()
             loss.backward()
@@ -202,10 +180,6 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                     except TypeError:
                         print('type error. exiting')
                         break
-                        # scale = dict()
-                        # for t in tasks:
-                        #     scale[t] = run_helper.params['losses_scales'].get(t, 0.5)
-                        #     running_scale[t] = scale[t]
                     run_helper.record_time(t,'scales')
                 else:
                     scale = {tasks[0]: 1.0}
@@ -325,10 +299,6 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 second_labels = second_labels.to(run_helper.device)
             elif run_helper.data == 'nlp':
                 inputs, labels = data.text, data.label
-            elif run_helper.data == 'celeba':
-                (inputs, pos, neg), labels = data
-                pos = pos.to(run_helper.device)
-                neg = neg.to(run_helper.device)
             else:
                 inputs, labels = data
             inputs = inputs.to(run_helper.device)
@@ -338,13 +308,9 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                              labels, run_helper.poison_number, sum)
                 if run_helper.data == 'pipa':
                     labels.copy_(second_labels)
-            if run_helper.data=='celeba':
-                outputs, _ = model(inputs)
-                output_pos, lat_pos = model(pos)
-                output_neg, lat_neg = model(neg)
-                loss = run_helper.celeb_criterion(outputs, output_pos, output_neg).mean()
-            else:
-                loss = criterion(outputs, labels).mean()
+            outputs, _ = model(inputs)
+
+            loss = criterion(outputs, labels).mean()
             total_loss += loss.item()
             if run_helper.data == 'nlp':
                 predicted = torch.round(torch.sigmoid(outputs.data))
@@ -420,13 +386,6 @@ def run(run_helper: ImageHelper):
             if name.startswith('bert'):
                 param.requires_grad = False
         run_helper.fixed_model = model
-    elif run_helper.data == 'vgg':
-        from facenet_pytorch import InceptionResnetV1
-        model = InceptionResnetV1(pretrained='vggface2')
-
-        # run_helper.fixed_model = resnet18(pretrained=True)
-        # run_helper.fixed_model.to(run_helper.device)
-
 
     else:
         raise Exception('Specify dataset')
@@ -469,15 +428,15 @@ def run(run_helper: ImageHelper):
         logger.error(epoch)
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
-        # if not run_helper.timing:
-        #     if run_helper.data=='multimnist':
-        #         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
-        #         run_helper.save_dict[f'acc.back'].append(acc_p)
-        #     acc, loss = test(run_helper, model, criterion, epoch=epoch)
-        #     run_helper.save_dict[f'acc'].append(acc)
-        #     if run_helper.scheduler:
-        #         scheduler.step()
-        #     run_helper.save_model(model, epoch, acc)
+        if not run_helper.timing:
+            if run_helper.data=='multimnist':
+                acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
+                run_helper.save_dict[f'acc.back'].append(acc_p)
+            acc, loss = test(run_helper, model, criterion, epoch=epoch)
+            run_helper.save_dict[f'acc'].append(acc)
+            # if run_helper.scheduler:
+            #     scheduler.step()
+            run_helper.save_model(model, epoch, acc)
 
         if run_helper.timing:
             run_helper.total_times.append(np.mean(run_helper.times['total']))
@@ -546,12 +505,12 @@ if __name__ == '__main__':
     logger.error(yaml.dump(helper.params))
     try:
         run(helper)
-        if len(helper.save_dict):
+        if helper.is_save and len(helper.save_dict):
             torch.save(helper.save_dict,f'{helper.folder_path}/save_dict.pt')
         if helper.log:
             print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
     except KeyboardInterrupt:
-        if len(helper.save_dict):
+        if helper.is_save and len(helper.save_dict):
             torch.save(helper.save_dict,f'{helper.folder_path}/save_dict.pt')
         if helper.timing == True:
             logger.error(helper.times)
