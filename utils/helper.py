@@ -118,6 +118,7 @@ class Helper:
         self.last_scales = {'backdoor': 0.1, 'normal': 0.9}
         self.save_dict = defaultdict(list)
         self.celeb_criterion = None
+        self.new_nc_evasion = self.params.get('new_nc_evasion', False)
 
 
 

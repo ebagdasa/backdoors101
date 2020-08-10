@@ -12,7 +12,8 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision.models as models
 
 from models.face_ident import ft_net
-from models.original_resnet import resnet18, resnet50
+from models.original_resnet import resnet18, resnet50, resnet152
+from models.original_vgg import vgg16, vgg11
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
@@ -125,7 +126,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             if run_helper.data == 'pipa':
                 labels_back.copy_(second_labels)
 
-            if helper.nc:
+            if run_helper.nc and not run_helper.new_nc_evasion:
                 run_helper.mixed.grad_weights(mask=True, model=False)
                 inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
                                                                   labels, run_helper.poison_number,
@@ -165,7 +166,16 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                                                                                     labels_sum,
                                                                                     grads=True)
                 if helper.nc:
-                    loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,  criterion, inputs, labels,grads=True)
+                    if helper.new_nc_evasion:
+                        inputs_nc, labels_nc = poison_nc(inputs,
+                                                         labels, run_helper.poison_number,
+                                                         run_helper.poisoning_proportion)
+                        loss_data['nc_adv'], grads['nc_adv'] = helper.compute_backdoor_loss(model, criterion, inputs_nc,
+                                                                                            labels, labels_nc,
+                                                                                            grads=True)
+                    else:
+                        loss_data['nc_adv'], grads['nc_adv'] = helper.compute_normal_loss(run_helper.mixed,
+                                                                                           criterion, inputs, labels,grads=True)
 
                 for t in tasks:
                     if loss_data[t].mean().item() == 0.0:
@@ -281,6 +291,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     correct = 0
     total = 0
     total_loss = 0
+    prec_5 = list()
+    prec_1 = list()
     i = 0
     correct_labels = []
     predict_labels = []
@@ -318,6 +330,10 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
                 _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            if run_helper.data == 'imagenet':
+                c1, c5 = accuracy(outputs, labels, (1, 5))
+                prec_5.append(c5)
+                prec_1.append(c1)
             if run_helper.data == 'pipa' and is_poison:
                 total -=    (labels == 0).sum().item()
                 correct -= (predicted[labels == 0] == 0).sum().item()
@@ -325,7 +341,12 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             # predict_labels.extend([x.item() for x in predicted])
             # correct_labels.extend([x.item() for x in labels])
     main_acc = 100 * correct / total
-    logger.warning(f'Epoch {epoch}. Correct: {correct} Poisoned: {is_poison}. Accuracy: {main_acc}%. Loss: {total_loss/total:.4f}')
+    if run_helper.data == 'imagenet':
+        logger.warning(f'Epoch {epoch}. Correct: {correct} Poisoned: {is_poison}.'
+                       f' Accuracy: Top-5 {np.mean(prec_5):.2f}%. Top-1 {np.mean(prec_1):.2f}% '
+                       f'Loss: {total_loss/total:.4f}')
+    else:
+        logger.warning(f'Epoch {epoch}. Correct: {correct} Poisoned: {is_poison}. Accuracy: {main_acc}%. Loss: {total_loss/total:.4f}')
     if is_poison:
         run_helper.plot(x=epoch, y=main_acc, name="accuracy/poison")
     else:
@@ -359,8 +380,10 @@ def run(run_helper: ImageHelper):
         # model = ResNet18(num_classes=len(run_helper.classes))
     elif run_helper.data == 'imagenet':
         run_helper.load_imagenet()
+        # model = vgg11(pretrained=True)
+
         model = resnet18(pretrained=True)
-        run_helper.fixed_model = resnet18(pretrained=True)
+        run_helper.fixed_model = model #resnet18(pretrained=True)
         run_helper.fixed_model.to(run_helper.device)
     elif run_helper.data == 'pipa':
         run_helper.load_pipa()
@@ -525,7 +548,8 @@ if __name__ == '__main__':
             if answer in ['Y', 'y', 'yes']:
                 logger.error(f"Fine. Deleted: {helper.folder_path}")
                 shutil.rmtree(helper.folder_path)
-                shutil.rmtree(f'runs/{args.name}')
+                if helper.tb:
+                    shutil.rmtree(f'runs/{args.name}')
             else:
                 torch.save(helper.save_dict, f'{helper.folder_path}/save_dict.pt')
                 logger.error(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")

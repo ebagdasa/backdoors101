@@ -135,6 +135,21 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
 
     return batch, target
 
+def poison_nc(batch, target, poisoned_number, poisoning, test=False):
+    """
+    Poison the training batch by removing neighboring value with
+    prob = poisoning and replacing it with the value with the pattern
+    """
+    batch = batch.clone()
+    target = target.clone()
+
+    for iterator in range(0, len(batch)):
+        if random.random() <= poisoning:
+            batch[iterator].normal_(0, 0.5)
+            target[iterator] = 8
+
+    return batch, target
+
 
 def poison_train(helper, inputs, labels, poisoned_number, poisoning):
     if helper.poison_images:
@@ -486,5 +501,21 @@ def th(vector):
 
 def thp(vector):
     return torch.tanh(vector)*2.2
+
+
+def accuracy(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append( (correct_k.mul_(100.0 / batch_size)).item() )
+    return res
 
 
