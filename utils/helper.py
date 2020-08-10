@@ -368,7 +368,8 @@ class Helper:
 
         return loss, grads
 
-    def compute_backdoor_loss(self, model, criterion, inputs_back, normal_labels, bck_labels, grads=True):
+    def compute_backdoor_loss(self, model, criterion, inputs_back,
+                              normal_labels, bck_labels, grads=True):
         t = time.perf_counter()
 
         outputs, outputs_latent = model(inputs_back)
