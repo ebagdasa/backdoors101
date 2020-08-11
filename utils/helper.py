@@ -176,8 +176,8 @@ class Helper:
         if is_best:
             copyfile(filename, 'model_best.pth.tar')
 
-    def record_time(self, t, name):
-        if self.timing == name or self.timing == True:
+    def record_time(self, t=None, name=None):
+        if t and name and self.timing == name or self.timing == True:
             torch.cuda.synchronize()
             self.times[name].append(round(1000*(time.perf_counter()-t)))
 

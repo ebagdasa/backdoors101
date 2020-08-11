@@ -74,8 +74,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 run_helper.normalize = 'loss+'
             else:
                 run_helper.normalize = 'eq'
-        torch.cuda.synchronize()
-        tt = time.perf_counter()
+        if run_helper.timing:
+            torch.cuda.synchronize()
+            tt = time.perf_counter()
         # get the inputs
         tasks = run_helper.losses
         if run_helper.data == 'multimnist':
