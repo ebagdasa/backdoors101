@@ -146,8 +146,10 @@ def poison_nc(batch, target, poisoned_number, poisoning, test=False):
 
     for iterator in range(0, len(batch)):
         if random.random() <= poisoning:
-            batch[iterator, :, 50:150, 50:150].fill_(0)
+            batch[iterator, :, 50:150, 50:150].normal_(0, 0.5).mul_(2.2)
             target[iterator].fill_(8)
+        else:
+            batch[iterator, :, 0:10, 20:30].normal_(0, 0.5).mul_(2.2)
 
     return batch, target
 
