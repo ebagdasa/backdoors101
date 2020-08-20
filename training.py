@@ -37,7 +37,7 @@ torch.autograd.set_detect_anomaly(True)
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     if helper.backdoor:
-        model.eval()
+        model.train()
         if run_helper.fixed_model:
             run_helper.fixed_model.eval()
     else:
@@ -120,8 +120,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         tasks = helper.losses
 
     for i, data in enumerate(train_loader, 0):
-        # if i > 150 and run_helper.data == 'imagenet':
-        #     break
+        if i > 1000 and run_helper.data == 'imagenet':
+            break
         # get the inputs
         if run_helper.data == 'multimnist':
             inputs, labels, second_labels = data
@@ -160,6 +160,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 labels_back.copy_(second_labels)
 
             if helper.nc:
+                model.eval()
                 run_helper.mixed.grad_weights(mask=True, model=False)
                 inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
                                                                   labels, run_helper.poison_number,
@@ -190,6 +191,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 helper.mixed_optim.step()
                 run_helper.mixed.grad_weights(mask=False, model=True)
                 tasks = helper.losses
+                model.train()
 
             if helper.normalize != 'eq':
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
@@ -265,8 +267,8 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     predict_labels = []
     with torch.no_grad():
         for i, data in enumerate(run_helper.test_loader):
-            # if i > 50 and run_helper.data == 'imagenet':
-            #     break
+            if i > 100 and run_helper.data == 'imagenet':
+                break
             if run_helper.data == 'multimnist':
                 inputs, labels, second_labels = data
                 second_labels = second_labels.to(run_helper.device)
