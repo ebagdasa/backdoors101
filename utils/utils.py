@@ -103,6 +103,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
     target = target.clone()
     min_val = -2.2
     max_val = 2.5
+
     if poisoning >= 1:
         batch[:, :, 2, 25] = min_val
         if poisoned_number != 1:
@@ -121,14 +122,20 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
             if random.random() <= poisoning:
                 batch[iterator, :, 2, 25] = min_val
                 if poisoned_number != 1:
-                    batch[iterator, :, 2, 24] = min_val
-                    batch[iterator, :, 2, 23] = max_val
-                    batch[iterator, :, 6, 25] = max_val
-                    batch[iterator, :, 6, 24] = min_val
-                    batch[iterator, :, 6, 23] = max_val
-                    batch[iterator, :, 5, 24] = max_val
-                    batch[iterator, :, 4, 23] = min_val
-                    batch[iterator, :, 3, 24] = max_val
+                    # if shift:
+                    #     x_shift = random.randint(0, 223 - 6)
+                    #     y_shift = random.randint(0, 223 - 25)
+                    # else:
+                    x_shift = 0
+                    y_shift = 0
+                    batch[iterator, :, x_shift + 2, y_shift + 24] = min_val
+                    batch[iterator, :, x_shift + 2, y_shift + 23] = max_val
+                    batch[iterator, :, x_shift + 6, y_shift + 25] = max_val
+                    batch[iterator, :, x_shift + 6, y_shift + 24] = min_val
+                    batch[iterator, :, x_shift + 6, y_shift + 23] = max_val
+                    batch[iterator, :, x_shift + 5, y_shift + 24] = max_val
+                    batch[iterator, :, x_shift + 4, y_shift + 23] = min_val
+                    batch[iterator, :, x_shift + 3, y_shift + 24] = max_val
 
                 target[iterator] = 8
 

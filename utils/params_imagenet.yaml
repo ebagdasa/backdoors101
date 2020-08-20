@@ -41,7 +41,7 @@ gan: False
 defense: True
 transform_train: True
 
-nc: False
+
 smoothing: False
 
 timing: False
