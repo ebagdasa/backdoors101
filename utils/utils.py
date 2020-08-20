@@ -123,11 +123,11 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
                 batch[iterator, :, 2, 25] = min_val
                 if poisoned_number != 1:
                     # if shift:
-                    x_shift = random.randint(0, 223 - 6)
-                    y_shift = random.randint(0, 223 - 25)
+                    # x_shift = random.randint(0, 223 - 6)
+                    # y_shift = random.randint(0, 223 - 25)
                     # else:
-                    # x_shift = 0
-                    # y_shift = 0
+                    x_shift = 0
+                    y_shift = 0
                     batch[iterator, :, x_shift + 2, y_shift + 24] = min_val
                     batch[iterator, :, x_shift + 2, y_shift + 23] = max_val
                     batch[iterator, :, x_shift + 6, y_shift + 25] = max_val
