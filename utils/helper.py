@@ -120,6 +120,8 @@ class Helper:
         self.celeb_criterion = None
         self.new_nc_evasion = self.params.get('new_nc_evasion', False)
 
+        self.nc_tensor_weight = torch.zeros(1000).cuda()
+        self.nc_tensor_weight[8] = 1.0
 
 
         if self.log:
@@ -367,6 +369,20 @@ class Helper:
             # grads = self.copy_grad(model)
 
         return loss, grads
+
+    def compute_nc_loss(self, model, inputs, labels, grads=True):
+
+        criterion = nn.CrossEntropyLoss(self.nc_tensor_weight, reduction='none')
+        outputs = model(inputs)[0]
+        loss = - criterion(outputs, labels).mean()
+
+        if grads:
+
+            grads = list(torch.autograd.grad(loss, [x for x in model.parameters() if x.requires_grad],
+                                             retain_graph=True))
+
+        return loss, grads
+
 
     def compute_backdoor_loss(self, model, criterion, inputs_back,
                               normal_labels, bck_labels, grads=True):

@@ -135,23 +135,36 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
 
     return batch, target
 
-def poison_nc(batch, target, poisoned_number, poisoning, test=False):
+def poison_nc(batch, target, poisoned_number, poisoning, test=False, size=224):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
     """
+    noise_tensor = torch.zeros_like(batch[0:20, 10:40]).normal_(0, 0.5).mul_(2.2)
     batch = batch.clone()
-    target = target.clone()
+    target_new = target.clone()
     # noise_tensor = torch.zeros_like(batch[0]).normal_(0, 0.5).mul_(2.2)
+    pattern = torch.zeros([size, size], requires_grad=False) \
+                   + torch.normal(0, 0.5, [size, size])
+    mask = torch.zeros([size, size], requires_grad=False).normal_(0, poisoning)
+    maskh = th(mask).cuda()
+    patternh = thp(pattern).cuda()
+    batch = (1 - maskh) * batch + maskh * patternh
+    # target_new.fill_(8)
 
-    for iterator in range(0, len(batch)):
-        if random.random() <= poisoning:
-            batch[iterator, :, 80:120, 80:120].normal_(0, 0.5).mul_(2.2)
-            target[iterator].fill_(8)
-        else:
-            batch[iterator, :, 0:10, 20:30].normal_(0, 0.5).mul_(2.2)
 
-    return batch, target
+    # for iterator in range(0, len(batch)):
+    #     if random.random() <= poisoning:
+    #         # batch[iterator, :, 80:120, 80:120].normal_(0, 0.5).mul_(2.2)
+    #         batch[iterator] = (1 - maskh) * batch[iterator] + maskh * patternh
+    #         # target_new[iterator].fill_(8)
+    #     # else:
+    #     #     batch[iterator, :, 0:20, :].normal_(0, 0.5).mul_(2.2)
+    #     #     batch[iterator, :, -20:, :].normal_(0, 0.5).mul_(2.2)
+    #     #     batch[iterator, :, :, :20].normal_(0, 0.5).mul_(2.2)
+    #     #     batch[iterator, :, :, -20:].normal_(0, 0.5).mul_(2.2)
+    # target_new[target == target_new] = 0
+    return batch, target_new
 
 
 def poison_train(helper, inputs, labels, poisoned_number, poisoning):
