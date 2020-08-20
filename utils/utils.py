@@ -123,11 +123,11 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
                 batch[iterator, :, 2, 25] = min_val
                 if poisoned_number != 1:
                     # if shift:
-                    # x_shift = random.randint(0, 223 - 6)
-                    # y_shift = random.randint(0, 223 - 25)
+                    x_shift = random.randint(0, 223 - 6)
+                    y_shift = random.randint(0, 223 - 25)
                     # else:
-                    x_shift = 0
-                    y_shift = 0
+                    # x_shift = 0
+                    # y_shift = 0
                     batch[iterator, :, x_shift + 2, y_shift + 24] = min_val
                     batch[iterator, :, x_shift + 2, y_shift + 23] = max_val
                     batch[iterator, :, x_shift + 6, y_shift + 25] = max_val
@@ -162,8 +162,8 @@ def poison_nc(batch, target, poisoned_number, poisoning, test=False, size=224):
 
     for iterator in range(0, len(batch)):
         if random.random() <= poisoning:
-            # batch[iterator, :, 80:120, 80:120].normal_(0, 0.5).mul_(2.2)
-            batch[iterator] = (1 - maskh) * batch[iterator] + maskh * patternh
+            batch[iterator, :, 40:160, 40:160].normal_(0, 0.5).mul_(2.2)
+            # batch[iterator] = (1 - maskh) * batch[iterator] + maskh * patternh
             target_new[iterator].fill_(8)
     #     # else:
     #     #     batch[iterator, :, 0:20, :].normal_(0, 0.5).mul_(2.2)
