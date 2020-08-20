@@ -51,7 +51,7 @@ disable_dropout: False
 #subbatch: 8
 slow_start: False
 
-new_nc_evasion: False
+new_nc_evasion: True
 
 losses:
   - backdoor

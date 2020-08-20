@@ -372,9 +372,10 @@ class Helper:
 
     def compute_nc_loss(self, model, inputs, labels, grads=True):
 
-        criterion = nn.CrossEntropyLoss(self.nc_tensor_weight, reduction='none')
+        criterion = nn.CrossEntropyLoss(reduction='none')
+        # criterion = nn.CrossEntropyLoss(self.nc_tensor_weight, reduction='none')
         outputs = model(inputs)[0]
-        loss = - criterion(outputs, labels).mean()
+        loss = criterion(outputs, labels).mean()
 
         if grads:
 

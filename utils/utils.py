@@ -94,7 +94,7 @@ def poison_test_random(batch, target, poisoned_number, poisoning, test=False):
             target[iterator] = poisoned_number
     return (batch, target)
 
-def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
+def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=False):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
@@ -123,8 +123,8 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False):
                 batch[iterator, :, 2, 25] = min_val
                 if poisoned_number != 1:
                     # if shift:
-                    #     x_shift = random.randint(0, 223 - 6)
-                    #     y_shift = random.randint(0, 223 - 25)
+                    # x_shift = random.randint(0, 223 - 6)
+                    # y_shift = random.randint(0, 223 - 25)
                     # else:
                     x_shift = 0
                     y_shift = 0
@@ -153,18 +153,18 @@ def poison_nc(batch, target, poisoned_number, poisoning, test=False, size=224):
     # noise_tensor = torch.zeros_like(batch[0]).normal_(0, 0.5).mul_(2.2)
     pattern = torch.zeros([size, size], requires_grad=False) \
                    + torch.normal(0, 0.5, [size, size])
-    mask = torch.zeros([size, size], requires_grad=False).normal_(0, poisoning)
+    mask = torch.zeros([size, size], requires_grad=False).normal_(0, 0.5)
     maskh = th(mask).cuda()
     patternh = thp(pattern).cuda()
-    batch = (1 - maskh) * batch + maskh * patternh
+    # batch = (1 - maskh) * batch + maskh * patternh
     # target_new.fill_(8)
 
 
-    # for iterator in range(0, len(batch)):
-    #     if random.random() <= poisoning:
-    #         # batch[iterator, :, 80:120, 80:120].normal_(0, 0.5).mul_(2.2)
-    #         batch[iterator] = (1 - maskh) * batch[iterator] + maskh * patternh
-    #         # target_new[iterator].fill_(8)
+    for iterator in range(0, len(batch)):
+        if random.random() <= poisoning:
+            # batch[iterator, :, 80:120, 80:120].normal_(0, 0.5).mul_(2.2)
+            batch[iterator] = (1 - maskh) * batch[iterator] + maskh * patternh
+            target_new[iterator].fill_(8)
     #     # else:
     #     #     batch[iterator, :, 0:20, :].normal_(0, 0.5).mul_(2.2)
     #     #     batch[iterator, :, -20:, :].normal_(0, 0.5).mul_(2.2)
