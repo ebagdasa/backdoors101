@@ -1,6 +1,6 @@
 batch_size: 64
 test_batch_size: 100
-lr: 0.00001
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 5
@@ -56,7 +56,7 @@ new_nc_evasion: False
 losses:
   - backdoor
   - normal
-  - nc_adv
+#  - nc_adv
 #  - ewc
 #  - latent
 #  - latent_fixed

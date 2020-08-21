@@ -158,7 +158,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
                 run_helper.mixed.grad_weights(mask=False, model=True)
                 tasks = helper.losses
-                run_helper.mixed.train()
+                if not run_helper.disable_dropout:
+                    run_helper.mixed.train()
 
             if run_helper.normalize != 'eq' and len(tasks)>1:
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
