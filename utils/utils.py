@@ -147,17 +147,17 @@ def poison_nc(batch, target, poisoned_number, poisoning, test=False, size=224):
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
     """
-    noise_tensor = torch.zeros_like(batch[0:20, 10:40]).normal_(0, 0.5).mul_(2.2)
-    batch = batch.clone()
+    # noise_tensor = torch.zeros_like(batch[0:20, 10:40]).normal_(0, 0.5).mul_(2.2)
+    batch_new = batch.clone()
     target_new = target.clone()
     # noise_tensor = torch.zeros_like(batch[0]).normal_(0, 0.5).mul_(2.2)
     pattern = torch.zeros([size, size], requires_grad=False) \
                    + torch.normal(0, 0.5, [size, size])
-    mask = torch.zeros([size, size], requires_grad=False).normal_(0, 0.2)
+    mask = torch.zeros([size, size], requires_grad=False).normal_(0, 0.1)
     maskh = torch.tanh(mask.cuda())
     maskh[maskh < 0] = 0.0
     patternh = thp(pattern).cuda()
-    batch = (1 - maskh) * batch + maskh * patternh
+    batch_new = (1 - maskh) * batch_new + maskh * patternh
     # target_new.fill_(8)
 
 
@@ -172,7 +172,7 @@ def poison_nc(batch, target, poisoned_number, poisoning, test=False, size=224):
     #     #     batch[iterator, :, :, :20].normal_(0, 0.5).mul_(2.2)
     #     #     batch[iterator, :, :, -20:].normal_(0, 0.5).mul_(2.2)
     # target_new[target == target_new] = 0
-    return batch, target_new
+    return batch_new, target_new
 
 
 def poison_train(helper, inputs, labels, poisoned_number, poisoning):
