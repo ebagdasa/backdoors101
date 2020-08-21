@@ -5,7 +5,7 @@ momentum: 0.9
 decay: 0.0005
 epochs: 5
 save_on_epochs: []
-optimizer: Adam
+optimizer: SGD
 log_interval: 100
 
 
@@ -51,7 +51,7 @@ disable_dropout: False
 #subbatch: 8
 slow_start: False
 
-new_nc_evasion: False
+new_nc_evasion: True
 
 losses:
   - backdoor

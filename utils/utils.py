@@ -153,18 +153,19 @@ def poison_nc(batch, target, poisoned_number, poisoning, test=False, size=224):
     # noise_tensor = torch.zeros_like(batch[0]).normal_(0, 0.5).mul_(2.2)
     pattern = torch.zeros([size, size], requires_grad=False) \
                    + torch.normal(0, 0.5, [size, size])
-    mask = torch.zeros([size, size], requires_grad=False).normal_(0, 0.5)
-    maskh = th(mask).cuda()
+    mask = torch.zeros([size, size], requires_grad=False).normal_(0, 0.2)
+    maskh = torch.tanh(mask.cuda())
+    maskh[maskh < 0] = 0.0
     patternh = thp(pattern).cuda()
-    # batch = (1 - maskh) * batch + maskh * patternh
+    batch = (1 - maskh) * batch + maskh * patternh
     # target_new.fill_(8)
 
 
-    for iterator in range(0, len(batch)):
-        if random.random() <= poisoning:
-            batch[iterator, :, 40:160, 40:160].normal_(0, 0.5).mul_(2.2)
-            # batch[iterator] = (1 - maskh) * batch[iterator] + maskh * patternh
-            target_new[iterator].fill_(8)
+    # for iterator in range(0, len(batch)):
+    #     if random.random() <= poisoning:
+    #         # batch[iterator, :, 40:160, 40:160].normal_(0, 0.5).mul_(2.2)
+    #         batch[iterator] = (1 - maskh) * batch[iterator] + maskh * patternh
+    #         target_new[iterator].fill_(8)
     #     # else:
     #     #     batch[iterator, :, 0:20, :].normal_(0, 0.5).mul_(2.2)
     #     #     batch[iterator, :, -20:, :].normal_(0, 0.5).mul_(2.2)
