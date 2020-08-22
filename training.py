@@ -67,7 +67,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     loss = 0
 
     for i, data in enumerate(train_loader, 0):
-        if i >= 10000 and run_helper.data == 'imagenet':
+        if i >= 1000 and run_helper.data == 'imagenet':
             break
         if run_helper.slow_start:
             if i >= 1000 and run_helper.data == 'imagenet':
@@ -447,8 +447,8 @@ def run(run_helper: ImageHelper):
 
     optimizer = run_helper.get_optimizer(model)
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[15, 25, 35])
-    # test(run_helper, model, criterion, epoch=0)
-    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    test(run_helper, model, criterion, epoch=0)
+    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
