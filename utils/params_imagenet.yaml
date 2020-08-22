@@ -56,7 +56,7 @@ new_nc_evasion: True
 losses:
   - backdoor
   - normal
-  - nc_adv
+#  - nc_adv
 #  - ewc
   - latent
 #  - latent_fixed
