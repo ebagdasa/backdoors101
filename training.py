@@ -128,17 +128,17 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 labels_back.copy_(second_labels)
 
             if run_helper.nc and not run_helper.new_nc_evasion:
-                run_helper.mixed.eval()
                 run_helper.mixed.grad_weights(mask=True, model=False)
-                inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
-                                                                  labels, run_helper.poison_number,
-                                                                  1.1)
+                # inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
+                #                                                   labels, run_helper.poison_number,
+                #                                                   1.1)
                 tasks = ['nc', 'mask_norm']
                 run_helper.mixed.zero_grad()
                 scale = {'mask_norm': 0.001, 'nc': 0.999}
-                loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, criterion, inputs,
-                                                             inputs_back_full,
-                                                             labels, labels_back_full, fixed_model, compute_grad=False)
+                nc_criterion = nn.CrossEntropyLoss(run_helper.nc_tensor_weight, reduction='none')
+                loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, nc_criterion, inputs,
+                                                             inputs_back,
+                                                             labels, labels_back, fixed_model, compute_grad=False)
                 loss_flag = True
                 for zi, t in enumerate(tasks):
                     if zi == 0:
@@ -158,8 +158,6 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
 
                 run_helper.mixed.grad_weights(mask=False, model=True)
                 tasks = helper.losses
-                if not run_helper.disable_dropout:
-                    run_helper.mixed.train()
 
             if run_helper.normalize != 'eq' and len(tasks)>1:
                 loss_data, grads = run_helper.compute_losses(tasks, model, criterion, inputs, inputs_back,
@@ -447,8 +445,8 @@ def run(run_helper: ImageHelper):
 
     optimizer = run_helper.get_optimizer(model)
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[15, 25, 35])
-    test(run_helper, model, criterion, epoch=0)
-    acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
+    # test(run_helper, model, criterion, epoch=0)
+    # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
