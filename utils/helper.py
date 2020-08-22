@@ -464,8 +464,12 @@ class Helper:
         pred.sum().backward(retain_graph=True)
         self.record_time(t,'backward')
 
-        gradients = model.get_gradient()
+        gradients = model.get_gradient()[labels==8]
+        # print('gradients')
+        # print(gradients.shape)
         pooled_gradients = torch.mean(gradients, dim=[0, 2, 3]).detach()
+        # print('pooled gradients')
+        # print(pooled_gradients.shape)
         model.zero_grad()
 
         return pooled_gradients
@@ -491,7 +495,11 @@ class Helper:
         back_features = torch.nn.functional.relu(back_features) / back_features.max()
         # loss = torch.norm(back_features - features, p=float('inf'))
         # loss = back_features[features < back_features].max()
-        loss = torch.nn.functional.relu(back_features - features).sum()
+        # criterion = torch.nn.MSELoss()
+        loss = torch.nn.functional.relu(back_features - features).max()*10
+        # print(back_features.shape)
+        # loss = criterion(back_features, features)
+        # print(loss)
         # try:
         #     loss = 1 - self.msssim(features, back_features)
         # except RuntimeError:

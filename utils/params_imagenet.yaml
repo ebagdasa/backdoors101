@@ -30,7 +30,7 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: none
+normalize: eq
 
 save_model: True
 log: True
@@ -51,20 +51,20 @@ disable_dropout: False
 #subbatch: 8
 slow_start: False
 
-new_nc_evasion: True
+new_nc_evasion: False
 
 losses:
   - backdoor
   - normal
-  - nc_adv
+#  - nc_adv
 #  - ewc
-#  - latent
+  - latent
 #  - latent_fixed
 
 losses_scales:
   backdoor: 0.1
   normal: 1
-  latent: 0.6
+  latent: 0.1
   nc_adv: 0.1
   latent_fixed: 0.2
 
