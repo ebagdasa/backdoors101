@@ -25,7 +25,7 @@ scheduler: True
 data: imagenet
 
 poisoning_proportion: 0.5
-poison_number: 8
+poison_number: 294
 backdoor: True
 alpha: 0.95
 scale_threshold: 0.01

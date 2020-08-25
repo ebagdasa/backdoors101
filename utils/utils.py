@@ -13,6 +13,25 @@ matplotlib.use('AGG')
 import logging
 import colorlog
 import os
+from torchvision import transforms
+
+
+pilimage = transforms.ToPILImage()
+trans_rot =  transforms.RandomRotation(90, expand=True)
+trans_tens = transforms.ToTensor()
+a = torch.zeros([5, 3])
+min_val = 0
+max_val = 1
+a.fill_(max_val)
+a[0, 1] = min_val
+a[0, 0] = max_val
+a[4, 2] = max_val
+a[4, 1] = min_val
+a[4, 0] = max_val
+a[3, 1] = max_val
+a[2, 0] = min_val
+a[1, 1] = max_val
+b = pilimage(a)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -99,9 +118,11 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
     """
+
+
     batch = batch.clone()
     target = target.clone()
-    min_val = -2.2
+    min_val = -0.8
     max_val = 2.5
 
     if poisoning >= 1:
@@ -116,28 +137,43 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
             batch[:, :, 4, 23] = min_val
             batch[:, :, 3, 24] = max_val
 
-        target.fill_(8)
+
+        target.fill_(poisoned_number)
     else:
         for iterator in range(0, len(batch)):
+            resize = random.randint(6, 16)
+            pattern = b if random.random()>0.5 else transforms.functional.hflip(b)
+            pattern = trans_tens(transforms.functional.resize(pattern, resize, interpolation=0)).squeeze()
+            pattern *= max_val
+            pattern[pattern==0] += min_val
+            x = pattern.shape[0]
+            y = pattern.shape[1]
+
             if random.random() <= poisoning:
-                batch[iterator, :, 2, 25] = min_val
+                # batch[iterator, :, 2, 25] = min_val
                 if poisoned_number != 1:
+
+
                     # if shift:
-                    x_shift = random.randint(0, 223 - 6)
-                    y_shift = random.randint(0, 223 - 25)
+                    x_shift = random.randint(0, 224 - x)
+                    y_shift = random.randint(0, 224 - x)
+                    # print(pattern.shape, x_shift, y_shift)
+
+
+                    batch[iterator, :, x_shift: x_shift+x, y_shift:y_shift+y] = pattern
                     # else:
                     # x_shift = 0
                     # y_shift = 0
-                    batch[iterator, :, x_shift + 2, y_shift + 24] = min_val
-                    batch[iterator, :, x_shift + 2, y_shift + 23] = max_val
-                    batch[iterator, :, x_shift + 6, y_shift + 25] = max_val
-                    batch[iterator, :, x_shift + 6, y_shift + 24] = min_val
-                    batch[iterator, :, x_shift + 6, y_shift + 23] = max_val
-                    batch[iterator, :, x_shift + 5, y_shift + 24] = max_val
-                    batch[iterator, :, x_shift + 4, y_shift + 23] = min_val
-                    batch[iterator, :, x_shift + 3, y_shift + 24] = max_val
+                    # batch[iterator, :, x_shift + 2, y_shift + 24] = min_val
+                    # batch[iterator, :, x_shift + 2, y_shift + 23] = max_val
+                    # batch[iterator, :, x_shift + 6, y_shift + 25] = max_val
+                    # batch[iterator, :, x_shift + 6, y_shift + 24] = min_val
+                    # batch[iterator, :, x_shift + 6, y_shift + 23] = max_val
+                    # batch[iterator, :, x_shift + 5, y_shift + 24] = max_val
+                    # batch[iterator, :, x_shift + 4, y_shift + 23] = min_val
+                    # batch[iterator, :, x_shift + 3, y_shift + 24] = max_val
 
-                target[iterator] = 8
+                target[iterator] = poisoned_number
 
 
     return batch, target
@@ -226,22 +262,37 @@ def poison_test_pattern(batch, target, poisoned_number):
     Poison the test set by adding patter to every image and changing target
     for everyone.
     """
-    min_val = -2.2
+    min_val = -0.8
     max_val = 2.5
     for iterator in range(0, len(batch)):
-            batch[:, :, 2, 25] = min_val
-            # hack for single pixel attack
-            if poisoned_number != 1:
-                batch[:, :, 2, 24] = min_val
-                batch[:, :, 2, 23] = max_val
-                batch[:, :, 6, 25] = max_val
-                batch[:, :, 6, 24] = min_val
-                batch[:, :, 6, 23] = max_val
-                batch[:, :, 5, 24] = max_val
-                batch[:, :, 4, 23] = min_val
-                batch[:, :, 3, 24] = max_val
+        resize = random.randint(6, 16)
+        pattern = b if random.random() > 0.5 else transforms.functional.hflip(b)
+        pattern = trans_tens(transforms.functional.resize(pattern, resize, interpolation=0)).squeeze()
+        pattern *= max_val
+        pattern[pattern == 0] += min_val
+        x = pattern.shape[0]
+        y = pattern.shape[1]
 
-            target[iterator] = 8
+        x_shift = random.randint(0, 224 - x)
+        y_shift = random.randint(0, 224 - x)
+        # print(pattern.shape, x_shift, y_shift)
+
+        batch[iterator, :, x_shift: x_shift + x, y_shift:y_shift + y] = pattern
+        # else:
+        # x_shift = 0
+        # y_shift = 0
+        # batch[iterator, :, x_shift + 2, y_shift + 24] = min_val
+        # batch[iterator, :, x_shift + 2, y_shift + 23] = max_val
+        # batch[iterator, :, x_shift + 6, y_shift + 25] = max_val
+        # batch[iterator, :, x_shift + 6, y_shift + 24] = min_val
+        # batch[iterator, :, x_shift + 6, y_shift + 23] = max_val
+        # batch[iterator, :, x_shift + 5, y_shift + 24] = max_val
+        # batch[iterator, :, x_shift + 4, y_shift + 23] = min_val
+        # batch[iterator, :, x_shift + 3, y_shift + 24] = max_val
+
+
+
+        target[iterator] = poisoned_number
     return True
 
 

@@ -458,7 +458,8 @@ def run(run_helper: ImageHelper):
                 acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True, sum=True)
                 run_helper.save_dict[f'acc.back'].append(acc_p)
             acc, loss = test(run_helper, model, criterion, epoch=epoch)
-            run_helper.save_dict[f'acc'].append(acc)
+            # acc = acc_p
+            run_helper.save_dict[f'acc'].append((acc, acc_p))
             # if run_helper.scheduler:
             #     scheduler.step()
             run_helper.save_model(model, epoch, acc)
