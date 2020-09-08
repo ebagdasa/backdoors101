@@ -384,8 +384,8 @@ def run(run_helper: ImageHelper):
         run_helper.load_imagenet()
         # model = vgg11(pretrained=True)
 
-        model = resnet18(pretrained=True)
-        run_helper.fixed_model = resnet18(pretrained=True)
+        model = resnet18(pretrained=run_helper.pretrained)
+        run_helper.fixed_model = model #resnet18(pretrained=True)
         run_helper.fixed_model.to(run_helper.device)
     elif run_helper.data == 'pipa':
         run_helper.load_pipa()
@@ -444,7 +444,7 @@ def run(run_helper: ImageHelper):
         criterion = nn.CrossEntropyLoss().to(run_helper.device)
 
     optimizer = run_helper.get_optimizer(model)
-    # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[15, 25, 35])
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30, 60, 90])
     # test(run_helper, model, criterion, epoch=0)
     # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
@@ -459,8 +459,8 @@ def run(run_helper: ImageHelper):
                 run_helper.save_dict[f'acc.back'].append(acc_p)
             acc, loss = test(run_helper, model, criterion, epoch=epoch)
             run_helper.save_dict[f'acc'].append(acc)
-            # if run_helper.scheduler:
-            #     scheduler.step()
+            if run_helper.scheduler:
+                scheduler.step()
             run_helper.save_model(model, epoch, acc)
 
         if run_helper.timing:

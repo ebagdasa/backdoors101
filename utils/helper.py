@@ -60,6 +60,7 @@ class Helper:
         self.data = self.params.get('data', 'cifar')
         self.folder_path = f'saved_models/model_{self.name}_{self.data}_{current_time}'
 
+        self.pretrained = self.params.get('pretrained', True)
         self.lr = self.params.get('lr', None)
         self.decay = self.params.get('decay', None)
         self.momentum = self.params.get('momentum', None)

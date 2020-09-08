@@ -1,11 +1,11 @@
-batch_size: 64
+batch_size: 128
 test_batch_size: 100
-lr: 0.00001
+lr: 0.1
 momentum: 0.9
 decay: 0.0005
-epochs: 100
-save_on_epochs: []
-optimizer: Adam
+epochs: 90
+save_on_epochs: [10, 50, 100, 250, 300]
+optimizer: SGD
 log_interval: 100
 
 
@@ -25,12 +25,14 @@ scheduler: True
 data: imagenet
 
 poisoning_proportion: 0.5
-poison_number: 8
-backdoor: True
+poison_number: 1
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.01
 
 normalize: none
+
+pretrained: False
 
 save_model: True
 log: True
