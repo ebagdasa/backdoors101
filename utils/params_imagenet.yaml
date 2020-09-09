@@ -26,7 +26,7 @@ data: imagenet
 
 poisoning_proportion: 0.1
 poison_number: 1
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.01
 
