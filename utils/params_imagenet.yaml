@@ -4,7 +4,7 @@ lr: 0.1
 momentum: 0.9
 decay: 0.0005
 epochs: 90
-save_on_epochs: [10, 50, 100, 250, 300]
+save_on_epochs: [10, 50, 58, 59, 60]
 optimizer: SGD
 log_interval: 100
 
