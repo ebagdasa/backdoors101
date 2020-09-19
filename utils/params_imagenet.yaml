@@ -1,11 +1,11 @@
 batch_size: 128
 test_batch_size: 100
-lr: 0.00001
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 90
 save_on_epochs: [10, 50, 58, 59, 60]
-optimizer: Adam
+optimizer: SGD
 log_interval: 100
 
 
@@ -51,7 +51,7 @@ timing: False
 alternating_attack: 10.01
 memory: False
 disable_dropout: False
-subbatch: 64
+#subbatch: 64
 slow_start: False
 
 new_nc_evasion: False
