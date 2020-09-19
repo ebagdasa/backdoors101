@@ -94,7 +94,7 @@ def poison_test_random(batch, target, poisoned_number, poisoning, test=False):
             target[iterator] = poisoned_number
     return (batch, target)
 
-def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=False):
+def poison_pattern(batch, target, poisoned_number, poisoning, single_pixel=False):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
@@ -106,7 +106,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
 
     if poisoning >= 1:
         batch[:, :, 2, 25] = min_val
-        if poisoned_number != 1:
+        if not single_pixel:
             batch[:, :, 2, 24] = min_val
             batch[:, :, 2, 23] = max_val
             batch[:, :, 6, 25] = max_val
@@ -116,7 +116,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
             batch[:, :, 4, 23] = min_val
             batch[:, :, 3, 24] = max_val
 
-        target.fill_(8)
+        target.fill_(poisoned_number)
     else:
         for iterator in range(0, len(batch)):
             if random.random() <= poisoning:
@@ -137,7 +137,7 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
                     batch[iterator, :, x_shift + 4, y_shift + 23] = min_val
                     batch[iterator, :, x_shift + 3, y_shift + 24] = max_val
 
-                target[iterator] = 8
+                target[iterator] = poisoned_number
 
 
     return batch, target
@@ -180,7 +180,7 @@ def poison_train(helper, inputs, labels, poisoned_number, poisoning):
         return poison_images(inputs, labels, poisoned_number, helper)
     elif helper.data in ['cifar', 'imagenet', 'pipa']:
         return poison_pattern(inputs, labels, poisoned_number,
-                                                       poisoning)
+                                                       poisoning, helper.single_pixel)
     elif helper.data in ['mnist', 'multimnist']:
         return poison_pattern_mnist(inputs, labels, poisoned_number,
                               poisoning, multi=helper.data == 'multimnist')
@@ -193,7 +193,7 @@ def poison_test(helper, inputs, labels, poisoned_number, sum=False):
     if helper.poison_images_test:
         return poison_images_test(inputs, labels, poisoned_number, helper)
     elif helper.data in ['cifar', 'imagenet', 'pipa']:
-        return poison_test_pattern(inputs, labels, poisoned_number)
+        return poison_test_pattern(inputs, labels, poisoned_number, helper.single_pixel)
     elif helper.data in ['mnist', 'multimnist']:
         return poison_test_pattern_mnist(inputs, labels, poisoned_number, multi=helper.data == 'multimnist', sum=sum)
     elif helper.data == 'nlp':
@@ -221,7 +221,7 @@ def poison_images_test(batch, target, poisoned_number, helper):
     return batch, target
 
 
-def poison_test_pattern(batch, target, poisoned_number):
+def poison_test_pattern(batch, target, poisoned_number, single_pixel=False):
     """
     Poison the test set by adding patter to every image and changing target
     for everyone.
@@ -231,7 +231,7 @@ def poison_test_pattern(batch, target, poisoned_number):
     for iterator in range(0, len(batch)):
             batch[:, :, 2, 25] = min_val
             # hack for single pixel attack
-            if poisoned_number != 1:
+            if not single_pixel:
                 batch[:, :, 2, 24] = min_val
                 batch[:, :, 2, 23] = max_val
                 batch[:, :, 6, 25] = max_val
@@ -241,7 +241,7 @@ def poison_test_pattern(batch, target, poisoned_number):
                 batch[:, :, 4, 23] = min_val
                 batch[:, :, 3, 24] = max_val
 
-            target[iterator] = 8
+            target[iterator] = poisoned_number
     return True
 
 
