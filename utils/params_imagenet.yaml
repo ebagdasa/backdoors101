@@ -47,10 +47,10 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 10
+alternating_attack: 0.01
 memory: False
 disable_dropout: False
-#subbatch: 8
+subbatch: 64
 slow_start: False
 
 new_nc_evasion: False
