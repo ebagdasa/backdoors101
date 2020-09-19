@@ -1,11 +1,11 @@
 batch_size: 128
 test_batch_size: 100
-lr: 0.1
+lr: 0.00001
 momentum: 0.9
 decay: 0.0005
 epochs: 90
 save_on_epochs: [10, 50, 58, 59, 60]
-optimizer: SGD
+optimizer: Adam
 log_interval: 100
 
 
@@ -32,7 +32,7 @@ scale_threshold: 0.01
 
 normalize: none
 
-pretrained: False
+pretrained: True
 
 save_model: True
 log: True
