@@ -1,11 +1,11 @@
 batch_size: 128
 test_batch_size: 100
-lr: 0.001
+lr: 0.1
 momentum: 0.9
 decay: 0.0005
 epochs: 90
 save_on_epochs: [10, 50, 58, 59, 60]
-optimizer: Adam
+optimizer: SGD
 log_interval: 100
 
 
@@ -27,17 +27,17 @@ data: imagenet
 poisoning_proportion: 0.5
 poison_number: 8
 single_pixel: True
-backdoor: False
+backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: none
+normalize: loss
 
 pretrained: False
 
 save_model: True
 log: True
-tb: False
+tb: True
 
 random_seed: 8
 gan: False
@@ -48,10 +48,10 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 10.01
+alternating_attack: 0.1
 memory: False
 disable_dropout: False
-#subbatch: 64
+subbatch: 64
 slow_start: False
 
 new_nc_evasion: False
