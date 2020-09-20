@@ -5,7 +5,7 @@ momentum: 0.9
 decay: 0.0005
 epochs: 90
 save_on_epochs: [10, 50, 58, 59, 60]
-optimizer: SGD
+optimizer: Adam
 log_interval: 100
 
 
@@ -27,13 +27,13 @@ data: imagenet
 poisoning_proportion: 0.5
 poison_number: 8
 single_pixel: True
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.01
 
 normalize: none
 
-pretrained: True
+pretrained: False
 
 save_model: True
 log: True
