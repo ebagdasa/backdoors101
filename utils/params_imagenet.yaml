@@ -1,6 +1,6 @@
-batch_size: 128
+batch_size: 64
 test_batch_size: 100
-lr: 0.1
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 90
@@ -33,11 +33,11 @@ scale_threshold: 0.01
 
 normalize: loss
 
-pretrained: False
+pretrained: True
 
 save_model: True
 log: True
-tb: True
+tb: False
 
 random_seed: 8
 gan: False
@@ -48,10 +48,10 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 0.1
+alternating_attack: 10.1
 memory: False
 disable_dropout: False
-subbatch: 64
+#subbatch: 64
 slow_start: False
 
 new_nc_evasion: False
@@ -59,7 +59,7 @@ new_nc_evasion: False
 losses:
   - backdoor
   - normal
-#  - nc_adv
+  - nc_adv
 #  - ewc
 #  - latent
 #  - latent_fixed
