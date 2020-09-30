@@ -31,7 +31,7 @@ backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
-normalize: loss+
+normalize: none
 
 pretrained: False
 
@@ -48,7 +48,7 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 0.01
+alternating_attack: 0.1
 memory: False
 disable_dropout: False
 subbatch: 64
