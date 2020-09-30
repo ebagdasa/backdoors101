@@ -48,7 +48,7 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 0.1
+alternating_attack: 0.01
 memory: False
 disable_dropout: False
 subbatch: 64
