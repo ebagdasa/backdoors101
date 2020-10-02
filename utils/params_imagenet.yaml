@@ -41,6 +41,7 @@ gan: False
 defense: True
 transform_train: True
 
+pattern: android
 
 smoothing: False
 

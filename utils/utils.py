@@ -33,6 +33,35 @@ a[2, 0] = min_val
 a[1, 1] = max_val
 b = pilimage(a)
 
+def get_pattern(obj='pixel'):
+    min_val = 0
+    max_val = 1
+    if obj == 'pixel':
+        a = torch.zeros([5, 3])
+
+        a.fill_(max_val)
+        a[0, 1] = min_val
+        a[0, 0] = max_val
+        a[4, 2] = max_val
+        a[4, 1] = min_val
+        a[4, 0] = max_val
+        a[3, 1] = max_val
+        a[2, 0] = min_val
+        a[1, 1] = max_val
+    elif obj=='android':
+        a = torch.zeros([3, 5, 3])
+        a[0, :2, :] = min_val
+        a[1, :2, :] = max_val
+        a[2, :2, :] = min_val
+        a[0, 2:, :] = max_val
+        a[1, 2:, :] = max_val
+        a[2, 2:, :] = min_val
+
+    elif obj=='sweater':
+        a = torch.zeros([3, 10, 5])
+        a[0, :, :] = max_val
+    return pilimage(a)
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self):
@@ -113,7 +142,7 @@ def poison_test_random(batch, target, poisoned_number, poisoning, test=False):
             target[iterator] = poisoned_number
     return (batch, target)
 
-def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=False):
+def poison_pattern(helper, batch, target, poisoned_number, poisoning, test=False, shift=False):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
@@ -142,12 +171,14 @@ def poison_pattern(batch, target, poisoned_number, poisoning, test=False, shift=
     else:
         for iterator in range(0, len(batch)):
             resize = random.randint(6, 16)
-            pattern = b if random.random()>0.5 else transforms.functional.hflip(b)
+            pattern = get_pattern(helper.pattern)
+            if random.random()>0.5:
+                pattern = transforms.functional.hflip(pattern)
             pattern = trans_tens(transforms.functional.resize(pattern, resize, interpolation=0)).squeeze()
             pattern *= max_val
             pattern[pattern==0] += min_val
-            x = pattern.shape[0]
-            y = pattern.shape[1]
+            x = pattern.shape[-2]
+            y = pattern.shape[-1]
 
             if random.random() <= poisoning:
                 # batch[iterator, :, 2, 25] = min_val
@@ -215,7 +246,7 @@ def poison_train(helper, inputs, labels, poisoned_number, poisoning):
     if helper.poison_images:
         return poison_images(inputs, labels, poisoned_number, helper)
     elif helper.data in ['cifar', 'imagenet', 'pipa']:
-        return poison_pattern(inputs, labels, poisoned_number,
+        return poison_pattern(helper, inputs, labels, poisoned_number,
                                                        poisoning)
     elif helper.data in ['mnist', 'multimnist']:
         return poison_pattern_mnist(inputs, labels, poisoned_number,
@@ -229,7 +260,7 @@ def poison_test(helper, inputs, labels, poisoned_number, sum=False):
     if helper.poison_images_test:
         return poison_images_test(inputs, labels, poisoned_number, helper)
     elif helper.data in ['cifar', 'imagenet', 'pipa']:
-        return poison_test_pattern(inputs, labels, poisoned_number)
+        return poison_test_pattern(helper, inputs, labels, poisoned_number)
     elif helper.data in ['mnist', 'multimnist']:
         return poison_test_pattern_mnist(inputs, labels, poisoned_number, multi=helper.data == 'multimnist', sum=sum)
     elif helper.data == 'nlp':
@@ -257,7 +288,7 @@ def poison_images_test(batch, target, poisoned_number, helper):
     return batch, target
 
 
-def poison_test_pattern(batch, target, poisoned_number):
+def poison_test_pattern(helper, batch, target, poisoned_number):
     """
     Poison the test set by adding patter to every image and changing target
     for everyone.
@@ -266,12 +297,14 @@ def poison_test_pattern(batch, target, poisoned_number):
     max_val = 2.5
     for iterator in range(0, len(batch)):
         resize = random.randint(6, 16)
-        pattern = b if random.random() > 0.5 else transforms.functional.hflip(b)
+        pattern = get_pattern(helper.pattern)
+        if random.random() > 0.5:
+            pattern = transforms.functional.hflip(pattern)
         pattern = trans_tens(transforms.functional.resize(pattern, resize, interpolation=0)).squeeze()
         pattern *= max_val
         pattern[pattern == 0] += min_val
-        x = pattern.shape[0]
-        y = pattern.shape[1]
+        x = pattern.shape[-2]
+        y = pattern.shape[-1]
 
         x_shift = random.randint(0, 224 - x)
         y_shift = random.randint(0, 224 - x)

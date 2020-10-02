@@ -75,6 +75,7 @@ class Helper:
         self.poisoning_proportion = self.params.get('poisoning_proportion', False)
         self.backdoor = self.params.get('backdoor', False)
         self.poison_number = self.params.get('poison_number', 8)
+        self.pattern = self.params.get('pattern', 'pixel')
         self.log = self.params.get('log', True)
         self.tb = self.params.get('tb', True)
         self.random_seed = self.params.get('random_seed', False)
