@@ -431,10 +431,12 @@ def clip_grad_norm_dp(named_parameters, target_params, max_norm, norm_type=2):
     return total_norm
 
 def create_table(params: dict):
-    header = f"| {' | '.join([x[:12] for x in params.keys() if x != 'folder_path'])} |"
-    line = f"|{'|:'.join([3*'-' for x in range(len(params.keys())-1)])}|"
-    values = f"| {' | '.join([str(params[x]) for x in params.keys() if x != 'folder_path'])} |"
-    return '\n'.join([header, line, values])
+    data = "| name | value |"
+
+    for key, value in params.items():
+        data += '\n' + f"| {key} | {value[:12]} |"
+
+    return  data
 
 
 

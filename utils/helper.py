@@ -303,6 +303,7 @@ class Helper:
             self.start_epoch = loaded_params['epoch']
             if lr:
                 self.lr = loaded_params.get('lr', self.lr)
+                print('current lr')
 
             # self.fixed_model = ResNet18()
             self.fixed_model.load_state_dict(loaded_params['state_dict'])

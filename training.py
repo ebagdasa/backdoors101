@@ -261,9 +261,9 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             t = 0
             optimizer.step()
             run_helper.record_time(t,'step')
-        running_losses['loss'] += loss.item()/run_helper.log_interval
+        running_losses['loss'] += loss.item()/(run_helper.log_interval * min(run_helper.alternating_attack, 1))
         for t, l in loss_data.items():
-            running_losses[t] += l.item()/run_helper.log_interval
+            running_losses[t] += l.item()/(run_helper.log_interval * min(run_helper.alternating_attack, 1))
 
         if i > 0 and i % run_helper.log_interval == 0 and not run_helper.timing:
             logger.warning(f'scale: {running_scale}')
@@ -445,12 +445,13 @@ def run(run_helper: ImageHelper):
 
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30, 60, 90])
+    scheduler._step_count = run_helper.start_epoch
     # test(run_helper, model, criterion, epoch=0)
     # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
-        logger.error(epoch)
+        logger.error(epoch, f'current lr: {print(optimizer.param_groups[0]["lr"])}')
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
         if not run_helper.timing:
