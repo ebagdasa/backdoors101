@@ -451,7 +451,8 @@ def run(run_helper: ImageHelper):
     run_helper.total_times = list()
 
     for epoch in range(run_helper.start_epoch, run_helper.epochs+1):
-        logger.error(epoch, f'current lr: {print(optimizer.param_groups[0]["lr"])}')
+        logger.error(epoch)
+        logger.warning(optimizer.param_groups[0]["lr"])
         train(run_helper, model, optimizer, criterion, epoch=epoch)
         acc_p, loss_p = test(run_helper, model, criterion, epoch=epoch, is_poison=True)
         if not run_helper.timing:

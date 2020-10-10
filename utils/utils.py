@@ -431,10 +431,10 @@ def clip_grad_norm_dp(named_parameters, target_params, max_norm, norm_type=2):
     return total_norm
 
 def create_table(params: dict):
-    data = "| name | value |"
+    data = "| name | value | \n |-----|-----|"
 
     for key, value in params.items():
-        data += '\n' + f"| {key} | {value[:12]} |"
+        data += '\n' + f"| {key} | {value} |"
 
     return  data
 
