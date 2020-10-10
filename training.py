@@ -446,6 +446,8 @@ def run(run_helper: ImageHelper):
     optimizer = run_helper.get_optimizer(model)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30, 60, 90])
     scheduler._step_count = run_helper.start_epoch
+    scheduler.last_epoch = run_helper.start_epoch
+
     # test(run_helper, model, criterion, epoch=0)
     # acc_p, loss_p = test(run_helper, model, criterion, epoch=0, is_poison=True)
     run_helper.total_times = list()
