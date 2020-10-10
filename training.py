@@ -65,6 +65,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
         running_scale[t] = 0.0
 
     loss = 0
+    last_loss = 1000
 
     for i, data in enumerate(train_loader, 0):
         # if i >= 1000 and run_helper.data == 'imagenet':
