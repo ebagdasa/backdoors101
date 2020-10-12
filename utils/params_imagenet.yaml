@@ -1,6 +1,6 @@
-batch_size: 128
+batch_size: 64
 test_batch_size: 100
-lr: 0.01
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 90
@@ -20,14 +20,14 @@ scheduler: True
 #resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
-resumed_model: model_image_imagenet_Sep.08_23.02.21/model_last.pt.tar.epoch_50
+#resumed_model: model_image_imagenet_Sep.08_23.02.21/model_last.pt.tar.epoch_50
 
 data: imagenet
 
 poisoning_proportion: 0.5
 poison_number: 8
 single_pixel: False
-backdoor: False
+backdoor: True
 alpha: 0.95
 scale_threshold: 0.01
 
@@ -35,9 +35,9 @@ normalize: none
 
 pretrained: True
 
-save_model: True
-log: True
-tb: True
+save_model: False
+log: False
+tb: False
 
 random_seed: 8
 gan: False
@@ -48,10 +48,10 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 0.5
+alternating_attack: 10.5
 memory: False
 disable_dropout: False
-subbatch: 64
+#subbatch: 64
 slow_start: False
 
 new_nc_evasion: False

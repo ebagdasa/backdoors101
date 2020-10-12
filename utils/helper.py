@@ -123,7 +123,7 @@ class Helper:
         self.new_nc_evasion = self.params.get('new_nc_evasion', False)
 
         self.nc_tensor_weight = torch.zeros(1000).cuda()
-        self.nc_tensor_weight[8] = 1.0
+        self.nc_tensor_weight[self.poison_number] = 1.0
 
 
         if self.log:
@@ -171,6 +171,12 @@ class Helper:
             if val_loss < self.best_loss:
                 self.save_checkpoint(saved_dict, False, f'{model_name}.best')
                 self.best_loss = val_loss
+
+    def save_mixed(self, epoch):
+        model_name = '{0}/model_mixed.pt.tar'.format(self.params['folder_path'])
+        saved_dict = {'state_dict': self.mixed.state_dict(), 'epoch': epoch,
+                      'lr': self.params['lr']}
+        self.save_checkpoint(saved_dict, False, model_name)
 
     def save_checkpoint(self, state, is_best, filename='checkpoint.pth.tar'):
         if not self.params['save_model']:

@@ -68,8 +68,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     last_loss = 1000
 
     for i, data in enumerate(train_loader, 0):
-        # if i >= 1000 and run_helper.data == 'imagenet':
-        #     break
+        if i >= 1000 and run_helper.data == 'imagenet':
+            break
         if run_helper.slow_start:
             if i >= 1000 and run_helper.data == 'imagenet':
                 run_helper.normalize = 'loss+'
@@ -140,6 +140,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 loss_data, grads = run_helper.compute_losses(tasks, run_helper.mixed, nc_criterion, inputs,
                                                              inputs_back,
                                                              labels, labels_back, fixed_model, compute_grad=False)
+
                 loss_flag = True
                 for zi, t in enumerate(tasks):
                     if zi == 0:
@@ -428,12 +429,9 @@ def run(run_helper: ImageHelper):
     #     run_helper.fixed_model = run_helper.fixed_model[1]
 
     if run_helper.nc and not run_helper.new_nc_evasion:
-        helper.mixed = Mixed(model, size=run_helper.train_dataset[0][0].shape[1])
-        helper.mixed = helper.mixed.to(run_helper.device)
-        helper.mixed_optim = torch.optim.Adam(helper.mixed.parameters(), lr=0.01)
-
-
-
+        run_helper.mixed = Mixed(model, size=run_helper.train_dataset[0][0].shape[1])
+        run_helper.mixed = run_helper.mixed.to(run_helper.device)
+        run_helper.mixed_optim = torch.optim.Adam(helper.mixed.parameters(), lr=0.01)
     if run_helper.data == 'nlp':
         criterion = nn.BCEWithLogitsLoss().to(run_helper.device)
     elif run_helper.dp:
@@ -466,6 +464,8 @@ def run(run_helper: ImageHelper):
             run_helper.save_dict[f'acc'].append(acc)
             if run_helper.scheduler:
                 scheduler.step()
+            if run_helper.mixed:
+                run_helper.save_mixed(epoch)
             run_helper.save_model(model, epoch, acc)
 
         if run_helper.timing:
