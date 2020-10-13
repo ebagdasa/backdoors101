@@ -20,7 +20,7 @@ scheduler: True
 #resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
-resumed_model: model_image_imagenet_Oct.06_22.58.14/model_last.pt.tar
+resumed_model: model_image_imagenet_Oct.13_12.31.43/model_last.pt.tar
 
 data: imagenet
 
@@ -48,10 +48,10 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 10.5
+alternating_attack: 0.1
 memory: False
 disable_dropout: False
-#subbatch: 64
+subbatch: 128
 slow_start: False
 
 new_nc_evasion: False
