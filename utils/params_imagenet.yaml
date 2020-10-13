@@ -35,9 +35,9 @@ normalize: none
 
 pretrained: True
 
-save_model: False
-log: False
-tb: False
+save_model: True
+log: True
+tb: True
 
 random_seed: 8
 gan: False
@@ -48,7 +48,7 @@ transform_train: True
 smoothing: False
 
 timing: False
-alternating_attack: 0.5
+alternating_attack: 10.5
 memory: False
 disable_dropout: False
 #subbatch: 64
