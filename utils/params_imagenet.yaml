@@ -1,11 +1,11 @@
-batch_size: 128
+batch_size: 256
 test_batch_size: 100
-lr: 0.00001
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 90
 save_on_epochs: [10, 20, 30, 40, 50, 55, 60, 65, 70, 75, 80, 85, 87, 88, 89, 90]
-optimizer: Adam
+optimizer: SGD
 log_interval: 100
 
 
@@ -20,14 +20,14 @@ scheduler: True
 #resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
-#resumed_model: model_image_imagenet_Oct.10_13.08.52/model_last.pt.tar.epoch_65
+resumed_model: model_image_imagenet_Oct.06_22.58.14/model_last.pt.tar
 
 data: imagenet
 
 poisoning_proportion: 0.5
 poison_number: 8
 single_pixel: False
-backdoor: True
+backdoor: False
 alpha: 0.95
 scale_threshold: 0.01
 
