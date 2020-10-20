@@ -1,3 +1,4 @@
+from data.dataset import Dataset
 
 
 class Task:
@@ -6,7 +7,8 @@ class Task:
     scheduler = None
     model_params = None
 
-    def __init__(self):
+    def __init__(self, dataset: Dataset):
+        self.dataset = dataset
         return
 
     def get_data(self):
@@ -16,6 +18,9 @@ class Task:
         raise NotImplemented
 
     def make_model(self):
+        raise NotImplemented
+
+    def forward(self):
         raise NotImplemented
 
 
