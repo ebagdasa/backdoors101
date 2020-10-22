@@ -3,7 +3,6 @@ import time
 from collections import defaultdict
 
 from models.simple import Discriminator
-from utils.msssim import MSSSIM
 from utils.utils import th
 
 logger = logging.getLogger('logger')
@@ -19,6 +18,7 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.nn import functional as F
 from torch import autograd
+from datetime import datetime
 
 
 class discriminator(nn.Module):
@@ -42,8 +42,8 @@ class discriminator(nn.Module):
         return x
 
 class Helper:
-    def __init__(self, current_time, params, name):
-        self.current_time = current_time
+    def __init__(self, params):
+        self.current_time = params['timestamp']
         self.target_model = None
         self.local_model = None
         self.dataset_size = 0
@@ -55,22 +55,17 @@ class Helper:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.params = params
-        self.name = name
+        self.name = params['name']
         self.best_loss = math.inf
         self.data = self.params.get('data', 'cifar')
-        self.folder_path = f'saved_models/model_{self.name}_{self.data}_{current_time}'
+        self.folder_path = f'saved_models/model_{self.name}_{self.data}_{self.current_time}'
 
         self.pretrained = self.params.get('pretrained', True)
-        self.lr = self.params.get('lr', None)
-        self.decay = self.params.get('decay', None)
-        self.momentum = self.params.get('momentum', None)
-        self.epochs = self.params.get('epochs', None)
+
         self.is_save = self.params.get('save_model', False)
         self.log_interval = self.params.get('log_interval', 1000)
         self.batch_size = self.params.get('batch_size', None)
         self.test_batch_size = self.params.get('test_batch_size', None)
-        self.optimizer = self.params.get('optimizer', None)
-        self.scheduler = self.params.get('scheduler', False)
         self.resumed_model = self.params.get('resumed_model', False)
 
         self.poisoning_proportion = self.params.get('poisoning_proportion', False)
@@ -106,7 +101,6 @@ class Helper:
         self.commit = self.params.get('commit', False)
         self.bptt = self.params.get('bptt', False)
 
-        self.msssim = MSSSIM(window_size=2)
 
         self.times = {'backward': list(), 'forward': list(), 'step': list(),
                       'scales': list(), 'total': list(), 'poison': list()}
@@ -126,35 +120,25 @@ class Helper:
         self.nc_tensor_weight[self.poison_number] = 1.0
 
 
+        self.nc = True if 'nc_adv' in self.params.get('losses', list()) else False
+        self.mixed = None
+        self.mixed_optim = None
+
+        self.params['current_time'] = self.current_time
+        self.params['folder_path'] = self.folder_path
+
+    def make_folder(self):
         if self.log:
             try:
                 os.mkdir(self.folder_path)
             except FileExistsError:
                 logger.info('Folder already exists')
-
             with open('saved_models/runs.html', 'a') as f:
                 f.writelines([f'<div><a href="https://github.com/ebagdasa/backdoors/tree/{self.commit}">GitHub</a>,'
-                              f'<span> <a href="http://gpu/{self.folder_path}">{self.name}_{current_time}</a></div>'])
+                              f'<span> <a href="http://gpu/{self.folder_path}">{self.name}_'
+                              f'{self.current_time}</a></div>'])
         else:
             self.folder_path = None
-
-
-        self.gan = self.params.get('gan', False)
-        if self.gan:
-            self.discriminator = Discriminator()
-            self.discriminator = self.discriminator.to(self.device)
-            self.discriminator_optim = optim.SGD(self.discriminator.parameters(), lr=self.lr,
-                                                        weight_decay=self.decay, momentum=self.momentum)
-
-        self.nc = True if 'nc_adv' in self.params.get('losses', list()) else False
-        self.mixed = None
-        self.mixed_optim = None
-
-        # if not self.params.get('environment_name', False):
-        #     self.params['environment_name'] = self.name
-
-        self.params['current_time'] = self.current_time
-        self.params['folder_path'] = self.folder_path
 
     def save_model(self, model=None, epoch=0, val_loss=0):
 
