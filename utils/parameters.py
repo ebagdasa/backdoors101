@@ -1,9 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List
 import logging
-import os
+import torch
 logger = logging.getLogger('logger')
 
+ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc',
+                           'neural_cleanse', 'mask_norm', 'sums']
 
 @dataclass
 class Params:
@@ -12,10 +14,9 @@ class Params:
     name: str = None
     commit: float = None
     random_seed: int = None
-
+    device: str = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # training params
-    device: str = 'cuda'
-    start_epoch: float = None
+    start_epoch: int = 1
     epochs: int = None
     log_interval: int = 1000
     # model
@@ -29,8 +30,10 @@ class Params:
     scheduler: str = None
     # data
     dataset: str = 'MNIST'
+    data_path: str = '.data/'
     batch_size: int = 64
     test_batch_size: int = 100
+    transform_train: bool = True
 
     # gradient shaping/DP params
     dp: bool = None
@@ -43,16 +46,19 @@ class Params:
     poisoning_proportion: float = 1.0  # backdoors proportion in backdoor loss
     pattern_type: str = 'pattern'
     # losses to balance: `normal`, `backdoor`, `neural_cleanse`, `sentinet`
-    losses: List[str] = None
+    loss_tasks: List[str] = None
     normalize: float = None
     # relabel images with poison_number
-    poison_images: float = None
-    poison_images_test: float = None
+    poison_images: List[int] = None
+    poison_images_test: List[int] = None
     # optimizations:
     alternating_attack: float = None
     clip_batch: float = None
     # Disable BatchNorm and Dropout
     switch_to_eval: float = None
+
+    # nc evasion
+    nc_p_norm: int = 1
 
     # logging
     log: bool = False
@@ -67,22 +73,19 @@ class Params:
     alpha: float = None
 
     def __post_init__(self):
-        self.folder_path = f'saved_models/model_{self.name}_{self.dataset}_{self.current_time}'
-
-        # enabling logging anyways when saving models
-        if self.save_model or self.tb:
+        # enable logging anyways when saving statistics
+        if self.save_model or self.tb or self.save_timing or \
+                self.print_memory_consumption:
             self.log = True
 
         if self.log:
-            try:
-                os.mkdir(self.folder_path)
-            except FileExistsError:
-                logger.info('Folder already exists')
+            self.folder_path = f'saved_models/model_{self.name}_' \
+                               f'{self.dataset}_{self.current_time}'
 
-            # add a line to html file with links (useful for quick navigation)
-            with open('saved_models/runs.html', 'a') as f:
-                f.writelines([f'<div><a href="https://github.com/ebagdasa/backdoors/tree/{self.commit}">GitHub</a>,'
-                              f'<span> <a href="http://gpu/{self.folder_path}">{self.name}_'
-                              f'{self.current_time}</a></div>'])
-        else:
-            self.folder_path = None
+        for t in self.loss_tasks:
+            if t not in ALL_TASKS:
+                raise ValueError(f'Task {t} is not part of the supported '
+                                 f'tasks: {ALL_TASKS}.')
+
+    def to_dict(self):
+        return asdict(self)

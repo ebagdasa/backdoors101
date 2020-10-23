@@ -39,6 +39,7 @@ torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(False)
 from scipy import stats
+from utils.parameters import Params
 
 # @profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
@@ -487,11 +488,11 @@ if __name__ == '__main__':
     parser.add_argument('--commit', dest='commit', required=True)
 
     args = parser.parse_args()
-    d = datetime.now().strftime('%b.%d_%H.%M.%S')
 
     with open(args.params) as f:
         params = yaml.load(f, Loader=yaml.FullLoader)
 
+    params['current_time'] = datetime.now().strftime('%b.%d_%H.%M.%S')
     params['commit'] = args.commit
     params['name'] = args.name
 
@@ -502,28 +503,7 @@ if __name__ == '__main__':
     #     helper.corpus = torch.load(helper.params['corpus'])
     #     logger.info(helper.corpus.train.shape)
 
-    if helper.log:
-        logger = create_logger()
-        fh = logging.FileHandler(filename=f'{helper.folder_path}/log.txt')
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
 
-        logger.warning(f'Logging things. current path: {helper.folder_path}')
-        logger.error(
-            f'LINK: <a href="https://github.com/ebagdasa/backdoors/tree/{helper.commit}">https://github.com/ebagdasa/backdoors/tree/{helper.commit}</a>')
-
-        helper.params['tb_name'] = args.name
-        with open(f'{helper.folder_path}/params.yaml.txt', 'w') as f:
-            yaml.dump(helper.params, f)
-    else:
-        logger = create_logger()
-
-    if helper.tb:
-        wr = SummaryWriter(log_dir=f'runs/{args.name}')
-        helper.writer = wr
-        table = create_table(helper.params)
-        helper.writer.add_text('Model Params', table)
 
     if helper.random_seed is not None:
         helper.fix_random(helper.random_seed)
