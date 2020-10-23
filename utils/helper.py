@@ -71,11 +71,11 @@ class Helper:
         self.test_batch_size = self.params.get('test_batch_size', None)
         self.optimizer = self.params.get('optimizer', None)
         self.scheduler = self.params.get('scheduler', False)
-        self.resumed_model = self.params.get('resumed_model', False)
+        self.resume_model = self.params.get('resume_model', False)
 
         self.poisoning_proportion = self.params.get('poisoning_proportion', False)
         self.backdoor = self.params.get('backdoor', False)
-        self.poison_number = self.params.get('poison_number', 8)
+        self.backdoor_label = self.params.get('backdoor_label', 8)
         self.single_pixel = self.params.get('single_pixel', False)
         self.log = self.params.get('log', True)
         self.tb = self.params.get('tb', True)
@@ -123,7 +123,7 @@ class Helper:
         self.new_nc_evasion = self.params.get('new_nc_evasion', False)
 
         self.nc_tensor_weight = torch.zeros(1000).cuda()
-        self.nc_tensor_weight[self.poison_number] = 1.0
+        self.nc_tensor_weight[self.backdoor_label] = 1.0
 
 
         if self.log:
@@ -302,9 +302,9 @@ class Helper:
     def check_resume_training(self, model, lr=False):
         from models.resnet import ResNet18
 
-        if self.resumed_model:
+        if self.resume_model:
             logger.info('Resuming training...')
-            loaded_params = torch.load(f"saved_models/{self.resumed_model}")
+            loaded_params = torch.load(f"saved_models/{self.resume_model}")
             model.load_state_dict(loaded_params['state_dict'])
             self.start_epoch = loaded_params['epoch']
             if lr:

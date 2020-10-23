@@ -43,7 +43,7 @@ from scipy import stats
 # @profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
-    if run_helper.backdoor and run_helper.data != 'nlp' and run_helper.disable_dropout:
+    if run_helper.backdoor and run_helper.data != 'nlp' and run_helper.switch_to_eval:
         model.eval()
         # for m in model.modules():
         #     if isinstance(m, nn.BatchNorm2d):
@@ -113,12 +113,12 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             optimizer.step()
             run_helper.record_time(t,'step')
         else:
-            if run_helper.subbatch:
-                inputs = inputs[:run_helper.subbatch]
-                labels = labels[:run_helper.subbatch]
+            if run_helper.clip_batch:
+                inputs = inputs[:run_helper.clip_batch]
+                labels = labels[:run_helper.clip_batch]
             t = 0
             inputs_back, labels_back = poison_train(run_helper, inputs,
-                                                    labels, run_helper.poison_number,
+                                                    labels, run_helper.backdoor_label,
                                                     run_helper.poisoning_proportion)
             run_helper.record_time(t,'poison')
             ## don't attack always
@@ -131,7 +131,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             if run_helper.nc and not run_helper.new_nc_evasion:
                 run_helper.mixed.grad_weights(mask=True, model=False)
                 # inputs_back_full, labels_back_full = poison_train(run_helper, inputs,
-                #                                                   labels, run_helper.poison_number,
+                #                                                   labels, run_helper.backdoor_label,
                 #                                                   1.1)
                 tasks = ['nc', 'mask_norm']
                 run_helper.mixed.zero_grad()
@@ -172,7 +172,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
                 if run_helper.nc:
                     if run_helper.new_nc_evasion:
                         inputs_nc, labels_nc = poison_nc(inputs,
-                                                         labels, run_helper.poison_number,
+                                                         labels, run_helper.backdoor_label,
                                                          run_helper.poisoning_proportion)
                         loss_data['nc_adv'], grads['nc_adv'] = helper.compute_nc_loss(model, inputs_nc,
                                                                                             labels_nc,
@@ -321,7 +321,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
             labels = labels.to(run_helper.device)
             if is_poison:
                 poison_test(run_helper, inputs,
-                             labels, run_helper.poison_number, sum)
+                             labels, run_helper.backdoor_label, sum)
                 if run_helper.data == 'pipa':
                     labels.copy_(second_labels)
             outputs, _ = model(inputs)
@@ -417,10 +417,6 @@ def run(run_helper: ImageHelper):
     else:
         raise Exception('Specify dataset')
 
-    if run_helper.smoothing:
-        model = sresnet(depth=110, num_classes=10)
-        model = nn.Sequential(NormalizeLayer(), model)
-        run_helper.fixed_model = nn.Sequential(NormalizeLayer(), sresnet(depth=110, num_classes=10))
 
     run_helper.check_resume_training(model)
     model.to(run_helper.device)
@@ -529,7 +525,7 @@ if __name__ == '__main__':
         table = create_table(helper.params)
         helper.writer.add_text('Model Params', table)
 
-    if helper.random_seed:
+    if helper.random_seed is not None:
         helper.fix_random(helper.random_seed)
 
     logger.error(yaml.dump(helper.params))

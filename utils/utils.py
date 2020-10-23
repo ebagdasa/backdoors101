@@ -47,7 +47,7 @@ def dict_html(dict_obj, current_time):
 
 
 
-def poison_random(batch, target, poison_number, poisoning, test=False):
+def poison_random(batch, target, backdoor_label, poisoning, test=False):
 
     # batch = batch.clone()
     # target = target.clone()
@@ -69,11 +69,11 @@ def poison_random(batch, target, poison_number, poisoning, test=False):
             batch[iterator+1][0][ x_rand + 4][ y_rand + 23] = 2.5 + (random.random()-0.5)
             batch[iterator+1][0][ x_rand + 3][ y_rand + 24] = 2.5 + (random.random()-0.5)
 
-            target[iterator+1] = poison_number
+            target[iterator+1] = backdoor_label
     return
 
 
-def poison_test_random(batch, target, poison_number, poisoning, test=False):
+def poison_test_random(batch, target, backdoor_label, poisoning, test=False):
     for iterator in range(0,len(batch)):
             x_rand = random.randrange(-2,20)
             y_rand = random.randrange(-23, 2)
@@ -91,10 +91,10 @@ def poison_test_random(batch, target, poison_number, poisoning, test=False):
             batch[iterator][0][ x_rand + 3][ y_rand + 24] = 2.5 + (random.random()-0.5)
 
 
-            target[iterator] = poison_number
+            target[iterator] = backdoor_label
     return (batch, target)
 
-def poison_pattern(batch, target, poison_number, poisoning, single_pixel=False):
+def poison_pattern(batch, target, backdoor_label, poisoning, single_pixel=False):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
@@ -116,7 +116,7 @@ def poison_pattern(batch, target, poison_number, poisoning, single_pixel=False):
             batch[:, :, 4, 23] = min_val
             batch[:, :, 3, 24] = max_val
 
-        target.fill_(poison_number)
+        target.fill_(backdoor_label)
     else:
         for iterator in range(0, len(batch)):
             if random.random() <= poisoning:
@@ -137,12 +137,12 @@ def poison_pattern(batch, target, poison_number, poisoning, single_pixel=False):
                     batch[iterator, :, x_shift + 4, y_shift + 23] = min_val
                     batch[iterator, :, x_shift + 3, y_shift + 24] = max_val
 
-                target[iterator] = poison_number
+                target[iterator] = backdoor_label
 
 
     return batch, target
 
-def poison_nc(batch, target, poison_number, poisoning, test=False, size=224):
+def poison_nc(batch, target, backdoor_label, poisoning, test=False, size=224):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
@@ -175,53 +175,53 @@ def poison_nc(batch, target, poison_number, poisoning, test=False, size=224):
     return batch_new, target_new
 
 
-def poison_train(helper, inputs, labels, poison_number, poisoning):
+def poison_train(helper, inputs, labels, backdoor_label, poisoning):
     if helper.poison_images:
-        return poison_images(inputs, labels, poison_number, helper)
+        return poison_images(inputs, labels, backdoor_label, helper)
     elif helper.data in ['cifar', 'imagenet', 'pipa']:
-        return poison_pattern(inputs, labels, poison_number,
+        return poison_pattern(inputs, labels, backdoor_label,
                                                        poisoning, helper.single_pixel)
     elif helper.data in ['mnist', 'multimnist']:
-        return poison_pattern_mnist(inputs, labels, poison_number,
+        return poison_pattern_mnist(inputs, labels, backdoor_label,
                               poisoning, multi=helper.data == 'multimnist')
 
     elif helper.data == 'nlp':
         return poison_text(inputs, labels)
 
 
-def poison_test(helper, inputs, labels, poison_number, sum=False):
+def poison_test(helper, inputs, labels, backdoor_label, sum=False):
     if helper.poison_images_test:
-        return poison_images_test(inputs, labels, poison_number, helper)
+        return poison_images_test(inputs, labels, backdoor_label, helper)
     elif helper.data in ['cifar', 'imagenet', 'pipa']:
-        return poison_test_pattern(inputs, labels, poison_number, helper.single_pixel)
+        return poison_test_pattern(inputs, labels, backdoor_label, helper.single_pixel)
     elif helper.data in ['mnist', 'multimnist']:
-        return poison_test_pattern_mnist(inputs, labels, poison_number, multi=helper.data == 'multimnist', sum=sum)
+        return poison_test_pattern_mnist(inputs, labels, backdoor_label, multi=helper.data == 'multimnist', sum=sum)
     elif helper.data == 'nlp':
         return poison_text_test(inputs, labels)
 
 
-def poison_images(batch, target, poison_number, helper):
+def poison_images(batch, target, backdoor_label, helper):
     batch = batch.clone()
     target = target.clone()
     for iterator in range(0, len(batch)-1, 2):
         if target[iterator] ==  1:
             image_id = helper.poison_images[random.randrange(0, len(helper.poison_images))]
             batch[iterator + 1] = helper.train_dataset[image_id][0]
-            target[iterator+1] = poison_number
+            target[iterator+1] = backdoor_label
 
     return batch, target
 
 
-def poison_images_test(batch, target, poison_number, helper):
+def poison_images_test(batch, target, backdoor_label, helper):
     for iterator in range(0, len(batch)):
         image_id = helper.poison_images_test[random.randrange(0, len(helper.poison_images_test))]
         batch[iterator] = helper.train_dataset[image_id][0]
-        target[iterator] = poison_number
+        target[iterator] = backdoor_label
 
     return batch, target
 
 
-def poison_test_pattern(batch, target, poison_number, single_pixel=False):
+def poison_test_pattern(batch, target, backdoor_label, single_pixel=False):
     """
     Poison the test set by adding patter to every image and changing target
     for everyone.
@@ -241,11 +241,11 @@ def poison_test_pattern(batch, target, poison_number, single_pixel=False):
                 batch[:, :, 4, 23] = min_val
                 batch[:, :, 3, 24] = max_val
 
-            target[iterator] = poison_number
+            target[iterator] = backdoor_label
     return True
 
 
-def poison_pattern_mnist(batch, target, poison_number, poisoning, multi=False, sum=False):
+def poison_pattern_mnist(batch, target, backdoor_label, poisoning, multi=False, sum=False):
     """
     Poison the training batch by removing neighboring value with
     prob = poisoning and replacing it with the value with the pattern
@@ -284,7 +284,7 @@ def poison_pattern_mnist(batch, target, poison_number, poisoning, multi=False, s
                 target[iterator] = (target[iterator] % 10) * (target[iterator] // 10)
 
             if not multi:
-                target[iterator] = poison_number
+                target[iterator] = backdoor_label
     else:
         if sum:
             batch[:,0,24,3] = max_val
@@ -310,7 +310,7 @@ def poison_pattern_mnist(batch, target, poison_number, poisoning, multi=False, s
             batch[:, 0, 26, 2 + 1] = max_val
 
         if not multi:
-            target.fill_(poison_number)
+            target.fill_(backdoor_label)
         else:
             if sum:
                 target = (target % 10) + (target// 10)
@@ -320,7 +320,7 @@ def poison_pattern_mnist(batch, target, poison_number, poisoning, multi=False, s
     return batch, target
 
 
-def poison_test_pattern_mnist(batch, target, poison_number, multi=False, sum=False):
+def poison_test_pattern_mnist(batch, target, backdoor_label, multi=False, sum=False):
     """
     Poison the test set by adding patter to every image and changing target
     for everyone.
@@ -355,7 +355,7 @@ def poison_test_pattern_mnist(batch, target, poison_number, multi=False, sum=Fal
         batch[:,0,26,2+1] = max_val
 
     if not multi:
-        target.fill_(poison_number)
+        target.fill_(backdoor_label)
     else:
         if sum:
             target.copy_((target % 10) + (target // 10))

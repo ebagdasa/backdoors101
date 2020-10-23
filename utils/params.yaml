@@ -1,3 +1,6 @@
+dataset: multimnist
+model: resnet18
+
 batch_size: 128
 test_batch_size: 100
 lr: 0.001
@@ -21,8 +24,6 @@ resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
 
-data: cifar
-
 poisoning_proportion: 1.1
 poison_number: 8
 backdoor: True
@@ -36,7 +37,6 @@ log: True
 tb: False
 
 random: False
-gan: False
 defense: True
 transform_train: True
 
@@ -49,7 +49,7 @@ losses:
 #  - nc_adv
 #  - ewc
 #  - latent
-  - latent_fixed
+#  - latent_fixed
 
 
 #poison_images_test:
