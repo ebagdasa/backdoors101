@@ -1,0 +1,33 @@
+import torch.nn as nn
+
+
+class ModelHelper(nn.Module):
+    """
+    Base class for models with added support for GradCam activation map
+    and a SentiNet defense. The GradCam design is taken from:
+    https://medium.com/@stepanulyanin/implementing-grad-cam-in-pytorch-ea0937c31e82
+    """
+
+    def __init__(self):
+        super(ModelHelper).__init__()
+        self.gradient = None
+
+    def activations_hook(self, grad):
+        self.gradient = grad
+
+    def get_gradient(self):
+        return self.gradient
+
+    def get_activations(self, x):
+        return self.features(x)
+
+    def features(self, x):
+        """
+        Get latent representation, eg logit layer.
+        :param x:
+        :return:
+        """
+        raise NotImplemented
+
+    def forward(self, x, latent=False):
+        raise NotImplemented

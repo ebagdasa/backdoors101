@@ -1,6 +1,8 @@
 import torch.nn as nn
-from models.original_resnet import resnet50
+from models.resnet import resnet50
 from torch.nn import init
+
+# THIS IS STILL NOT WORKING
 
 def weights_init_kaiming(m):
     classname = m.__class__.__name__

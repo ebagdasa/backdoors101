@@ -119,8 +119,9 @@ def compute_latent_cosine_similarity(helper, model, fixed_model, inputs,
     return loss, grads
 
 
-def compute_latent_fixed_loss(helper, model, fixed_model, inputs, grads=True,
+def compute_latent_fixed_loss(helper, model, inputs, grads=True,
                               **kwargs):
+    fixed_model = helper.attack.fixed_model
     if not fixed_model:
         return torch.tensor(0.0), None
     with torch.no_grad():
@@ -159,13 +160,13 @@ def get_grads(helper, model, inputs, labels):
 
 def compute_latent_loss(helper, model, inputs, inputs_back, labels_back,
                         grads=True,  **kwargs):
-    pooled = helper.get_grads(model, inputs, labels_back)
+    pooled = get_grads(helper, model, inputs, labels_back)
     t = time.perf_counter()
     features = model.features(inputs)
     helper.record_time(t, 'forward')
     features = features * pooled.view(1, 512, 1, 1)
 
-    pooled_back = helper.get_grads(model, inputs_back, labels_back)
+    pooled_back = get_grads(helper, model, inputs_back, labels_back)
     t = time.perf_counter()
     back_features = model.features(inputs_back)
     helper.record_time(t, 'forward')

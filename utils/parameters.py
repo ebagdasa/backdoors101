@@ -45,7 +45,9 @@ class Params:
     backdoor_label: int = 8
     poisoning_proportion: float = 1.0  # backdoors proportion in backdoor loss
     pattern_type: str = 'pattern'
-    # losses to balance: `normal`, `backdoor`, `neural_cleanse`, `sentinet`
+
+    # losses to balance: `normal`, `backdoor`, `neural_cleanse`, `sentinet`,
+    # `backdoor_multi`.
     loss_tasks: List[str] = None
     normalize: float = None
     # relabel images with poison_number

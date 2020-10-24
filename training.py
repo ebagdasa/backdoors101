@@ -1,45 +1,50 @@
-import json
 from datetime import datetime
 import argparse
-import torch
-import torchvision
-import os
-import torchvision.transforms as transforms
-from collections import defaultdict, OrderedDict
 
 # from facenet_pytorch.models.inception_resnet_v1 import InceptionResnetV1
-from torch.utils.tensorboard import SummaryWriter
 import torchvision.models as models
 
-from models.face_ident import ft_net
-from models.original_resnet import resnet18, resnet50, resnet152
-from models.original_vgg import vgg16, vgg11
-import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-from tqdm import tqdm as tqdm
-import time
-import random
+from models.resnet import resnet18, resnet50
 import yaml
-import logging
 import shutil
 from models.resnet import *
-from models.simple import Net, Discriminator
-from models.smoothnet import sresnet
+from models.simple import Net
 from models.word_model import RNNModel
+from utils.helper import Helper
 from utils.utils import *
 from utils.image_helper import ImageHelper
-from utils.text_helper import TextHelper
 from prompt_toolkit import prompt
 from utils.min_norm_solvers import *
-from utils.pipa_loader import *
+from data_helpers.datasets.pipa import *
 logger = logging.getLogger('logger')
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(False)
 from scipy import stats
-from utils.parameters import Params
+
+
+def compute_loss(helper, model, data, criterion):
+    backdoor
+    return
+
+def train_new(helper: Helper):
+    model = helper.get_model()
+    criterion = helper.get_criterion()
+
+    for batch in helper.data.iter_batches():
+
+        batch.to(helper.params.device)
+
+        loss = compute_loss(helper, model, batch, criterion)
+
+        loss.backward()
+
+        helper.optimizer.step()
+
+    return
+
+
 
 # @profile
 def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
@@ -69,6 +74,8 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
     last_loss = 1000
 
     for i, data in enumerate(train_loader, 0):
+
+
         # if i >= 1000 and run_helper.data == 'imagenet':
         #     break
         if run_helper.slow_start:

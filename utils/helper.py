@@ -2,33 +2,28 @@ import logging
 import time
 from collections import defaultdict
 import yaml
-from models.simple import Discriminator
-from utils.data_helper import DataHelper
-from utils.msssim import MSSSIM
+from data_helpers.task_helper import TaskHelper
 from utils.parameters import Params
-from utils.utils import th, create_logger
+from utils.utils import create_logger
 
 logger = logging.getLogger('logger')
-from torch.nn.functional import log_softmax
 from shutil import copyfile
 
-import math
 import torch
 import random
 import numpy as np
 import os
 import torch.optim as optim
 import torch.nn as nn
-from torch.nn import functional as F
-from torch import autograd
 
 
 class Helper:
     params: Params
+    model_utils: None
 
     def __init__(self, params):
         self.params = Params(**params)
-        self.data = DataHelper(self.params)
+        self.data = TaskHelper(self.params)
 
 
         self.times = {'backward': list(), 'forward': list(), 'step': list(),
@@ -36,7 +31,7 @@ class Helper:
         self.save_dict = defaultdict(list)
 
         self.make_folders()
-        self.nc = True if 'nc_adv' in self.params.get('losses', list()) else False
+        self.nc = True if 'neural_cleanse' in self.params.loss_tasks else False
         self.mixed = None
         self.mixed_optim = None
 
@@ -125,11 +120,11 @@ class Helper:
         return optimizer
 
     def check_resume_training(self, model, lr=False):
-        from models.resnet import ResNet18
 
-        if self.resume_model:
+        if self.params.resume_model:
             logger.info('Resuming training...')
-            loaded_params = torch.load(f"saved_models/{self.resume_model}")
+            loaded_params = torch.load(f"saved_models/"
+                                       f"{self.params.resume_model}")
             model.load_state_dict(loaded_params['state_dict'])
             self.start_epoch = loaded_params['epoch']
             if lr:
@@ -159,6 +154,7 @@ class Helper:
         # logger.warning('Setting random_seed seed for reproducible results.')
         random.seed(seed)
         torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
         np.random.seed(seed)
