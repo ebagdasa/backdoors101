@@ -1,12 +1,12 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.model_helper import ModelHelper
+from models.model import Model
 
 
-class SimpleNet(ModelHelper):
+class SimpleNet(Model):
     def __init__(self, num_classes):
-        super(SimpleNet, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(1, 20, 5, 1)
         self.conv2 = nn.Conv2d(20, 50, 5, 1)
         self.fc1 = nn.Linear(4 * 4 * 50, 500)

@@ -10,6 +10,10 @@ ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc',
 @dataclass
 class Params:
 
+    # Corresponds to the class module: tasks.mnist_task.MNISTTask
+    # See other tasks in the task folder.
+    task: str = 'MNIST'
+
     current_time: str = None
     name: str = None
     commit: float = None
@@ -29,7 +33,6 @@ class Params:
     optimizer: str = None
     scheduler: str = None
     # data
-    dataset: str = 'MNIST'
     data_path: str = '.data/'
     batch_size: int = 64
     test_batch_size: int = 100

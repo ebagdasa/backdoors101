@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import torch
 
+
 @dataclass
 class Batch:
     inputs: torch.Tensor
@@ -8,7 +9,6 @@ class Batch:
 
     # For PIPA experiment we use this field to store identity label.
     aux: torch.Tensor = None
-
 
     def to(self, device):
         self.inputs = self.inputs.to(device)

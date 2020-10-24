@@ -2,20 +2,19 @@ from datetime import datetime
 import argparse
 
 # from facenet_pytorch.models.inception_resnet_v1 import InceptionResnetV1
-import torchvision.models as models
+# import torchvision.models as models
 
-from models.resnet import resnet18, resnet50
+# from models.resnet import resnet18, resnet50
 import yaml
 import shutil
-from models.resnet import *
-from models.simple import Net
-from models.word_model import RNNModel
+# from models.resnet import *
+# from models.word_model import RNNModel
+from tasks.batch import Batch
 from utils.helper import Helper
 from utils.utils import *
-from utils.image_helper import ImageHelper
+# from utils.image_helper import ImageHelper
 from prompt_toolkit import prompt
-from utils.min_norm_solvers import *
-from data_helpers.datasets.pipa import *
+# from utils.min_norm_solvers import *
 logger = logging.getLogger('logger')
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.enabled = True
@@ -25,29 +24,28 @@ from scipy import stats
 
 
 def compute_loss(helper, model, data, criterion):
-    backdoor
+
     return
 
 def train_new(helper: Helper):
-    model = helper.get_model()
-    criterion = helper.get_criterion()
+    model = helper.task.model
+    criterion = helper.task.criterion
 
-    for batch in helper.data.iter_batches():
-
-        batch.to(helper.params.device)
+    for data in helper.task.train_loader:
+        batch = helper.task.get_batch(data)
 
         loss = compute_loss(helper, model, batch, criterion)
 
         loss.backward()
 
-        helper.optimizer.step()
+        helper.task.optimizer.step()
 
     return
 
 
 
 # @profile
-def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch):
+def train(run_helper, model, optimizer, criterion, epoch):
     train_loader = run_helper.train_loader
     if run_helper.backdoor and run_helper.data != 'nlp' and run_helper.switch_to_eval:
         model.eval()
@@ -298,7 +296,7 @@ def train(run_helper: ImageHelper, model: nn.Module, optimizer, criterion, epoch
             run_helper.record_time(tt,'total')
 
 
-def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=False, sum=False):
+def test(run_helper, model, criterion, epoch, is_poison=False, sum=False):
     model.eval()
     correct = 0
     total = 0
@@ -371,7 +369,7 @@ def test(run_helper: ImageHelper, model: nn.Module, criterion, epoch, is_poison=
     return main_acc, total_loss
 
 
-def run(run_helper: ImageHelper):
+def run(run_helper):
 
     # load data
     if run_helper.data == 'cifar':
@@ -504,46 +502,47 @@ if __name__ == '__main__':
     params['name'] = args.name
 
     # if params['data'] == 'image':
-    helper = ImageHelper(current_time=d, params=params, name='image')
+    # helper = ImageHelper(current_time=d, params=params, name='image')
     # else:
     #     helper = TextHelper(current_time=d, params=params, name='text')
     #     helper.corpus = torch.load(helper.params['corpus'])
     #     logger.info(helper.corpus.train.shape)
+    helper = Helper(params)
+    train_new(helper)
 
-
-
-    if helper.random_seed is not None:
-        helper.fix_random(helper.random_seed)
-
-    logger.error(yaml.dump(helper.params))
-    try:
-        run(helper)
-        if helper.is_save and len(helper.save_dict):
-            torch.save(helper.save_dict,f'{helper.folder_path}/save_dict.pt')
-        if helper.log:
-            print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
-    except KeyboardInterrupt:
-
-        if helper.timing == True:
-            logger.error(helper.times)
-        elif helper.timing == 'total':
-            logger.error(helper.times)
-            logger.error([np.mean(helper.times['total'][1:]), np.std(helper.times['total'][1:])])
-            logger.error(helper.total_times)
-
-        if helper.memory:
-            logger.warning(torch.cuda.memory_summary(abbreviated=True))
-        if helper.log:
-            answer = prompt('\nDelete the repo? (y/n): ')
-            if answer in ['Y', 'y', 'yes']:
-                logger.error(f"Fine. Deleted: {helper.folder_path}")
-                shutil.rmtree(helper.folder_path)
-                if helper.tb:
-                    shutil.rmtree(f'runs/{args.name}')
-            else:
-                torch.save(helper.save_dict, f'{helper.folder_path}/save_dict.pt')
-                logger.error(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")
-        else:
-            logger.error(f"Aborted training. No output generated.")
+    #
+    # if helper.random_seed is not None:
+    #     helper.fix_random(helper.random_seed)
+    #
+    # logger.error(yaml.dump(helper.params))
+    # try:
+    #     run(helper)
+    #     if helper.is_save and len(helper.save_dict):
+    #         torch.save(helper.save_dict,f'{helper.folder_path}/save_dict.pt')
+    #     if helper.log:
+    #         print(f'You can find files in {helper.folder_path}. TB graph: {args.name}')
+    # except KeyboardInterrupt:
+    #
+    #     if helper.timing == True:
+    #         logger.error(helper.times)
+    #     elif helper.timing == 'total':
+    #         logger.error(helper.times)
+    #         logger.error([np.mean(helper.times['total'][1:]), np.std(helper.times['total'][1:])])
+    #         logger.error(helper.total_times)
+    #
+    #     if helper.memory:
+    #         logger.warning(torch.cuda.memory_summary(abbreviated=True))
+    #     if helper.log:
+    #         answer = prompt('\nDelete the repo? (y/n): ')
+    #         if answer in ['Y', 'y', 'yes']:
+    #             logger.error(f"Fine. Deleted: {helper.folder_path}")
+    #             shutil.rmtree(helper.folder_path)
+    #             if helper.tb:
+    #                 shutil.rmtree(f'runs/{args.name}')
+    #         else:
+    #             torch.save(helper.save_dict, f'{helper.folder_path}/save_dict.pt')
+    #             logger.error(f"Aborted training. Results: {helper.folder_path}. TB graph: {args.name}")
+    #     else:
+    #         logger.error(f"Aborted training. No output generated.")
 
 

@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-class ModelHelper(nn.Module):
+class Model(nn.Module):
     """
     Base class for models with added support for GradCam activation map
     and a SentiNet defense. The GradCam design is taken from:
@@ -9,7 +9,7 @@ class ModelHelper(nn.Module):
     """
 
     def __init__(self):
-        super(ModelHelper).__init__()
+        super().__init__()
         self.gradient = None
 
     def activations_hook(self, grad):

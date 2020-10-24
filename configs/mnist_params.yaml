@@ -1,7 +1,6 @@
-dataset: multimnist
-model: resnet18
+task: MNIST
 
-batch_size: 128
+batch_size: 32
 test_batch_size: 100
 lr: 0.001
 momentum: 0.9
@@ -14,7 +13,7 @@ log_interval: 10
 
 scheduler: True
 
-resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
+#resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 
 #resumed_model: model_image_cifar_Oct.01_11.37.45/model_last.pt.tar
 
@@ -25,25 +24,20 @@ resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 
 
 poisoning_proportion: 1.1
-poison_number: 8
+backdoor_label: 8
 backdoor: True
 alpha: 0.95
-scale_threshold: 0.1
 
 normalize: loss
 
-save_model: True
-log: True
+save_model: False
+log: False
 tb: False
 
-random: False
-defense: True
 transform_train: True
 
-nc: False
-smoothing: False
 
-losses:
+loss_tasks:
   - backdoor
   - normal
 #  - nc_adv

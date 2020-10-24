@@ -1,7 +1,12 @@
-from data_helpers.task_helper import TaskHelper
+import torchvision
+import torch.utils.data as torch_data
+from torchvision.transforms import transforms
+
+from models.resnet import resnet18
+from tasks.task import Task
 
 
-class Cifar10Helper(TaskHelper):
+class Cifar10Task(Task):
 
     def load_data(self):
         if self.params.transform_train:
@@ -28,7 +33,7 @@ class Cifar10Helper(TaskHelper):
                                                           download=True,
                                                           transform=transform_train)
         if self.params.poison_images:
-            self.train_loader = self.poison_loader()
+            self.train_loader = self.remove_semantic_backdoors()
         else:
             self.train_loader = torch_data.DataLoader(self.train_dataset,
                                                       batch_size=self.params.batch_size,
@@ -44,5 +49,25 @@ class Cifar10Helper(TaskHelper):
 
         self.classes = ('plane', 'car', 'bird', 'cat',
                         'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-
         return True
+
+    def build_model(self) -> None:
+        self.model = resnet18(pretrained=self.params.pretrained,
+                              num_classes=len(self.classes))
+
+    def remove_semantic_backdoors(self):
+        """
+        Semantic backdoors still occur with unmodified labels in the training
+        set. This method removes them, so the only occurrence of the semantic
+        backdoor will be in the
+        :return: None
+        """
+
+        all_images = set(range(len(self.train_dataset)))
+        unpoisoned_images = list(all_images.difference(set(
+            self.params.poison_images)))
+
+        self.train_loader = torch_data.DataLoader(self.train_dataset,
+                                     batch_size=self.params.batch_size,
+                                     sampler=torch_data.sampler.SubsetRandomSampler(
+                                         unpoisoned_images))

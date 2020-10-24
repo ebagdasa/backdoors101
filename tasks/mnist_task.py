@@ -1,8 +1,13 @@
-from data_helpers.task_helper import TaskHelper
+import torchvision
+import torch.utils.data as torch_data
+from torch.nn import CrossEntropyLoss
+
+from models.simple import SimpleNet
+from tasks.task import Task
+from torchvision.transforms import transforms
 
 
-class MNISTHelper(TaskHelper):
-
+class MNISTTask(Task):
 
     def load_data(self):
         transform_train = transforms.Compose([
@@ -36,7 +41,5 @@ class MNISTHelper(TaskHelper):
         self.classes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
         return True
 
-    def iter_batches(self, train=True):
-        data_loader = self.train_loader if train else self.test_loader
-        for input, label in data_loader:
-            yield (input, label)
+    def build_model(self) -> None:
+        self.model = SimpleNet(num_classes=len(self.classes))
