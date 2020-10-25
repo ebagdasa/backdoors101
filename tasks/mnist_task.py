@@ -28,7 +28,7 @@ class MNISTTask(Task):
         self.train_loader = torch_data.DataLoader(self.train_dataset,
                                                   batch_size=self.params.batch_size,
                                                   shuffle=True,
-                                                  num_workers=2)
+                                                  num_workers=0)
         self.test_dataset = torchvision.datasets.MNIST(
             root=self.params.data_path,
             train=False,
@@ -37,7 +37,7 @@ class MNISTTask(Task):
         self.test_loader = torch_data.DataLoader(self.test_dataset,
                                                  batch_size=100,
                                                  shuffle=False,
-                                                 num_workers=2)
+                                                 num_workers=0)
         self.classes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
         return True
 

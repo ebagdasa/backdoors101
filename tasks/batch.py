@@ -10,6 +10,12 @@ class Batch:
     # For PIPA experiment we use this field to store identity label.
     aux: torch.Tensor = None
 
+    def __post_init__(self):
+        self.batch_size = self.inputs.shape[0]
+
+    def __len__(self):
+        return self.batch_size
+
     def to(self, device):
         self.inputs = self.inputs.to(device)
         self.labels = self.labels.to(device)

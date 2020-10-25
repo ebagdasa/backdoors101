@@ -37,6 +37,7 @@ class Helper:
 
         self.make_folders()
         self.make_task()
+        self.make_backdoor()
 
         self.nc = True if 'neural_cleanse' in self.params.loss_tasks else False
         # self.mixed = None
@@ -50,6 +51,13 @@ class Helper:
         task_module = importlib.import_module(module_name)
         task_class = getattr(task_module, f'{self.params.task}Task')
         self.task = task_class(self.params)
+
+    def make_backdoor(self):
+        module_name = f'backdoors.{self.params.backdoor_type.lower()}_backdoor'
+        backdoor_module = importlib.import_module(module_name)
+        task_class = getattr(backdoor_module, f'{self.params.backdoor_type}Backdoor')
+        self.backdoor = task_class(self.params)
+
 
     def make_folders(self):
         logger = create_logger()
