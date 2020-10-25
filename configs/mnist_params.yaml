@@ -1,6 +1,7 @@
 task: MNIST
 backdoor_type: Pattern
 
+
 batch_size: 32
 test_batch_size: 100
 lr: 0.001
@@ -24,10 +25,11 @@ scheduler: True
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
 
-poisoning_proportion: 1.1
+poisoning_proportion: 1.0
 backdoor_label: 8
 backdoor: True
 alpha: 0.95
+backdoor_dynamic_position: True
 
 normalize: loss
 

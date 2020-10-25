@@ -1,18 +1,23 @@
+import random
+
 import torch
+from torchvision.transforms import transforms, functional
 
 from backdoors.backdoor import Backdoor
 from tasks.batch import Batch
 from tasks.task import Task
 
+transform_to_image = transforms.ToPILImage()
+transform_to_tensor = transforms.ToTensor()
+
 
 class PatternBackdoor(Backdoor):
-
     pattern_tensor: torch.Tensor = torch.tensor([
-        [1, 0, 1],
-        [-10, 1, -10],
-        [-10, -10, 0],
-        [-10, 1, -10],
-        [1, 0, 1]
+        [1., 0., 1.],
+        [-10., 1., -10.],
+        [-10., -10., 0.],
+        [-10., 1., -10.],
+        [1., 0., 1.]
     ])
     "Just some random 2D pattern."
 
@@ -23,6 +28,9 @@ class PatternBackdoor(Backdoor):
 
     mask_value = -10
     "A tensor coordinate with this value won't be applied to the image."
+
+    resize_scale = (5, 10)
+    "If the pattern is dynamically placed, resize the pattern."
 
     mask: torch.Tensor = None
     "A mask used to combine backdoor pattern with the original image."
@@ -52,10 +60,28 @@ class PatternBackdoor(Backdoor):
         self.mask = 1 * (full_image != self.mask_value).to(self.params.device)
         self.pattern = self.task.normalize(full_image).to(self.params.device)
 
-
     def apply_backdoor(self, batch: Batch, attack_proportion):
-        inputs = (1 - self.mask) * batch.inputs[:attack_proportion] \
-                 + self.mask * self.pattern
+        pattern, mask = self.get_pattern()
+        inputs = (1 - mask) * batch.inputs[:attack_proportion] + mask * pattern
         batch.inputs[:attack_proportion] = inputs
         batch.labels[:attack_proportion].fill_(self.params.backdoor_label)
         return batch
+
+    def get_pattern(self):
+        if self.params.backdoor_dynamic_position:
+            resize = random.randint(self.resize_scale[0], self.resize_scale[1])
+            pattern = self.pattern_tensor
+            if random.random() > 0.5:
+                pattern = functional.hflip(pattern)
+            image = transform_to_image(pattern)
+            pattern = transform_to_tensor(
+                functional.resize(image,
+                    resize, interpolation=0)).squeeze()
+
+            x = random.randint(0, self.task.input_shape[1] \
+                               - pattern.shape[0] - 1)
+            y = random.randint(0, self.task.input_shape[2] \
+                               - pattern.shape[1] - 1)
+            self.make_pattern(pattern, x, y)
+
+        return self.pattern, self.mask

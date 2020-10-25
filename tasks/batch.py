@@ -14,9 +14,19 @@ class Batch:
         self.batch_size = self.inputs.shape[0]
 
     def to(self, device):
-        self.inputs = self.inputs.to(device)
-        self.labels = self.labels.to(device)
+        inputs = self.inputs.to(device)
+        labels = self.labels.to(device)
         if self.aux is not None:
-            self.aux = self.aux.to(device)
+            aux = self.aux.to(device)
+        else:
+            aux = None
+        return Batch(inputs, labels, aux)
 
-        return self
+    def clone(self):
+        inputs = self.inputs.clone()
+        labels = self.labels.clone()
+        if self.aux is not None:
+            aux = self.aux.clone()
+        else:
+            aux = None
+        return Batch(inputs, labels, aux)

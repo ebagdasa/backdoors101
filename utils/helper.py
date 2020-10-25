@@ -43,7 +43,7 @@ class Helper:
 
     def make_task(self):
         name_lower = self.params.task.lower()
-        name_cap = self.params.task.capitalize()
+        name_cap = self.params.task
         module_name = f'tasks.{name_lower}_task'
         try:
             task_module = importlib.import_module(module_name)
@@ -57,7 +57,7 @@ class Helper:
 
     def make_backdoor(self):
         name_lower = self.params.backdoor_type.lower()
-        name_cap = self.params.backdoor_type.capitalize()
+        name_cap = self.params.backdoor_type
         module_name = f'backdoors.{name_lower}_backdoor'
         try:
             backdoor_module = importlib.import_module(module_name)
