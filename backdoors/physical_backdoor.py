@@ -5,7 +5,7 @@ from torchvision.transforms import transforms
 from backdoors.backdoor import Backdoor
 
 
-class PatternBackdoor(Backdoor):
+class PhysicalBackdoor(Backdoor):
 
     def apply_backdoor(self, batch, i=-1):
         resize = random.randint(6, 16)

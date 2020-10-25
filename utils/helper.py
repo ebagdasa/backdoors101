@@ -48,14 +48,30 @@ class Helper:
 
     def make_task(self):
         module_name = f'tasks.{self.params.task.lower()}_task'
-        task_module = importlib.import_module(module_name)
-        task_class = getattr(task_module, f'{self.params.task}Task')
+        try:
+            task_module = importlib.import_module(module_name)
+            task_class = getattr(task_module, f'{self.params.task}Task')
+        except (ModuleNotFoundError, AttributeError):
+            raise ModuleNotFoundError(f'Your task: {self.params.task} should '
+                                      f'be defined as a class '
+                                      f'{self.params.task}Task in file: '
+                                      f'tasks/'
+                                      f'{self.params.task.lower()}_task.py')
         self.task = task_class(self.params)
 
     def make_backdoor(self):
         module_name = f'backdoors.{self.params.backdoor_type.lower()}_backdoor'
-        backdoor_module = importlib.import_module(module_name)
-        task_class = getattr(backdoor_module, f'{self.params.backdoor_type}Backdoor')
+        try:
+            backdoor_module = importlib.import_module(module_name)
+            task_class = getattr(backdoor_module, f'{self.params.backdoor_type}'
+                                                  f'Backdoor')
+        except (ModuleNotFoundError, AttributeError):
+            raise ModuleNotFoundError(f'The attack: {self.params.backdoor_type}'
+                                      f' should be defined as a class '
+                                      f'{self.params.backdoor_type}Backdoor in '
+                                      f'file: backdoors/'
+                                      f'{self.params.backdoor_type.lower()}'
+                                      f'_backdoor.py')
         self.backdoor = task_class(self.params)
 
 
