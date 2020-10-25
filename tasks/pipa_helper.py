@@ -2,27 +2,24 @@ from torchvision.transforms import transforms
 import torch
 import torch.utils.data as torch_data
 
-from data_helpers.batch import Batch
-from data_helpers.datasets.pipa import *
-from data_helpers.task_helper import TaskHelper
+from dataset.pipa import *
+from tasks.task import Task
 
 
-class PipaHelper(TaskHelper):
+class PipaHelper(Task):
 
     def load_data(self):
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
         train_transform = transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            normalize,
+            self.normalize,
         ])
         test_transform = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
-            normalize,
+            self.normalize,
         ])
 
         self.train_dataset = PipaDataset(train=True, transform=train_transform)

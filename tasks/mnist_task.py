@@ -8,16 +8,17 @@ from torchvision.transforms import transforms
 
 
 class MNISTTask(Task):
+    normalize = transforms.Normalize((0.1307,), (0.3081,))
 
     def load_data(self):
         transform_train = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
+            self.normalize
         ])
 
         transform_test = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
+            self.normalize
         ])
 
         self.train_dataset = torchvision.datasets.MNIST(

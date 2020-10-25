@@ -40,40 +40,34 @@ class Helper:
         self.make_backdoor()
 
         self.nc = True if 'neural_cleanse' in self.params.loss_tasks else False
-        # self.mixed = None
-        # self.mixed_optim = None
-
-        # self.nc_tensor_weight = torch.zeros(1000).cuda()
-        # self.nc_tensor_weight[self.params.backdoor_label] = 1.0
 
     def make_task(self):
-        module_name = f'tasks.{self.params.task.lower()}_task'
+        name_lower = self.params.task.lower()
+        name_cap = self.params.task.capitalize()
+        module_name = f'tasks.{name_lower}_task'
         try:
             task_module = importlib.import_module(module_name)
-            task_class = getattr(task_module, f'{self.params.task}Task')
+            task_class = getattr(task_module, f'{name_cap}Task')
         except (ModuleNotFoundError, AttributeError):
             raise ModuleNotFoundError(f'Your task: {self.params.task} should '
                                       f'be defined as a class '
-                                      f'{self.params.task}Task in file: '
-                                      f'tasks/'
-                                      f'{self.params.task.lower()}_task.py')
+                                      f'{name_cap}'
+                                      f'Task in tasks/{name_lower}_task.py')
         self.task = task_class(self.params)
 
     def make_backdoor(self):
-        module_name = f'backdoors.{self.params.backdoor_type.lower()}_backdoor'
+        name_lower = self.params.backdoor_type.lower()
+        name_cap = self.params.backdoor_type.capitalize()
+        module_name = f'backdoors.{name_lower}_backdoor'
         try:
             backdoor_module = importlib.import_module(module_name)
-            task_class = getattr(backdoor_module, f'{self.params.backdoor_type}'
-                                                  f'Backdoor')
+            task_class = getattr(backdoor_module, f'{name_cap}Backdoor')
         except (ModuleNotFoundError, AttributeError):
             raise ModuleNotFoundError(f'The attack: {self.params.backdoor_type}'
                                       f' should be defined as a class '
-                                      f'{self.params.backdoor_type}Backdoor in '
-                                      f'file: backdoors/'
-                                      f'{self.params.backdoor_type.lower()}'
-                                      f'_backdoor.py')
-        self.backdoor = task_class(self.params)
-
+                                      f'{name_cap}Backdoor in '
+                                      f'backdoors/{name_lower}_backdoor.py')
+        self.backdoor = task_class(self.task)
 
     def make_folders(self):
         logger = create_logger()

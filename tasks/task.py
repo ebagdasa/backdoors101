@@ -1,7 +1,8 @@
 import logging
-import torch.utils.data as torch_data
+import torch
+
 from torch import optim, nn
-from torch.nn import CrossEntropyLoss
+from torchvision.transforms import transforms
 
 from models.model import Model
 from tasks.batch import Batch
@@ -22,6 +23,9 @@ class Task:
     model: Model = None
     optimizer: optim.Optimizer = None
     criterion: nn.Module = None
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    input_shape: torch.Size = None
 
     def __init__(self, params: Params):
         self.params = params
@@ -29,6 +33,7 @@ class Task:
         self.build_model()
         self.make_optimizer()
         self.make_criterion()
+        self.set_input_shape()
 
     def load_data(self) -> None:
         raise NotImplemented
@@ -57,6 +62,10 @@ class Task:
         else:
             raise ValueError(f'No optimizer: {self.optimizer}')
 
+    def set_input_shape(self):
+        input, label = self.train_dataset[0]
+        self.input_shape = input.shape
+
     def get_batch(self, data) -> Batch:
         """Process data into a batch.
 
@@ -68,4 +77,3 @@ class Task:
         inputs, labels = data
         batch = Batch(inputs, labels)
         return batch.to(self.params.device)
-

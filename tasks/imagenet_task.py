@@ -2,25 +2,25 @@ import torch.utils.data as torch_data
 import torchvision
 from torchvision.transforms import transforms
 
-from data_helpers.task_helper import TaskHelper
+from models.resnet import resnet18
+from tasks.task import Task
 
 
-class ImageNetHelper(TaskHelper):
+class ImagenetTask(Task):
 
     def load_data(self):
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
+
         train_transform = transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            normalize,
+            self.normalize,
         ])
         test_transform = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
-            normalize,
+            self.normalize,
         ])
 
         self.train_dataset = torchvision.datasets.ImageNet(
@@ -42,3 +42,6 @@ class ImageNetHelper(TaskHelper):
                 f'{self.params.data_path}/imagenet1000_clsidx_to_labels.txt') \
                 as f:
             self.classes = eval(f.read())
+
+    def build_model(self) -> None:
+        self.model = resnet18(num_classes=len(self.classes))

@@ -23,7 +23,10 @@ torch.autograd.set_detect_anomaly(False)
 from scipy import stats
 
 
-def compute_loss(helper, model, data, criterion):
+def compute_loss(helper, model, batch, criterion):
+
+    backdoor_batch = helper.backdoor.attack_batch(batch)
+    print(backdoor_batch)
 
 
 
