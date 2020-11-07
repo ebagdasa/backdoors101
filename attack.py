@@ -1,4 +1,3 @@
-import random
 import logging
 
 from backdoors.backdoor import Backdoor
@@ -7,6 +6,7 @@ from utils.min_norm_solvers import MGDASolver
 from utils.parameters import Params
 
 logger = logging.getLogger('logger')
+
 
 class Attack:
     params: Params
@@ -53,9 +53,7 @@ class Attack:
         if len(loss_tasks) == 1:
             scale = {loss_tasks[0]: 1.0}
 
-
         blind_loss = self.scale_losses(loss_tasks, loss_values, scale)
-
 
         return blind_loss
 
