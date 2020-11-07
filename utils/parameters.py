@@ -39,6 +39,10 @@ class Params:
     test_batch_size: int = 100
     transform_train: bool = True
 
+    # No need to set, updated by the Task class.
+    input_shape = None
+
+
     # gradient shaping/DP params
     dp: bool = None
     dp_clip: float = None

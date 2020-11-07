@@ -5,7 +5,7 @@ class Model(nn.Module):
     """
     Base class for models with added support for GradCam activation map
     and a SentiNet defense. The GradCam design is taken from:
-    https://medium.com/@stepanulyanin/implementing-grad-cam-in-pytorch-ea0937c31e82
+https://medium.com/@stepanulyanin/implementing-grad-cam-in-pytorch-ea0937c31e82
     """
 
     def __init__(self):

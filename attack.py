@@ -68,5 +68,5 @@ class Attack:
                 blind_loss = scale[t] * loss_values[t]
             else:
                 blind_loss += scale[t] * loss_values[t]
-
+        self.params.running_losses['total'].append(blind_loss.item())
         return blind_loss

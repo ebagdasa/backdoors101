@@ -43,16 +43,16 @@ class PatternBackdoor(Backdoor):
         self.make_pattern(self.pattern_tensor, self.x_top, self.y_top)
 
     def make_pattern(self, pattern_tensor, x_top, y_top):
-        full_image = torch.zeros(self.task.input_shape)
+        full_image = torch.zeros(self.params.input_shape)
         full_image.fill_(self.mask_value)
 
         x_bot = x_top + pattern_tensor.shape[0]
         y_bot = y_top + pattern_tensor.shape[1]
 
-        if x_bot >= self.task.input_shape[1] or \
-                y_bot >= self.task.input_shape[2]:
+        if x_bot >= self.params.input_shape[1] or \
+                y_bot >= self.params.input_shape[2]:
             raise ValueError(f'Position of backdoor outside image limits:'
-                             f'image: {self.task.input_shape}, but backdoor'
+                             f'image: {self.params.input_shape}, but backdoor'
                              f'ends at ({x_bot}, {y_bot})')
 
         full_image[:, x_top:x_bot, y_top:y_bot] = pattern_tensor
@@ -78,9 +78,9 @@ class PatternBackdoor(Backdoor):
                 functional.resize(image,
                     resize, interpolation=0)).squeeze()
 
-            x = random.randint(0, self.task.input_shape[1] \
+            x = random.randint(0, self.params.input_shape[1] \
                                - pattern.shape[0] - 1)
-            y = random.randint(0, self.task.input_shape[2] \
+            y = random.randint(0, self.params.input_shape[2] \
                                - pattern.shape[1] - 1)
             self.make_pattern(pattern, x, y)
 

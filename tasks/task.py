@@ -68,7 +68,7 @@ class Task:
 
     def set_input_shape(self):
         inp, _ = self.train_dataset[0]
-        self.input_shape = inp.shape
+        self.params.input_shape = inp.shape
 
     def get_batch(self, batch_id, data) -> Batch:
         """Process data into a batch.

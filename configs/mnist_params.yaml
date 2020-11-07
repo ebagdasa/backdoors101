@@ -1,5 +1,5 @@
 task: MNIST
-backdoor_type: Pattern
+backdoor_type: SinglePixel
 
 
 batch_size: 64
@@ -11,19 +11,7 @@ epochs: 350
 save_on_epochs: []
 optimizer: SGD
 log_interval: 100
-
-
-scheduler: True
-
-#resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
-
-#resumed_model: model_image_cifar_Oct.01_11.37.45/model_last.pt.tar
-
-#resumed_model: ../../bd_proj/smoothing/models/cifar10/resnet110/noise_0.25/checkpoint.pth.tar
-
-#resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
-#resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
-
+scheduler: False
 
 poisoning_proportion: 1.0
 backdoor_label: 8
