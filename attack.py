@@ -1,6 +1,6 @@
 import logging
 
-from backdoors.backdoor import Backdoor
+from synthesizers.synthesizer import Synthesizer
 from losses.loss_functions import compute_all_losses_and_grads
 from utils.min_norm_solvers import MGDASolver
 from utils.parameters import Params
@@ -10,11 +10,11 @@ logger = logging.getLogger('logger')
 
 class Attack:
     params: Params
-    backdoor: Backdoor
+    synthesizer: Synthesizer
 
-    def __init__(self, params, backdoor):
+    def __init__(self, params, synthesizer):
         self.params = params
-        self.backdoor = backdoor
+        self.synthesizer = synthesizer
 
         # NC hyper params
         self.mask = None
@@ -26,7 +26,7 @@ class Attack:
     def compute_blind_loss(self, model, criterion, batch):
         batch = batch.clip(self.params.clip_batch)
         loss_tasks = self.params.loss_tasks.copy()
-        batch_back = self.backdoor.attack_batch(batch)
+        batch_back = self.synthesizer.attack_batch(batch)
         scale = dict()
 
         if len(loss_tasks) == 1:

@@ -1,5 +1,5 @@
 task: Cifar10
-backdoor_type: Pattern
+synthesizer: Pattern
 
 batch_size: 64
 test_batch_size: 100

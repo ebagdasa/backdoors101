@@ -1,5 +1,5 @@
 task: Imagenet
-backdoor_type: Pattern
+synthesizer: Pattern
 
 data_path: /media/ssd/eugene/datasets/imagenet/
 
