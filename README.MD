@@ -1,5 +1,10 @@
 # Backdoors 101
 
+<p align="center">
+<img src="./src/pixel_vs_semantic.png" alt="drawing" width="600"/>
+</p>
+
+
 This PyTorch framework contains state-of-the-art backdoor 
 attacks and defenses on deep learning models and real-world datasets. It's 
 primarily based on the 
@@ -61,8 +66,9 @@ for example a model trained on a task to count people
  in the image might contain a backdoor task to identify particular
   individuals. 
 
-<img src="./src/pipa.png" alt="drawing" width="200"/>
-
+<p align="center">
+<img src="./src/pipa.png" alt="drawing" width="400"/>
+</p>
 
 4. **Supporting multiple backdoors.** Our definition enables to multiple
  backdoor tasks. As a toy example we attack a model that recognizes a two-digit
