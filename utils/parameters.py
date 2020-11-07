@@ -1,5 +1,6 @@
+from collections import defaultdict
 from dataclasses import dataclass, asdict
-from typing import List
+from typing import List, Dict
 import logging
 import torch
 logger = logging.getLogger('logger')
@@ -53,7 +54,15 @@ class Params:
     # losses to balance: `normal`, `backdoor`, `neural_cleanse`, `sentinet`,
     # `backdoor_multi`.
     loss_tasks: List[str] = None
-    normalize: float = None
+
+    loss_balance: str = 'MGDA'
+    "loss_balancing: `fixed` or `MGDA`"
+
+    # approaches to balance losses with MGDA: `none`, `loss`,
+    # `loss+`, `l2`
+    mgda_normalize: str = None
+    fixed_scales: Dict[str, float] = None
+
     # relabel images with poison_number
     poison_images: List[int] = None
     poison_images_test: List[int] = None
@@ -65,6 +74,8 @@ class Params:
 
     # nc evasion
     nc_p_norm: int = 1
+    # spectral evasion
+    spectral_similarity: 'str' = 'norm'
 
     # logging
     log: bool = False
@@ -74,6 +85,11 @@ class Params:
     save_scale_values: bool = False
     print_memory_consumption: bool = False
     save_timing: bool = False
+    timing_data: Dict[str, List] = None
+
+    # Temporary storage for running values
+    running_losses: Dict[str, List] = None
+    running_scales: Dict[str, List] = None
 
     # future FL params
     alpha: float = None
@@ -86,7 +102,11 @@ class Params:
 
         if self.log:
             self.folder_path = f'saved_models/model_{self.name}_' \
-                               f'{self.dataset}_{self.current_time}'
+                               f'{self.task}_{self.current_time}'
+
+        self.running_losses = defaultdict(list)
+        self.running_scales = defaultdict(list)
+        self.timing_data = defaultdict(list)
 
         for t in self.loss_tasks:
             if t not in ALL_TASKS:

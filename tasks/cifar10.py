@@ -7,6 +7,8 @@ from tasks.task import Task
 
 
 class Cifar10Task(Task):
+    normalize = transforms.Normalize((0.4914, 0.4822, 0.4465),
+                         (0.2023, 0.1994, 0.2010))
 
     def load_data(self):
         if self.params.transform_train:
@@ -14,19 +16,16 @@ class Cifar10Task(Task):
                 transforms.RandomCrop(32, padding=4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize((0.4914, 0.4822, 0.4465),
-                                     (0.2023, 0.1994, 0.2010)),
+                self.normalize,
             ])
         else:
             transform_train = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize((0.4914, 0.4822, 0.4465),
-                                     (0.2023, 0.1994, 0.2010)),
+                self.normalize,
             ])
         transform_test = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465),
-                                 (0.2023, 0.1994, 0.2010)),
+            self.normalize,
         ])
         self.train_dataset = torchvision.datasets.CIFAR10(root='./data',
                                                           train=True,

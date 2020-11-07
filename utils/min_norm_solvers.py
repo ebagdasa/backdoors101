@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-class MinNormSolver:
+class MGDASolver:
     MAX_ITER = 250
     STOP_CRIT = 1e-5
 
@@ -54,7 +54,7 @@ class MinNormSolver:
                     dps[(j, j)] = 0.0   
                     for k in range(len(vecs[i])):
                         dps[(j, j)] += torch.dot(vecs[j][k].view(-1), vecs[j][k].view(-1)).detach()
-                c,d = MinNormSolver._min_norm_element_from2(dps[(i,i)], dps[(i,j)], dps[(j,j)])
+                c,d = MGDASolver._min_norm_element_from2(dps[(i, i)], dps[(i, j)], dps[(j, j)])
                 if d < dmin:
                     dmin = d
                     sol = [(i,j),c,d]
@@ -91,7 +91,7 @@ class MinNormSolver:
             t = min(t, np.min(tm2[tm2>1e-7]))
 
         next_point = proj_grad*t + cur_val
-        next_point = MinNormSolver._projection2simplex(next_point)
+        next_point = MGDASolver._projection2simplex(next_point)
         return next_point
 
     @staticmethod
@@ -104,7 +104,7 @@ class MinNormSolver:
         """
         # Solution lying at the combination of two points
         dps = {}
-        init_sol, dps = MinNormSolver._min_norm_2d(vecs, dps)
+        init_sol, dps = MGDASolver._min_norm_2d(vecs, dps)
         
         n=len(vecs)
         sol_vec = np.zeros(n)
@@ -123,9 +123,9 @@ class MinNormSolver:
                 grad_mat[i,j] = dps[(i, j)]
                 
 
-        while iter_count < MinNormSolver.MAX_ITER:
+        while iter_count < MGDASolver.MAX_ITER:
             grad_dir = -1.0*np.dot(grad_mat, sol_vec)
-            new_point = MinNormSolver._next_point(sol_vec, grad_dir, n)
+            new_point = MGDASolver._next_point(sol_vec, grad_dir, n)
             # Re-compute the inner products for line search
             v1v1 = 0.0
             v1v2 = 0.0
@@ -135,13 +135,13 @@ class MinNormSolver:
                     v1v1 += sol_vec[i]*sol_vec[j]*dps[(i,j)]
                     v1v2 += sol_vec[i]*new_point[j]*dps[(i,j)]
                     v2v2 += new_point[i]*new_point[j]*dps[(i,j)]
-            nc, nd = MinNormSolver._min_norm_element_from2(v1v1.item(), v1v2.item(), v2v2.item())
+            nc, nd = MGDASolver._min_norm_element_from2(v1v1.item(), v1v2.item(), v2v2.item())
             # try:
             new_sol_vec = nc*sol_vec + (1-nc)*new_point
             # except AttributeError:
             #     print(sol_vec)
             change = new_sol_vec - sol_vec
-            if np.sum(np.abs(change)) < MinNormSolver.STOP_CRIT:
+            if np.sum(np.abs(change)) < MGDASolver.STOP_CRIT:
                 return sol_vec, nd
             sol_vec = new_sol_vec
 
@@ -155,7 +155,7 @@ class MinNormSolver:
         """
         # Solution lying at the combination of two points
         dps = {}
-        init_sol, dps = MinNormSolver._min_norm_2d(vecs, dps)
+        init_sol, dps = MGDASolver._min_norm_2d(vecs, dps)
 
         n=len(vecs)
         sol_vec = np.zeros(n)
@@ -173,24 +173,24 @@ class MinNormSolver:
             for j in range(n):
                 grad_mat[i,j] = dps[(i, j)]
 
-        while iter_count < MinNormSolver.MAX_ITER:
+        while iter_count < MGDASolver.MAX_ITER:
             t_iter = np.argmin(np.dot(grad_mat, sol_vec))
 
             v1v1 = np.dot(sol_vec, np.dot(grad_mat, sol_vec))
             v1v2 = np.dot(sol_vec, grad_mat[:, t_iter])
             v2v2 = grad_mat[t_iter, t_iter]
 
-            nc, nd = MinNormSolver._min_norm_element_from2(v1v1, v1v2, v2v2)
+            nc, nd = MGDASolver._min_norm_element_from2(v1v1, v1v2, v2v2)
             new_sol_vec = nc*sol_vec
             new_sol_vec[t_iter] += 1 - nc
 
             change = new_sol_vec - sol_vec
-            if np.sum(np.abs(change)) < MinNormSolver.STOP_CRIT:
+            if np.sum(np.abs(change)) < MGDASolver.STOP_CRIT:
                 return sol_vec, nd
             sol_vec = new_sol_vec
 
     @classmethod
-    def get_scales(cls, grads, losses, normalization_type, tasks, running_scale, log_interval):
+    def get_scales(cls, grads, losses, normalization_type, tasks):
         scale = {}
         gn = gradient_normalizers(grads, losses, normalization_type)
         for t in tasks:
@@ -199,13 +199,8 @@ class MinNormSolver:
         sol, min_norm = cls.find_min_norm_element([grads[t] for t in tasks])
         for zi, t in enumerate(tasks):
             scale[t] = float(sol[zi])
-        for t in tasks:
-            if running_scale.get(t, False) is False:
-                running_scale[t] = 0.0
-            running_scale[t] += scale[t] / log_interval
 
         return scale
-
 
 
 def gradient_normalizers(grads, losses, normalization_type):
@@ -224,5 +219,5 @@ def gradient_normalizers(grads, losses, normalization_type):
         for t in grads:
             gn[t] = 1.0
     else:
-        print('ERROR: Invalid Normalization Type')
+        raise ValueError('ERROR: Invalid Normalization Type')
     return gn

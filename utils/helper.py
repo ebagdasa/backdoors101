@@ -1,45 +1,45 @@
-import logging
-import time
-from collections import defaultdict
-import yaml
 import importlib
+import logging
+import os
+import random
+from shutil import copyfile
 
+import numpy as np
+import torch
+import yaml
 from torch.utils.tensorboard import SummaryWriter
 
+from attack import Attack
+from backdoors.backdoor import Backdoor
 from tasks.task import Task
-
-
 from utils.parameters import Params
 from utils.utils import create_logger, create_table
 
 logger = logging.getLogger('logger')
-from shutil import copyfile
-
-import torch
-import random
-import numpy as np
-import os
-import torch.optim as optim
-import torch.nn as nn
 
 
 class Helper:
-    params: Params
-    task: Task
-    model_utils: None
+    params: Params = None
+    task: Task = None
+    backdoor: Backdoor = None
+    attack: Attack = None
+    tb_writer: SummaryWriter = None
 
     def __init__(self, params):
         self.params = Params(**params)
 
         self.times = {'backward': list(), 'forward': list(), 'step': list(),
                       'scales': list(), 'total': list(), 'poison': list()}
-        self.save_dict = defaultdict(list)
+        if self.params.random_seed is not None:
+            self.fix_random(self.params.random_seed)
 
         self.make_folders()
         self.make_task()
         self.make_backdoor()
+        self.attack = Attack(self.params, self.backdoor)
 
         self.nc = True if 'neural_cleanse' in self.params.loss_tasks else False
+        self.best_loss = float('inf')
 
     def make_task(self):
         name_lower = self.params.task.lower()
@@ -70,28 +70,29 @@ class Helper:
         self.backdoor = task_class(self.task)
 
     def make_folders(self):
-        logger = create_logger()
+        log = create_logger()
         if self.params.log:
             try:
                 os.mkdir(self.params.folder_path)
             except FileExistsError:
-                logger.info('Folder already exists')
+                log.info('Folder already exists')
 
             with open('saved_models/runs.html', 'a') as f:
                 f.writelines([f'<div><a href="https://github.com/ebagdasa/'
-                              f'backdoors/tree/{self.params.commit}">GitHub</a>,'
-                              f'<span> <a href="http://gpu/'
+                              f'backdoors/tree/{self.params.commit}">GitHub'
+                              f'</a>, <span> <a href="http://gpu/'
                               f'{self.params.folder_path}">{self.params.name}_'
                               f'{self.params.current_time}</a></div>'])
 
-            fh = logging.FileHandler(filename=f'{self.params.folder_path}/log.txt')
+            fh = logging.FileHandler(
+                filename=f'{self.params.folder_path}/log.txt')
             formatter = logging.Formatter('%(asctime)s - %(name)s '
                                           '- %(levelname)s - %(message)s')
             fh.setFormatter(formatter)
-            logger.addHandler(fh)
+            log.addHandler(fh)
 
-            logger.warning(f'Logging to: {self.params.folder_path}')
-            logger.error(
+            log.warning(f'Logging to: {self.params.folder_path}')
+            log.error(
                 f'LINK: <a href="https://github.com/ebagdasa/backdoors/tree/'
                 f'{self.params.commit}">https://github.com/ebagdasa/backdoors'
                 f'/tree/{self.params.commit}</a>')
@@ -101,14 +102,14 @@ class Helper:
 
         if self.params.tb:
             wr = SummaryWriter(log_dir=f'runs/{self.params.name}')
-            self.writer = wr
+            self.tb_writer = wr
             table = create_table(self.params.to_dict())
-            self.writer.add_text('Model Params', table)
+            self.tb_writer.add_text('Model Params', table)
 
     def save_model(self, model=None, epoch=0, val_loss=0):
 
         if self.params.save_model:
-            logger.info("saving model")
+            logger.info(f"Saving model to {self.params.folder_path}.")
             model_name = '{0}/model_last.pt.tar'.format(self.params.folder_path)
             saved_dict = {'state_dict': model.state_dict(),
                           'epoch': epoch,
@@ -123,12 +124,6 @@ class Helper:
                 self.save_checkpoint(saved_dict, False, f'{model_name}.best')
                 self.best_loss = val_loss
 
-    def save_mixed(self, epoch):
-        model_name = '{0}/model_mixed.pt.tar'.format(self.params['folder_path'])
-        saved_dict = {'state_dict': self.mixed.state_dict(), 'epoch': epoch,
-                      'lr': self.params['lr']}
-        self.save_checkpoint(saved_dict, False, model_name)
-
     def save_checkpoint(self, state, is_best, filename='checkpoint.pth.tar'):
         if not self.params.save_model:
             return False
@@ -137,11 +132,6 @@ class Helper:
         if is_best:
             copyfile(filename, 'model_best.pth.tar')
 
-    def record_time(self, t=None, name=None):
-        if t and name and self.timing == name or self.timing == True:
-            torch.cuda.synchronize()
-            self.times[name].append(round(1000*(time.perf_counter()-t)))
-
     def check_resume_training(self, lr=False):
 
         if self.params.resume_model:
@@ -149,43 +139,37 @@ class Helper:
             loaded_params = torch.load(f"saved_models/"
                                        f"{self.params.resume_model}")
             self.task.model.load_state_dict(loaded_params['state_dict'])
-            self.start_epoch = loaded_params['epoch']
+            self.params.start_epoch = loaded_params['epoch']
             if lr:
                 self.params.lr = loaded_params.get('lr', self.params.lr)
                 print('current lr')
 
             logger.warning(f"Loaded parameters from saved model: LR is"
-                        f" {self.params.lr} and current epoch is"
+                           f" {self.params.lr} and current epoch is"
                            f" {self.params.start_epoch}")
 
     def flush_writer(self):
-        if self.writer:
-            self.writer.flush()
+        if self.tb_writer:
+            self.tb_writer.flush()
 
     def plot(self, x, y, name):
-        if self.writer is not None:
-            self.writer.add_scalar(tag=name, scalar_value=y, global_step=x)
+        if self.tb_writer is not None:
+            self.tb_writer.add_scalar(tag=name, scalar_value=y, global_step=x)
             self.flush_writer()
         else:
             return False
 
     @staticmethod
     def fix_random(seed=1):
-        # logger.warning('Setting random_seed seed for reproducible results.')
+        from torch.backends import cudnn
+
+        logger.warning('Setting random_seed seed for reproducible results.')
         random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        cudnn.deterministic = False
+        cudnn.enabled = True
+        cudnn.benchmark = True
         np.random.seed(seed)
 
         return True
-
-    # @staticmethod
-    # def copy_grad(model: nn.Module):
-    #     grads = list()
-    #     for name, params in model.named_parameters():
-    #         if params.requires_grad:
-    #             grads.append(params.grad.clone().detach())
-    #     model.zero_grad()
-    #     return grads

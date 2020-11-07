@@ -1,6 +1,6 @@
 import logging
-import torch
 
+import torch
 from torch import optim, nn
 from torchvision.transforms import transforms
 
@@ -21,10 +21,14 @@ class Task:
     classes = None
 
     model: Model = None
+
     optimizer: optim.Optimizer = None
+
     criterion: nn.Module = None
+
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
+                                     std=[0.229, 0.224, 0.225])
+    "Generic normalization for input data."
     input_shape: torch.Size = None
 
     def __init__(self, params: Params):
@@ -52,28 +56,47 @@ class Task:
     def make_optimizer(self) -> None:
         if self.params.optimizer == 'SGD':
             self.optimizer = optim.SGD(self.model.parameters(),
-                                      lr=self.params.lr,
-                                  weight_decay=self.params.decay,
-                                  momentum=self.params.momentum)
+                                       lr=self.params.lr,
+                                       weight_decay=self.params.decay,
+                                       momentum=self.params.momentum)
         elif self.params.optimizer == 'Adam':
             self.optimizer = optim.Adam(self.model.parameters(),
                                         lr=self.params.lr,
-                                   weight_decay=self.params.decay)
+                                        weight_decay=self.params.decay)
         else:
             raise ValueError(f'No optimizer: {self.optimizer}')
 
     def set_input_shape(self):
-        input, label = self.train_dataset[0]
-        self.input_shape = input.shape
+        inp, _ = self.train_dataset[0]
+        self.input_shape = inp.shape
 
-    def get_batch(self, data) -> Batch:
+    def get_batch(self, batch_id, data) -> Batch:
         """Process data into a batch.
 
         Specific for different datasets and data loaders this method unifies
         the output by returning the object of class Batch.
+        :param batch_id: id of the batch
         :param data: object returned by the Loader.
         :return:
         """
         inputs, labels = data
-        batch = Batch(inputs, labels)
+        batch = Batch(batch_id, inputs, labels)
         return batch.to(self.params.device)
+
+    @staticmethod
+    def get_batch_accuracy(outputs, labels, top_k=(1,)):
+        """Computes the precision@k for the specified values of k"""
+        max_k = max(top_k)
+        batch_size = labels.size(0)
+
+        _, pred = outputs.topk(max_k, 1, True, True)
+        pred = pred.t()
+        correct = pred.eq(labels.view(1, -1).expand_as(pred))
+
+        res = []
+        for k in top_k:
+            correct_k = correct[:k].view(-1).float().sum(0)
+            res.append((correct_k.mul_(100.0 / batch_size)).item())
+        if len(res) == 1:
+            res = res[0]
+        return res

@@ -1,16 +1,17 @@
-task: MNIST
+task: Cifar10
 backdoor_type: Pattern
 
+data_path: /media/ssd/eugene/datasets/imagenet/
 
-batch_size: 64
+batch_size: 32
 test_batch_size: 100
-lr: 0.1
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 350
 save_on_epochs: []
 optimizer: SGD
-log_interval: 100
+log_interval: 10
 
 
 scheduler: True
@@ -25,14 +26,12 @@ scheduler: True
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
 
-poisoning_proportion: 1.0
+poisoning_proportion: 1.1
 backdoor_label: 8
 backdoor: True
 alpha: 0.95
-backdoor_dynamic_position: True
 
-loss_balance: MGDA
-mgda_normalize: loss
+normalize: loss
 
 save_model: False
 log: False

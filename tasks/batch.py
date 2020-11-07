@@ -4,6 +4,7 @@ import torch
 
 @dataclass
 class Batch:
+    batch_id: int
     inputs: torch.Tensor
     labels: torch.Tensor
 
@@ -20,7 +21,7 @@ class Batch:
             aux = self.aux.to(device)
         else:
             aux = None
-        return Batch(inputs, labels, aux)
+        return Batch(self.batch_id, inputs, labels, aux)
 
     def clone(self):
         inputs = self.inputs.clone()
@@ -29,4 +30,16 @@ class Batch:
             aux = self.aux.clone()
         else:
             aux = None
-        return Batch(inputs, labels, aux)
+        return Batch(self.batch_id, inputs, labels, aux)
+
+
+    def clip(self, batch_size):
+        inputs = self.inputs[:batch_size]
+        labels = self.labels[:batch_size]
+
+        if self.aux is None:
+            aux = None
+        else:
+            aux = self.aux[:batch_size]
+
+        return Batch(self.batch_id, inputs, labels, aux)
