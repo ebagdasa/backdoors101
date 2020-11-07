@@ -31,22 +31,21 @@ def compute_all_losses_and_grads(loss_tasks, attack, model, criterion,
                                                              batch_back.inputs,
                                                              batch_back.labels,
                                                              grads=compute_grad)
-        elif t == 'latent_fixed':
+        elif t == 'spectral_evasion':
             loss_values[t], grads[t] = compute_spectral_evasion_loss(
                 attack.params,
                 model,
                 attack.fixed_model,
                 batch.inputs,
                 grads=compute_grad)
-        elif t == 'latent':
-            loss_values[t], grads[t] = compute_latent_loss(attack.params, model,
-                                                           batch.inputs,
-                                                           batch_back.inputs,
-                                                           batch_back.labels,
-                                                           grads=compute_grad)
-        elif t == 'ewc':
-            loss_values[t], grads[t] = ewc_loss(attack.params, model,
-                                                grads=compute_grad)
+        elif t == 'sentinet_evasion':
+            loss_values[t], grads[t] = compute_sentinet_evasion(
+                attack.params,
+                model,
+                batch.inputs,
+                batch_back.inputs,
+                batch_back.labels,
+                grads=compute_grad)
         elif t == 'mask_norm':
             loss_values[t], grads[t] = norm_loss(attack.params, model,
                                                  grads=compute_grad)
@@ -205,8 +204,8 @@ def get_latent_grads(params, model, inputs, labels):
     return pooled_gradients
 
 
-def compute_latent_loss(params, model, inputs, inputs_back, labels_back,
-                        grads=None):
+def compute_sentinet_evasion(params, model, inputs, inputs_back, labels_back,
+                             grads=None):
     """The GradCam design is taken from:
     https://medium.com/@stepanulyanin/implementing-grad-cam-in-pytorch-ea0937c31e82
     

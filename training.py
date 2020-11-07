@@ -7,7 +7,7 @@ import numpy as np
 import yaml
 from prompt_toolkit import prompt
 
-from utils.helper import Helper
+from helper import Helper
 from utils.utils import *
 
 logger = logging.getLogger('logger')
