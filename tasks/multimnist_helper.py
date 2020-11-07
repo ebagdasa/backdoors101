@@ -2,15 +2,14 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms import transforms
 
 from dataset.multi_mnist_loader import MNIST
-from tasks.task import Task
+from tasks.mnist_task import MNISTTask
 
 
-class MultiMNISTHelper(Task):
+class MultiMNISTTask(MNISTTask):
 
     def load_data(self):
         transform = transforms.Compose([transforms.ToTensor(),
-                                        transforms.Normalize((0.1307,),
-                                                             (0.3081,))])
+                                        self.normalize])
         self.train_dataset = MNIST(root='./data', train=True, download=True,
                                    transform=transform,
                                    multi=True)

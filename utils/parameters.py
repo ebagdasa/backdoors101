@@ -24,24 +24,26 @@ class Params:
     start_epoch: int = 1
     epochs: int = None
     log_interval: int = 1000
-    # model
-    model_type: str = 'Simple'
+
+    # model arch is usually defined by the task
     pretrained: bool = False
     resume_model: str = None
     lr: float = None
     decay: float = None
     momentum: float = None
     optimizer: str = None
-    scheduler: str = None
+    scheduler: bool = False
+    scheduler_milestones: List[int] = None
     # data
     data_path: str = '.data/'
     batch_size: int = 64
     test_batch_size: int = 100
     transform_train: bool = True
-
-    # No need to set, updated by the Task class.
+    "Do not apply transformations to the training images."
+    max_batch_id: int = None
+    "For large datasets stop training earlier."
     input_shape = None
-
+    "No need to set, updated by the Task class."
 
     # gradient shaping/DP params
     dp: bool = None
@@ -89,11 +91,11 @@ class Params:
     save_scale_values: bool = False
     print_memory_consumption: bool = False
     save_timing: bool = False
-    timing_data: Dict[str, List] = None
+    timing_data = None
 
     # Temporary storage for running values
-    running_losses: Dict[str, List] = None
-    running_scales: Dict[str, List] = None
+    running_losses = None
+    running_scales = None
 
     # future FL params
     alpha: float = None
@@ -105,8 +107,8 @@ class Params:
             self.log = True
 
         if self.log:
-            self.folder_path = f'saved_models/model_{self.name}_' \
-                               f'{self.task}_{self.current_time}'
+            self.folder_path = f'saved_models/model_' \
+                               f'{self.task}_{self.current_time}_{self.name}'
 
         self.running_losses = defaultdict(list)
         self.running_scales = defaultdict(list)

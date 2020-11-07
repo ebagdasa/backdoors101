@@ -13,13 +13,15 @@ class Backdoor:
         self.task = task
         self.params = task.params
 
-    def attack_batch(self, batch: Batch) -> Batch:
+    def attack_batch(self, batch: Batch, test=False) -> Batch:
 
         # Don't attack if only normal loss task.
         if self.params.loss_tasks == ['normal']:
             return batch
         else:
-            attack_portion = self.params.poisoning_proportion * batch.batch_size
+            attack_portion = batch.batch_size
+            if not test:
+                attack_portion *= self.params.poisoning_proportion
 
             return self.apply_backdoor(batch.clone(), round(attack_portion))
 

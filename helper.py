@@ -2,6 +2,7 @@ import importlib
 import logging
 import os
 import random
+from collections import defaultdict
 from shutil import copyfile
 
 import numpy as np
@@ -103,7 +104,8 @@ class Helper:
         if self.params.tb:
             wr = SummaryWriter(log_dir=f'runs/{self.params.name}')
             self.tb_writer = wr
-            table = create_table(self.params.to_dict())
+            params_dict = self.params.to_dict()
+            table = create_table(params_dict)
             self.tb_writer.add_text('Model Params', table)
 
     def save_model(self, model=None, epoch=0, val_loss=0):
@@ -132,21 +134,6 @@ class Helper:
         if is_best:
             copyfile(filename, 'model_best.pth.tar')
 
-    def check_resume_training(self, lr=False):
-
-        if self.params.resume_model:
-            logger.info('Resuming training...')
-            loaded_params = torch.load(f"saved_models/"
-                                       f"{self.params.resume_model}")
-            self.task.model.load_state_dict(loaded_params['state_dict'])
-            self.params.start_epoch = loaded_params['epoch']
-            if lr:
-                self.params.lr = loaded_params.get('lr', self.params.lr)
-                print('current lr')
-
-            logger.warning(f"Loaded parameters from saved model: LR is"
-                           f" {self.params.lr} and current epoch is"
-                           f" {self.params.start_epoch}")
 
     def flush_writer(self):
         if self.tb_writer:
@@ -158,6 +145,29 @@ class Helper:
             self.flush_writer()
         else:
             return False
+
+    def report_training_losses_scales(self, batch_id, epoch):
+        if batch_id % self.params.log_interval != 0:
+            return
+        total_batches = len(self.task.train_loader)
+        losses = [f'{x}: {np.mean(y):.2f}'
+                  for x, y in self.params.running_losses.items()]
+        scales = [f'{x}: {np.mean(y):.2f}'
+                  for x, y in self.params.running_scales.items()]
+        logger.info(
+            f'Epoch: {epoch:3d}. '
+            f'Batch: {batch_id:5d}/{total_batches}. '
+            f' Losses: {losses}.'
+            f' Scales: {scales}')
+        for name, values in self.params.running_losses.items():
+            self.plot(epoch * total_batches + batch_id, np.mean(values),
+                            f'Train_Loss/{name}')
+        for name, values in self.params.running_scales.items():
+            self.plot(epoch * total_batches + batch_id, np.mean(values),
+                            f'Train_Scale/{name}')
+
+        self.params.running_losses = defaultdict(list)
+        self.params.running_scales = defaultdict(list)
 
     @staticmethod
     def fix_random(seed=1):

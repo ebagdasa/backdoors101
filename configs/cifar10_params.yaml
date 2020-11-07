@@ -1,11 +1,9 @@
 task: Cifar10
 backdoor_type: Pattern
 
-data_path: /media/ssd/eugene/datasets/imagenet/
-
-batch_size: 32
+batch_size: 64
 test_batch_size: 100
-lr: 0.001
+lr: 0.1
 momentum: 0.9
 decay: 0.0005
 epochs: 350
@@ -13,17 +11,11 @@ save_on_epochs: []
 optimizer: SGD
 log_interval: 10
 
+pretrained: False
 
 scheduler: True
+scheduler_milestones: [30, 60]
 
-#resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
-
-#resumed_model: model_image_cifar_Oct.01_11.37.45/model_last.pt.tar
-
-#resumed_model: ../../bd_proj/smoothing/models/cifar10/resnet110/noise_0.25/checkpoint.pth.tar
-
-#resumed_model: model_image_Aug.31_17.16.10/model_last.pt.tar
-#resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
 
 poisoning_proportion: 1.1
@@ -31,7 +23,8 @@ backdoor_label: 8
 backdoor: True
 alpha: 0.95
 
-normalize: loss
+loss_balance: MGDA
+mgda_normalize: loss
 
 save_model: False
 log: False

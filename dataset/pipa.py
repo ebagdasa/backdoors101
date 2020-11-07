@@ -2,7 +2,6 @@ from __future__ import print_function, division
 import os
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from torchvision.datasets.folder import default_loader

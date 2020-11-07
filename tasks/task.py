@@ -2,6 +2,7 @@ import logging
 
 import torch
 from torch import optim, nn
+from torch.optim.lr_scheduler import MultiStepLR
 from torchvision.transforms import transforms
 
 from models.model import Model
@@ -21,10 +22,9 @@ class Task:
     classes = None
 
     model: Model = None
-
     optimizer: optim.Optimizer = None
-
     criterion: nn.Module = None
+    scheduler: MultiStepLR = None
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
@@ -35,6 +35,9 @@ class Task:
         self.params = params
         self.load_data()
         self.build_model()
+        self.resume_model()
+        self.model = self.model.to(self.params.device)
+
         self.make_optimizer()
         self.make_criterion()
         self.set_input_shape()
@@ -65,6 +68,26 @@ class Task:
                                         weight_decay=self.params.decay)
         else:
             raise ValueError(f'No optimizer: {self.optimizer}')
+
+    def make_scheduler(self) -> None:
+        if self.params.scheduler:
+            self.scheduler = MultiStepLR(self.optimizer,
+                    milestones=self.params.scheduler_milestones,
+                    last_epoch=self.params.start_epoch,
+                    gamma=0.1)
+
+    def resume_model(self):
+        if self.params.resume_model:
+            logger.info(f'Resuming training from {self.params.resume_model}')
+            loaded_params = torch.load(f"saved_models/"
+                                       f"{self.params.resume_model}")
+            self.model.load_state_dict(loaded_params['state_dict'])
+            self.params.start_epoch = loaded_params['epoch']
+            self.params.lr = loaded_params.get('lr', self.params.lr)
+
+            logger.warning(f"Loaded parameters from saved model: LR is"
+                           f" {self.params.lr} and current epoch is"
+                           f" {self.params.start_epoch}")
 
     def set_input_shape(self):
         inp, _ = self.train_dataset[0]

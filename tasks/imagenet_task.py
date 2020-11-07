@@ -1,5 +1,6 @@
-import torch.utils.data as torch_data
 import torchvision
+from torch import nn
+from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
 from models.resnet import resnet18
@@ -31,12 +32,12 @@ class ImagenetTask(Task):
             root=self.params.data_path,
             split='val', transform=test_transform)
 
-        self.train_loader = torch_data.DataLoader(self.train_dataset,
-                                                  batch_size=self.params.batch_size,
-                                                  shuffle=True, num_workers=2)
-        self.test_loader = torch_data.DataLoader(self.test_dataset,
-                                                 batch_size=self.params.test_batch_size,
-                                                 shuffle=False, num_workers=2)
+        self.train_loader = DataLoader(self.train_dataset,
+                                       batch_size=self.params.batch_size,
+                                       shuffle=True, num_workers=2)
+        self.test_loader = DataLoader(self.test_dataset,
+                                      batch_size=self.params.test_batch_size,
+                                      shuffle=False, num_workers=2)
 
         with open(
                 f'{self.params.data_path}/imagenet1000_clsidx_to_labels.txt') \
@@ -44,4 +45,4 @@ class ImagenetTask(Task):
             self.classes = eval(f.read())
 
     def build_model(self) -> None:
-        self.model = resnet18(num_classes=len(self.classes))
+        self.model = resnet18(pretrained=self.params.pretrained)

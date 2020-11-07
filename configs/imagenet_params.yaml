@@ -5,17 +5,17 @@ data_path: /media/ssd/eugene/datasets/imagenet/
 
 batch_size: 32
 test_batch_size: 100
-lr: 0.001
+lr: 0.00001
 momentum: 0.9
 decay: 0.0005
 epochs: 350
 save_on_epochs: []
-optimizer: SGD
+optimizer: Adam
 log_interval: 10
 
-
-scheduler: True
-
+scheduler: False
+pretrained: True
+max_batch_id: 1000
 #resumed_model: model_image_Aug.15_11.40.44/model_last.pt.tar
 
 #resumed_model: model_image_cifar_Oct.01_11.37.45/model_last.pt.tar
@@ -26,12 +26,13 @@ scheduler: True
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 
 
-poisoning_proportion: 1.1
+poisoning_proportion: 0.5
 backdoor_label: 8
 backdoor: True
 alpha: 0.95
 
-normalize: loss
+loss_balance: MGDA
+mgda_normalize: none
 
 save_model: False
 log: False

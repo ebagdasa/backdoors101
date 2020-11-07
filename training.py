@@ -1,6 +1,5 @@
 import argparse
 import shutil
-from collections import defaultdict
 from datetime import datetime
 
 import numpy as np
@@ -16,8 +15,11 @@ logger = logging.getLogger('logger')
 def train(run_helper: Helper, epoch):
     model = run_helper.task.model
     criterion = run_helper.task.criterion
+    model.train()
 
     for i, data in enumerate(run_helper.task.train_loader):
+        if i == run_helper.params.max_batch_id:
+            break
         batch = run_helper.task.get_batch(i, data)
         model.zero_grad()
 
@@ -27,18 +29,7 @@ def train(run_helper: Helper, epoch):
 
         run_helper.task.optimizer.step()
 
-        if i % run_helper.params.log_interval == 0:
-            losses = [f'{x}: {np.mean(y):.2f}'
-                      for x, y in run_helper.params.running_losses.items()]
-            scales = [f'{x}: {np.mean(y):.2f}'
-                      for x, y in run_helper.params.running_scales.items()]
-            logger.info(
-                f'Epoch: {epoch:3d}. '
-                f'Batch: {i:5d}/{len(run_helper.task.train_loader)}. '
-                f' Losses: {losses}.'
-                f' Scales: {scales}')
-            run_helper.params.running_losses = defaultdict(list)
-            run_helper.params.running_scales = defaultdict(list)
+        run_helper.report_training_losses_scales(i, epoch)
 
     return
 
@@ -52,7 +43,8 @@ def test(run_helper: Helper, epoch, backdoor=False):
         for i, data in enumerate(run_helper.task.test_loader):
             batch = run_helper.task.get_batch(i, data)
             if backdoor:
-                batch = run_helper.attack.backdoor.attack_batch(batch)
+                batch = run_helper.attack.backdoor.attack_batch(batch,
+                                                                test=True)
 
             outputs = model(batch.inputs)
             batch_acc.append(run_helper.task.get_batch_accuracy(outputs,
@@ -60,11 +52,13 @@ def test(run_helper: Helper, epoch, backdoor=False):
     accuracy = np.mean(batch_acc)
     logger.info(f'Epoch: {epoch:4d} (Backdoor: {backdoor}). '
                 f'Accuracy: {accuracy:.2f}')
-    run_helper.plot(x=epoch, y=accuracy, name=f'accuracy/backdoor_{backdoor}')
+    run_helper.plot(x=epoch, y=accuracy, name=f'Accuracy/backdoor_{backdoor}')
     return np.mean(batch_acc)
 
 
 def run(run_helper):
+    # test(run_helper, 0, backdoor=False)
+    # test(run_helper, 0, backdoor=True)
     for epoch in range(run_helper.params.start_epoch,
                        run_helper.params.epochs + 1):
         train(run_helper, epoch)
