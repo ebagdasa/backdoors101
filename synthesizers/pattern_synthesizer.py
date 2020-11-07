@@ -3,15 +3,14 @@ import random
 import torch
 from torchvision.transforms import transforms, functional
 
-from backdoors.backdoor import Backdoor
-from tasks.batch import Batch
+from synthesizers.synthesizer import Synthesizer
 from tasks.task import Task
 
 transform_to_image = transforms.ToPILImage()
 transform_to_tensor = transforms.ToTensor()
 
 
-class PatternBackdoor(Backdoor):
+class PatternSynthesizer(Synthesizer):
     pattern_tensor: torch.Tensor = torch.tensor([
         [1., 0., 1.],
         [-10., 1., -10.],
@@ -60,12 +59,14 @@ class PatternBackdoor(Backdoor):
         self.mask = 1 * (full_image != self.mask_value).to(self.params.device)
         self.pattern = self.task.normalize(full_image).to(self.params.device)
 
-    def apply_backdoor(self, batch: Batch, attack_proportion):
+    def synthesize_inputs(self, inputs):
         pattern, mask = self.get_pattern()
-        inputs = (1 - mask) * batch.inputs[:attack_proportion] + mask * pattern
-        batch.inputs[:attack_proportion] = inputs
-        batch.labels[:attack_proportion].fill_(self.params.backdoor_label)
-        return batch
+        inputs = (1 - mask) * inputs + mask * pattern
+        return inputs
+
+    def synthesize_labels(self, labels):
+        labels.fill_(self.params.backdoor_label)
+        return labels
 
     def get_pattern(self):
         if self.params.backdoor_dynamic_position:

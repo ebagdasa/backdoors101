@@ -11,7 +11,7 @@ import yaml
 from torch.utils.tensorboard import SummaryWriter
 
 from attack import Attack
-from backdoors.backdoor import Backdoor
+from synthesizers.synthesizer import Synthesizer
 from tasks.task import Task
 from utils.parameters import Params
 from utils.utils import create_logger, create_table
@@ -22,7 +22,7 @@ logger = logging.getLogger('logger')
 class Helper:
     params: Params = None
     task: Task = None
-    backdoor: Backdoor = None
+    synthesizer: Synthesizer = None
     attack: Attack = None
     tb_writer: SummaryWriter = None
 
@@ -36,8 +36,8 @@ class Helper:
 
         self.make_folders()
         self.make_task()
-        self.make_backdoor()
-        self.attack = Attack(self.params, self.backdoor)
+        self.make_synthesizer()
+        self.attack = Attack(self.params, self.synthesizer)
 
         self.nc = True if 'neural_cleanse' in self.params.loss_tasks else False
         self.best_loss = float('inf')
@@ -56,19 +56,20 @@ class Helper:
                                       f'Task in tasks/{name_lower}_task.py')
         self.task = task_class(self.params)
 
-    def make_backdoor(self):
-        name_lower = self.params.backdoor_type.lower()
-        name_cap = self.params.backdoor_type
-        module_name = f'backdoors.{name_lower}_backdoor'
+    def make_synthesizer(self):
+        name_lower = self.params.synthesizer.lower()
+        name_cap = self.params.synthesizer
+        module_name = f'synthesizers.{name_lower}_synthesizer'
         try:
-            backdoor_module = importlib.import_module(module_name)
-            task_class = getattr(backdoor_module, f'{name_cap}Backdoor')
+            synthesizer_module = importlib.import_module(module_name)
+            task_class = getattr(synthesizer_module, f'{name_cap}Synthesizer')
         except (ModuleNotFoundError, AttributeError):
-            raise ModuleNotFoundError(f'The attack: {self.params.backdoor_type}'
-                                      f' should be defined as a class '
-                                      f'{name_cap}Backdoor in '
-                                      f'backdoors/{name_lower}_backdoor.py')
-        self.backdoor = task_class(self.task)
+            raise ModuleNotFoundError(
+                f'The synthesizer: {self.params.synthesizer}'
+                f' should be defined as a class '
+                f'{name_cap}Synthesizer in '
+                f'synthesizers/{name_lower}_synthesizer.py')
+        self.synthesizer = task_class(self.task)
 
     def make_folders(self):
         log = create_logger()
@@ -134,7 +135,6 @@ class Helper:
         if is_best:
             copyfile(filename, 'model_best.pth.tar')
 
-
     def flush_writer(self):
         if self.tb_writer:
             self.tb_writer.flush()
@@ -161,10 +161,10 @@ class Helper:
             f' Scales: {scales}')
         for name, values in self.params.running_losses.items():
             self.plot(epoch * total_batches + batch_id, np.mean(values),
-                            f'Train_Loss/{name}')
+                      f'Train_Loss/{name}')
         for name, values in self.params.running_scales.items():
             self.plot(epoch * total_batches + batch_id, np.mean(values),
-                            f'Train_Scale/{name}')
+                      f'Train_Scale/{name}')
 
         self.params.running_losses = defaultdict(list)
         self.params.running_scales = defaultdict(list)

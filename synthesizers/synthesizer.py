@@ -5,7 +5,7 @@ from tasks.task import Task
 from utils.parameters import Params
 
 
-class Backdoor:
+class Synthesizer:
     params: Params
     task: Task
 
@@ -26,4 +26,13 @@ class Backdoor:
             return self.apply_backdoor(batch.clone(), round(attack_portion))
 
     def apply_backdoor(self, batch, attack_portion):
+        inputs = self.synthesize_inputs(inputs=batch.inputs[:attack_portion])
+        labels = self.synthesize_labels(labels=batch.labels[:attack_portion])
+        backdoor_batch = Batch(batch.batch_id, inputs, labels)
+        raise backdoor_batch
+
+    def synthesize_inputs(self, inputs):
+        raise NotImplemented
+
+    def synthesize_labels(self, labels):
         raise NotImplemented
