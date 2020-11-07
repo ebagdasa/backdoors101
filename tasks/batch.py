@@ -34,6 +34,9 @@ class Batch:
 
 
     def clip(self, batch_size):
+        if batch_size is None:
+            return self
+
         inputs = self.inputs[:batch_size]
         labels = self.labels[:batch_size]
 

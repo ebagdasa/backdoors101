@@ -24,13 +24,17 @@ class Attack:
         self.fixed_model = None
 
     def compute_blind_loss(self, model, criterion, batch):
-
-        if self.params.clip_batch:
-            batch = batch.clip(self.params.clip_batch)
-        batch_back = self.backdoor.attack_batch(batch)
+        batch = batch.clip(self.params.clip_batch)
         loss_tasks = self.params.loss_tasks.copy()
+        batch_back = self.backdoor.attack_batch(batch)
         scale = dict()
-        if self.params.loss_balance == 'MGDA':
+
+        if len(loss_tasks) == 1:
+            loss_values, grads = compute_all_losses_and_grads(
+                loss_tasks,
+                self, model, criterion, batch, batch_back, compute_grad=False
+            )
+        elif self.params.loss_balance == 'MGDA':
 
             loss_values, grads = compute_all_losses_and_grads(
                 loss_tasks,
