@@ -1,4 +1,5 @@
-# Adapted from: https://github.com/pytorch/vision/blob/master/torchvision/datasets/mnist.py
+# Credits to Ozan Sener
+# https://github.com/intel-isl/MultiObjectiveOptimization
 
 from __future__ import print_function
 

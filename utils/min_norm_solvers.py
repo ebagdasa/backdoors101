@@ -1,3 +1,6 @@
+# Credits to Ozan Sener
+# https://github.com/intel-isl/MultiObjectiveOptimization
+
 import numpy as np
 import torch
 
