@@ -11,6 +11,11 @@ primarily based on the
 [Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823) paper 
 and easily allows to incorporate newer attacks. 
 
+This repo contains attacks on ImageNet, CIFAR, Pipa face identification, 
+MultiMNIST, and IMDB reviews datasets and supports all modern model
+architectures including ResNet and BERT. Implemented backdoors include pixel
+pattern, physical, and semantic backdoors.  
+
 ## Basics
 
 First, we want to give some background on backdoor attacks, note that our
