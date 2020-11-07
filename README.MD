@@ -66,4 +66,43 @@ for example a model trained on a task to count people
  number and inject two new backdoor tasks: one that sums up digits and another 
  one the multiplies them. 
 
+5. **Methods to inject backdoor task.** Depending on a selected threat
+model the attack can inject backdoors by
+poisoning the training dataset, directly mixing backdoor inputs into a
+training batch, altering loss functions, or modifying model weights. Our
+framework supports all these methods, but primarily focuses on injecting
+backdoors by adding a special loss value. We also utilize Multiple
+Gradient Descent Algorithm ([MGDA](https://arxiv.org/abs/1810.04650)) to
+efficiently balance multiple losses.
+
 ## Installation
+
+Now, let's configure the system: 
+* Install all dependencies: `pip install -r requirements.txt`. 
+* Create two directories: `runs` for Tensorboard graphs and `saved_models` to
+ store results. 
+* Startup Tensorboard: `tensorboard --logdir=runs/`.
+
+Next, let's run some basic attack on MNIST dataset. We use YAML files to
+ configure the attacks. For MNIST attack, please refer to the [`configs
+ /mnist_params.yaml`](configs/mnist_params.yaml) file. For the full set of available
+  parameters see the
+  dataclass [`Parameters`](utils/parameters.py.). Let's start the training:
+  
+  ```shell script
+python training.py --name mnist --params configs/mnist_params.yaml --commit none
+```
+ 
+Argument `name` specifies Tensorboard name and commit just records the
+ commit id into a log file for reproducibility.
+ 
+ 
+## Structure
+
+Our framework includes a training file [`training.py`](training.py) that
+heavily relies on a [`Helper`](helper.py) object storing all the necessary
+objects for training. The helper object contains the main 
+[`Task`](tasks/task.py)  that stores models, datasets, optimizers, and
+other parameters for the training. Another object [`Attack`](attack.py
+) contains synthesizers and performs
+loss computation for multiple tasks.  

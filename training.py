@@ -43,7 +43,7 @@ def test(run_helper: Helper, epoch, backdoor=False):
         for i, data in enumerate(run_helper.task.test_loader):
             batch = run_helper.task.get_batch(i, data)
             if backdoor:
-                batch = run_helper.attack.backdoor.attack_batch(batch,
+                batch = run_helper.attack.synthesizer.attack_batch(batch,
                                                                 test=True)
 
             outputs = model(batch.inputs)

@@ -29,7 +29,7 @@ class Synthesizer:
         inputs = self.synthesize_inputs(inputs=batch.inputs[:attack_portion])
         labels = self.synthesize_labels(labels=batch.labels[:attack_portion])
         backdoor_batch = Batch(batch.batch_id, inputs, labels)
-        raise backdoor_batch
+        return backdoor_batch
 
     def synthesize_inputs(self, inputs):
         raise NotImplemented
