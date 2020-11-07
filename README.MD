@@ -61,6 +61,9 @@ for example a model trained on a task to count people
  in the image might contain a backdoor task to identify particular
   individuals. 
 
+<img src="./src/pipa.png" alt="drawing" width="200"/>
+
+
 4. **Supporting multiple backdoors.** Our definition enables to multiple
  backdoor tasks. As a toy example we attack a model that recognizes a two-digit
  number and inject two new backdoor tasks: one that sums up digits and another 
@@ -85,9 +88,10 @@ Now, let's configure the system:
 
 Next, let's run some basic attack on MNIST dataset. We use YAML files to
  configure the attacks. For MNIST attack, please refer to the [`configs
- /mnist_params.yaml`](configs/mnist_params.yaml) file. For the full set of available
+ /mnist_params.yaml`](./configs/mnist_params.yaml) file. For the full set of
+  available
   parameters see the
-  dataclass [`Parameters`](utils/parameters.py.). Let's start the training:
+  dataclass [`Parameters`](./utils/parameters.py.). Let's start the training:
   
   ```shell script
 python training.py --name mnist --params configs/mnist_params.yaml --commit none
