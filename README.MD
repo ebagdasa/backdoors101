@@ -77,8 +77,9 @@ for example a model trained on a task to count people
 <img src="./src/pipa.png" alt="drawing" width="400"/>
 </p>
 
-4. **Supporting multiple backdoors.** Our definition enables to multiple
- backdoor tasks. As a toy example we attack a model that recognizes a two-digit
+4. **Supporting multiple backdoors.** Our definition enables multiple
+ backdoor tasks. As a toy example we can attack a model that recognizes a two
+ -digit
  number and inject two new backdoor tasks: one that sums up digits and another 
  one the multiplies them. 
  
