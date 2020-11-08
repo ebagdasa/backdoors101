@@ -22,8 +22,9 @@ First, we want to give some background on backdoor attacks, note that our
  definition is inclusive of many other definitions stated before and supports
  all the new attacks (e.g. clean-label, feature-mix, semantic).
 
-1. Deep Learning. We focus on supervised learning setting and attempt to
- learn some task ***m*: X -> Y** (we call it *main* task) on some domain of
+1. **Deep Learning**. We focus on supervised learning setting where our goal is to
+ learn some task ***m*: X -> Y** (we call it a *main* [task](tasks/task.py)) on some
+  domain of
   inputs **X** 
 and labels **Y**. 
 A model **θ** for task ***m*** is trained on tuples **(x,y) ∈ (X,Y)** using 
@@ -56,7 +57,8 @@ the model has to be trained on a different domain of backdoor inputs and
    a part of the unmodified input (ie. a particular model of a car or an
    airplane that will be misclassified as birds).
    
-   We propose to use *synthesizers* that transform non-backdoored inputs
+   We propose to use [`synthesizers`](synthesizers/synthesizer.py) that transform non
+   -backdoored inputs
     to contain backdoor features and create backdoor labels. For example in
      image backdoors. The input synthesizer can simply insert a pixel pattern
       on top of an image,
@@ -79,6 +81,11 @@ for example a model trained on a task to count people
  backdoor tasks. As a toy example we attack a model that recognizes a two-digit
  number and inject two new backdoor tasks: one that sums up digits and another 
  one the multiplies them. 
+ 
+ <p align="center">
+<img src="./src/calculator.png" alt="drawing" width="400"/>
+</p>
+calculator.png
 
 5. **Methods to inject backdoor task.** Depending on a selected threat
 model the attack can inject backdoors by
@@ -102,7 +109,7 @@ Next, let's run some basic attack on MNIST dataset. We use YAML files to
  /mnist_params.yaml`](./configs/mnist_params.yaml) file. For the full set of
   available
   parameters see the
-  dataclass [`Parameters`](./utils/parameters.py.). Let's start the training:
+  dataclass [`Parameters`](./utils/parameters.py). Let's start the training:
   
   ```shell script
 python training.py --name mnist --params configs/mnist_params.yaml --commit none
