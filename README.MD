@@ -85,7 +85,6 @@ for example a model trained on a task to count people
  <p align="center">
 <img src="./src/calculator.png" alt="drawing" width="400"/>
 </p>
-calculator.png
 
 5. **Methods to inject backdoor task.** Depending on a selected threat
 model the attack can inject backdoors by
