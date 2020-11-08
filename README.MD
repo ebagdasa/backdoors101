@@ -81,7 +81,7 @@ for example a model trained on a task to count people
  backdoor tasks. As a toy example we can attack a model that recognizes a two
  -digit
  number and inject two new backdoor tasks: one that sums up digits and another 
- one the multiplies them. 
+ one that multiplies them. 
  
  <p align="center">
 <img src="./src/calculator.png" alt="drawing" width="400"/>
