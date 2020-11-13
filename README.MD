@@ -16,6 +16,9 @@ MultiMNIST, and IMDB reviews datasets and supports all modern model
 architectures including ResNet and BERT. Implemented backdoors include pixel
 pattern, physical, and semantic backdoors.  
 
+It's under heavy development now, so don't hesitate to ask questions 
+and all contributions are welcome.
+
 ## Basics
 
 First, we want to give some background on backdoor attacks, note that our
