@@ -17,7 +17,8 @@ architectures including ResNet and BERT. Implemented backdoors include pixel
 pattern, physical, and semantic backdoors.  
 
 It's under heavy development now, so don't hesitate to ask questions 
-and all contributions are welcome.
+and make contributions. The progress is tracked in the [Project
+ Board](https://github.com/ebagdasa/backdoors101/projects/1).
 
 ## Basics
 
