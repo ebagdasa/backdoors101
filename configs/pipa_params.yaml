@@ -28,10 +28,10 @@ data_path: /media/hdd/eugene/backdoors/data/pipa/
 
 poisoning_proportion: 1.1
 backdoor_label: 1
-backdoor: False
+backdoor: True
 
 loss_balance: MGDA
-mgda_normalize: none
+mgda_normalize: loss
 
 
 save_model: False
@@ -40,5 +40,5 @@ tb: False
 
 
 loss_tasks:
-#  - backdoor
+  - backdoor
   - normal

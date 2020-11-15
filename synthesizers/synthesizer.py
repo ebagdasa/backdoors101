@@ -1,5 +1,3 @@
-import random
-
 from tasks.batch import Batch
 from tasks.task import Task
 from utils.parameters import Params
@@ -16,23 +14,35 @@ class Synthesizer:
     def attack_batch(self, batch: Batch, test=False) -> Batch:
 
         # Don't attack if only normal loss task.
-        if self.params.loss_tasks == ['normal']:
+        if self.params.loss_tasks == ['normal'] and not test:
             return batch
-        else:
+
+        if test:
             attack_portion = batch.batch_size
-            if not test:
-                attack_portion *= self.params.poisoning_proportion
+        else:
+            attack_portion = round(
+                batch.batch_size * self.params.poisoning_proportion)
 
-            return self.apply_backdoor(batch.clone(), round(attack_portion))
+        backdoored_batch = batch.clone()
+        sub_batch = backdoored_batch.clip(attack_portion)
+        self.apply_backdoor(sub_batch)
 
-    def apply_backdoor(self, batch, attack_portion):
-        inputs = self.synthesize_inputs(inputs=batch.inputs[:attack_portion])
-        labels = self.synthesize_labels(labels=batch.labels[:attack_portion])
-        backdoor_batch = Batch(batch.batch_id, inputs, labels)
-        return backdoor_batch
+        return backdoored_batch
 
-    def synthesize_inputs(self, inputs):
+    def apply_backdoor(self, batch):
+        """
+        Modifies only a portion of the batch (represents batch poisoning).
+
+        :param batch:
+        :return:
+        """
+        self.synthesize_inputs(batch=batch)
+        self.synthesize_labels(batch=batch)
+
+        return
+
+    def synthesize_inputs(self, batch):
         raise NotImplemented
 
-    def synthesize_labels(self, labels):
+    def synthesize_labels(self, batch):
         raise NotImplemented
