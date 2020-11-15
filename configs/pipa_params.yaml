@@ -1,3 +1,6 @@
+task: Pipa
+synthesizer: Pattern
+
 batch_size: 64
 test_batch_size: 100
 lr: 0.1
@@ -21,103 +24,21 @@ scheduler: True
 #resumed_model: model_image_Sep.11_14.56.21/model_last.pt.tar # backdoored
 #resumed_model: model_image_pipa_Mar.06_16.20.29/model_last.pt.tar
 
-data: pipa
+data_path: /media/hdd/eugene/backdoors/data/pipa/
 
 poisoning_proportion: 1.1
-poison_number: 1
+backdoor_label: 1
 backdoor: False
-alpha: 0.95
-scale_threshold: 0.1
 
-normalize: none
+loss_balance: MGDA
+mgda_normalize: none
+
 
 save_model: False
 log: False
 tb: False
 
-random_seed: 8
-gan: False
-defense: True
-transform_train: True
 
-nc: False
-smoothing: False
-
-losses:
-  - backdoor
+loss_tasks:
+#  - backdoor
   - normal
-#  - nc_adv
-#  - ewc
-#  - latent
-#  - latent_fixed
-
-losses_scales:
-  backdoor: 0.5
-  normal: 0.5
-  latent: 0.6
-  nc_adv: 0.5
-  latent_fixed: 0.2
-
-#poison_images_test:
-#  - 389
-#  - 561
-#  - 874
-#  - 1605
-#  - 3378
-#  - 3678
-#  - 4528
-#  - 9744
-#  - 19165
-#  - 19500
-#  - 21422
-#  - 22984
-#  - 32941
-#  - 34287
-#  - 34385
-#  - 36005
-#  - 37365
-#  - 37533
-#  - 38658
-#  - 38735
-#  - 39824
-#  - 40138
-#  - 41336
-#  - 41861
-#  - 47001
-#  - 47026
-#  - 48003
-#  - 48030
-#  - 49163
-#  - 49588
-#
-#poison_images:
-#  - 389
-#  - 561
-#  - 874
-#  - 1605
-#  - 3378
-#  - 3678
-#  - 4528
-#  - 9744
-#  - 19165
-#  - 19500
-#  - 21422
-#  - 22984
-#  - 32941
-#  - 34287
-#  - 34385
-#  - 36005
-#  - 37365
-#  - 37533
-#  - 38658
-#  - 38735
-#  - 39824
-#  - 40138
-#  - 41336
-#  - 41861
-#  - 47001
-#  - 47026
-#  - 48003
-#  - 48030
-#  - 49163
-#  - 49588

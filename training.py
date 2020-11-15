@@ -6,6 +6,8 @@ import numpy as np
 import yaml
 from prompt_toolkit import prompt
 
+# noinspection PyUnresolvedReferences
+from dataset.pipa import Annotations  # legacy to correctly load dataset.
 from helper import Helper
 from utils.utils import *
 
@@ -44,7 +46,7 @@ def test(run_helper: Helper, epoch, backdoor=False):
             batch = run_helper.task.get_batch(i, data)
             if backdoor:
                 batch = run_helper.attack.synthesizer.attack_batch(batch,
-                                                                test=True)
+                                                                   test=True)
 
             outputs = model(batch.inputs)
             batch_acc.append(run_helper.task.get_batch_accuracy(outputs,

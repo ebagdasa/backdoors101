@@ -90,7 +90,7 @@ class Task:
                            f" {self.params.start_epoch}")
 
     def set_input_shape(self):
-        inp, _ = self.train_dataset[0]
+        inp = self.train_dataset[0][0]
         self.params.input_shape = inp.shape
 
     def get_batch(self, batch_id, data) -> Batch:

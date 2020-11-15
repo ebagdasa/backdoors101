@@ -1,11 +1,8 @@
 from __future__ import print_function, division
-import os
+
 import torch
-import numpy as np
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
+import torch.utils.data as data
 from torchvision.datasets.folder import default_loader
-import random
 
 
 class Annotations:
@@ -21,31 +18,39 @@ class Annotations:
 
     def __repr__(self):
         return f'photoset: {self.photoset_id}, photo id: {self.photo_id}, ' \
-            f'identity: {self.identity_id}, subs: {self.subset_id}, {self.people_on_photo}'
+               f'identity: {self.identity_id}, subs: {self.subset_id}, ' \
+               f'{self.people_on_photo}'
 
-class PipaDataset(Dataset):
+
+class PipaDataset(data.Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, train=True, transform=None):
+    def __init__(self, data_path, train=True, transform=None):
         """
         Args:
-            storage_list (string): Path to the file with annotations.
-            root_dir (string): Directory with all the images.
+            data_path (string): Directory with all the data.
+            train (bool): train or test dataset.
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.directory = 'data/pipa/'
-        if train:
-            self.data_list = torch.load(f'{self.directory}/train_split.pt')
-        else:
-            self.data_list = torch.load(f'{self.directory}/test_split.pt')
-        self.photo_list = torch.load(f'{self.directory}/photo_list.pt')
-        self.target_identities = torch.load(f'{self.directory}/target_identities.pt')
+        self.directory = data_path
+        try:
+            if train:
+                self.data_list = torch.load(f'{self.directory}/train_split.pt')
+            else:
+                self.data_list = torch.load(f'{self.directory}/test_split.pt')
+            self.photo_list = torch.load(f'{self.directory}/photo_list.pt')
+            self.target_identities = torch.load(
+                f'{self.directory}/target_identities.pt')
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                'Please download the archive: https://drive.google.com/'
+                'file/d/1IAsTDl6kw4u8kk7Ikyf8K2A4RSPv9izz')
         self.transform = transform
         self.loader = default_loader
 
-
-        self.labels = torch.tensor([self.get_label(x)[0] for x in range(len(self))])
+        self.labels = torch.tensor(
+            [self.get_label(x)[0] for x in range(len(self))])
         self.metadata = [self.get_label(x) for x in range(len(self))]
 
     def __len__(self):
@@ -54,7 +59,7 @@ class PipaDataset(Dataset):
     def get_label(self, idx):
         photo_id, identities = self.data_list[idx]
         target = len(identities) - 1
-        if target>4:
+        if target > 4:
             target = 4
         target_identity = 0
         for pos, z in enumerate(self.target_identities):
@@ -73,23 +78,22 @@ class PipaDataset(Dataset):
         target = len(identities) - 1
 
         # more than 5 people nobody cares
-        if target>4:
+        if target > 4:
             target = 4
         target_identity = 0
         for pos, z in enumerate(self.target_identities):
             if z in identities:
-                target_identity = pos+1
+                target_identity = pos + 1
 
-        ## get image
-        sample = self.loader(f'{self.directory}/{path}/{x.photoset_id}_{x.photo_id}.jpg')
+        # get image
+        sample = self.loader(
+            f'{self.directory}/{path}/{x.photoset_id}_{x.photo_id}.jpg')
         crop = self.get_crop(photo_id)
         sample = sample.crop(crop)
         if self.transform is not None:
             sample = self.transform(sample)
 
-
         return sample, target, target_identity, (photo_id, idx)
-
 
     def get_crop(self, photo_id):
         ids = self.photo_list[photo_id]
@@ -100,15 +104,14 @@ class PipaDataset(Dataset):
         lower = 0
         for x in ids:
             left = min(x.xmin, left)
-            upper  = min(x.ymin, upper)
-            right = max(x.xmin+x.width, right)
+            upper = min(x.ymin, upper)
+            right = max(x.xmin + x.width, right)
             lower = max(x.ymin + x.height, lower)
 
-        diff = (right-left) - (lower-upper)
+        diff = (right - left) - (lower - upper)
         if diff >= 0:
             lower += diff
         else:
             right -= diff
 
-        return (left, upper, right, lower)
-
+        return left, upper, right, lower
