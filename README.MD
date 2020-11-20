@@ -35,7 +35,7 @@ the supported datasets and tasks. Here is the high-level overview of the
  possible attack vectors: 
  
 <p align="center">
-<img src="./src/attack_vectors.png" alt="drawing" width="400"/>
+<img src="./src/attack_vectors.png" alt="drawing" width="600"/>
 </p>
 
 ### Backdoors
