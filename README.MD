@@ -42,11 +42,11 @@ the supported datasets and tasks.
 *TODO* clean-label (good place to contribute).
 
 ### Injection methods
-* Data poisoning -- allows to modify the dataset object to add backdoors.
-* Batch poisoning -- injects backdoor samples directly into the batch during
+* Data poisoning - adds backdoors into the dataset.
+* Batch poisoning - injects backdoor samples directly into the batch during
  training.
-* Loss poisoning -- Modifies the loss value during training (supports dynamic
- loss balancing, see  [Sec 3.4]((https://arxiv.org/abs/2005.03823)))
+* Loss poisoning - modifies the loss value during training (supports dynamic
+ loss balancing, see  [Sec 3.4](https://arxiv.org/abs/2005.03823) )
 
 *TODO*: model poisoning (good place to contribute!).
 
