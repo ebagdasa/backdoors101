@@ -7,7 +7,7 @@
 If you are starting a project on backdoors and want some assistance, shoot us
  an [email](mailto:eugene@cs.cornell.edu). If you have a
  new defense or attack, let us know as well, happy to help porting it
-into this framework. Any help and time spent is greatly appreciated. 
+into this framework. Any help is greatly appreciated. 
 
 This PyTorch framework contains state-of-the-art backdoor 
 attacks and defenses on deep learning models and real-world datasets. It's 
