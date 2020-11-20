@@ -31,7 +31,12 @@ and easily allows to incorporate newer attacks.
 ## Current status
 
 We try to incorporate new attacks and defenses as well as to extend
-the supported datasets and tasks.
+the supported datasets and tasks. Here is the high-level overview of the
+ possible attack vectors: 
+ 
+<p align="center">
+<img src="./src/attack_vectors.png" alt="drawing" width="400"/>
+</p>
 
 ### Backdoors
 * Pixel-pattern (incl. single-pixel) - traditional pixel modification attacks.
