@@ -15,7 +15,19 @@ primarily based on the
 [Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823) paper 
 and easily allows to incorporate newer attacks. 
 
-##Current status: 
+**Table of contents** 
+ * [Current status:](#current-status)
+   * [Backdoors:](#backdoors)
+   * [Injection methods:](#injection-methods)
+   * [Datasets:](#datasets)
+   * [Defenses](#defenses)
+   * [Training regimes](#training-regimes)
+ * [Basics](#basics)
+ * [Installation](#installation)
+ * [Structure](#structure)
+
+
+## Current status: 
 
 ### Backdoors:
 * Pixel-pattern (incl. single-pixel) -- traditional pixel modification attacks.
@@ -118,7 +130,7 @@ for example a model trained on a task to count people
   individuals. 
 
 <p align="center">
-<img src="./src/pipa.png" alt="drawing" width="400"/>
+<img src="./src/complex.png" alt="drawing" width="400"/>
 </p>
 
 4. **Supporting multiple backdoors.** Our definition enables multiple
