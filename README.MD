@@ -4,6 +4,10 @@
 <img src="./src/pixel_vs_semantic.png" alt="drawing" width="600"/>
 </p>
 
+If you are starting a project on backdoors and want some assistance, shoot us
+ an [email](mailto:eugene@cs.cornell.edu)). If you have a
+ new defense or attack, let us know as well, happy to help porting it
+into this framework. Any help and time spent is greatly appreciated. 
 
 This PyTorch framework contains state-of-the-art backdoor 
 attacks and defenses on deep learning models and real-world datasets. It's 
@@ -11,14 +15,50 @@ primarily based on the
 [Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823) paper 
 and easily allows to incorporate newer attacks. 
 
-This repo contains attacks on ImageNet, CIFAR, Pipa face identification, 
-MultiMNIST, and IMDB reviews datasets and supports all modern model
-architectures including ResNet and BERT. Implemented backdoors include pixel
-pattern, physical, and semantic backdoors.  
+##Current status: 
 
-It's under heavy development now, so don't hesitate to ask questions 
-and make contributions. The progress is tracked in the [Project
- Board](https://github.com/ebagdasa/backdoors101/projects/1).
+### Backdoors:
+* Pixel-pattern (incl. single-pixel) -- traditional pixel modification attacks.
+* Physical -- attacks that are triggered by physical objects.
+* Semantic backdoors -- attacks that don't modify the input (e.g. react on
+ features already present in the scene).
+
+*TODO* clean-label (good place to contribute).
+
+### Injection methods: 
+* Data poisoning -- allows to modify the dataset object to add backdoors.
+* Batch poisoning -- injects backdoor samples directly into the batch during
+ training.
+* Loss poisoning -- Modifies the loss value during training (supports dynamic
+ loss balancing, see  [Sec 3.4]((https://arxiv.org/abs/2005.03823)))
+
+*TODO*: model poisoning (good place to contribute!).
+
+### Datasets:
+* Image Classification: ImageNet, CIFAR-10, Pipa face identification, 
+MultiMNIST, MNIST.
+* Text: IMDB reviews datasets, Reddit (coming)
+
+*TODO*: Face recognition, eg Celeba or VGG. We already have some code, but need
+ expertise on producing good models (good place to contribute!).
+
+### Defenses
+* Input perturbation: 
+[NeuralCleanse](https://people.cs.uchicago.edu/~ravenben/publications/pdf/backdoor-sp19.pdf) + 
+added evasion.
+* Model anomalies [SentiNet](https://arxiv.org/pdf/1812.00292.pdf) + added
+ evasion.
+* Spectral clustering / fine-pruning + added evasion.
+
+*TODO*: Port Jupyter notebooks demonstrating defenses and evasions. Add new
+ defenses and evasions (good place to contribute!).
+
+### Training regimes
+
+* Centralized training
+* Differentially private / gradient shaping training
+
+*TODO*: Federated Learning (coming soon).
 
 ## Basics
 
