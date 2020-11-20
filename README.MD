@@ -15,11 +15,12 @@ primarily based on the
 [Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823) paper 
 and easily allows to incorporate newer attacks. 
 
-**Table of contents** 
- * [Current status:](#current-status)
-   * [Backdoors:](#backdoors)
-   * [Injection methods:](#injection-methods)
-   * [Datasets:](#datasets)
+## Table of contents
+ 
+ * [Current status](#current-status)
+   * [Backdoors](#backdoors)
+   * [Injection methods](#injection-methods)
+   * [Datasets](#datasets)
    * [Defenses](#defenses)
    * [Training regimes](#training-regimes)
  * [Basics](#basics)
@@ -27,9 +28,12 @@ and easily allows to incorporate newer attacks.
  * [Structure](#structure)
 
 
-## Current status: 
+## Current status
 
-### Backdoors:
+We try to incorporate new attacks and defenses as well as to extend
+the supported datasets and tasks.
+
+### Backdoors
 * Pixel-pattern (incl. single-pixel) -- traditional pixel modification attacks.
 * Physical -- attacks that are triggered by physical objects.
 * Semantic backdoors -- attacks that don't modify the input (e.g. react on
@@ -37,7 +41,7 @@ and easily allows to incorporate newer attacks.
 
 *TODO* clean-label (good place to contribute).
 
-### Injection methods: 
+### Injection methods
 * Data poisoning -- allows to modify the dataset object to add backdoors.
 * Batch poisoning -- injects backdoor samples directly into the batch during
  training.
@@ -46,7 +50,7 @@ and easily allows to incorporate newer attacks.
 
 *TODO*: model poisoning (good place to contribute!).
 
-### Datasets:
+### Datasets
 * Image Classification: ImageNet, CIFAR-10, Pipa face identification, 
 MultiMNIST, MNIST.
 * Text: IMDB reviews datasets, Reddit (coming)
