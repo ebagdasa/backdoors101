@@ -34,9 +34,9 @@ We try to incorporate new attacks and defenses as well as to extend
 the supported datasets and tasks.
 
 ### Backdoors
-* Pixel-pattern (incl. single-pixel) -- traditional pixel modification attacks.
-* Physical -- attacks that are triggered by physical objects.
-* Semantic backdoors -- attacks that don't modify the input (e.g. react on
+* Pixel-pattern (incl. single-pixel) - traditional pixel modification attacks.
+* Physical - attacks that are triggered by physical objects.
+* Semantic backdoors - attacks that don't modify the input (e.g. react on
  features already present in the scene).
 
 *TODO* clean-label (good place to contribute).
@@ -51,18 +51,18 @@ the supported datasets and tasks.
 *TODO*: model poisoning (good place to contribute!).
 
 ### Datasets
-* Image Classification: ImageNet, CIFAR-10, Pipa face identification, 
+* Image Classification - ImageNet, CIFAR-10, Pipa face identification, 
 MultiMNIST, MNIST.
-* Text: IMDB reviews datasets, Reddit (coming)
+* Text - IMDB reviews datasets, Reddit (coming)
 
 *TODO*: Face recognition, eg Celeba or VGG. We already have some code, but need
  expertise on producing good models (good place to contribute!).
 
 ### Defenses
-* Input perturbation: 
+* Input perturbation -
 [NeuralCleanse](https://people.cs.uchicago.edu/~ravenben/publications/pdf/backdoor-sp19.pdf) + 
 added evasion.
-* Model anomalies [SentiNet](https://arxiv.org/pdf/1812.00292.pdf) + added
+* Model anomalies - [SentiNet](https://arxiv.org/pdf/1812.00292.pdf) + added
  evasion.
 * Spectral clustering / fine-pruning + added evasion.
 
