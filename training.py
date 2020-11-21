@@ -14,59 +14,57 @@ from utils.utils import *
 logger = logging.getLogger('logger')
 
 
-def train(run_helper: Helper, epoch):
-    model = run_helper.task.model
-    criterion = run_helper.task.criterion
+def train(hlpr: Helper, epoch):
+    model = hlpr.task.model
+    criterion = hlpr.task.criterion
     model.train()
 
-    for i, data in enumerate(run_helper.task.train_loader):
-        if i == run_helper.params.max_batch_id:
+    for i, data in enumerate(hlpr.task.train_loader):
+        if i == hlpr.params.max_batch_id:
             break
-        batch = run_helper.task.get_batch(i, data)
+        batch = hlpr.task.get_batch(i, data)
         model.zero_grad()
 
-        loss = run_helper.attack.compute_blind_loss(model, criterion, batch)
+        loss = hlpr.attack.compute_blind_loss(model, criterion, batch)
 
         loss.backward()
 
-        run_helper.task.optimizer.step()
+        hlpr.task.optim.step()
 
-        run_helper.report_training_losses_scales(i, epoch)
+        hlpr.report_training_losses_scales(i, epoch)
 
     return
 
 
-def test(run_helper: Helper, epoch, backdoor=False):
-    model = run_helper.task.model
+def test(hlpr: Helper, epoch, backdoor=False):
+    model = hlpr.task.model
     model.eval()
     batch_acc = list()
 
     with torch.no_grad():
-        for i, data in enumerate(run_helper.task.test_loader):
-            batch = run_helper.task.get_batch(i, data)
+        for i, data in enumerate(hlpr.task.test_loader):
+            batch = hlpr.task.get_batch(i, data)
             if backdoor:
-                batch = run_helper.attack.synthesizer.attack_batch(batch,
-                                                                   test=True)
+                batch = hlpr.attack.synthesizer.attack_batch(batch,
+                                                             test=True)
 
             outputs = model(batch.inputs)
-            batch_acc.append(run_helper.task.get_batch_accuracy(outputs,
-                                                                batch.labels))
+            batch_acc.append(hlpr.task.get_batch_accuracy(outputs,
+                                                          batch.labels))
     accuracy = np.mean(batch_acc)
     logger.info(f'Epoch: {epoch:4d} (Backdoor: {backdoor}). '
                 f'Accuracy: {accuracy:.2f}')
-    run_helper.plot(x=epoch, y=accuracy, name=f'Accuracy/backdoor_{backdoor}')
+    hlpr.plot(x=epoch, y=accuracy, name=f'Accuracy/backdoor_{backdoor}')
     return np.mean(batch_acc)
 
 
-def run(run_helper):
-    # test(run_helper, 0, backdoor=False)
-    # test(run_helper, 0, backdoor=True)
-    for epoch in range(run_helper.params.start_epoch,
-                       run_helper.params.epochs + 1):
-        train(run_helper, epoch)
-        acc = test(run_helper, epoch, backdoor=False)
-        test(run_helper, epoch, backdoor=True)
-        run_helper.save_model(run_helper.task.model, epoch, acc)
+def run(hlpr):
+    for epoch in range(hlpr.params.start_epoch,
+                       hlpr.params.epochs + 1):
+        train(hlpr, epoch)
+        acc = test(hlpr, epoch, backdoor=False)
+        test(hlpr, epoch, backdoor=True)
+        hlpr.save_model(hlpr.task.model, epoch, acc)
 
 
 if __name__ == '__main__':

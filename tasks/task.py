@@ -22,7 +22,7 @@ class Task:
     classes = None
 
     model: Model = None
-    optimizer: optim.Optimizer = None
+    optim: optim.Optimizer = None
     criterion: nn.Module = None
     scheduler: MultiStepLR = None
 
@@ -58,23 +58,23 @@ class Task:
 
     def make_optimizer(self) -> None:
         if self.params.optimizer == 'SGD':
-            self.optimizer = optim.SGD(self.model.parameters(),
-                                       lr=self.params.lr,
-                                       weight_decay=self.params.decay,
-                                       momentum=self.params.momentum)
+            self.optim = optim.SGD(self.model.parameters(),
+                                   lr=self.params.lr,
+                                   weight_decay=self.params.decay,
+                                   momentum=self.params.momentum)
         elif self.params.optimizer == 'Adam':
-            self.optimizer = optim.Adam(self.model.parameters(),
-                                        lr=self.params.lr,
-                                        weight_decay=self.params.decay)
+            self.optim = optim.Adam(self.model.parameters(),
+                                    lr=self.params.lr,
+                                    weight_decay=self.params.decay)
         else:
-            raise ValueError(f'No optimizer: {self.optimizer}')
+            raise ValueError(f'No optimizer: {self.optim}')
 
     def make_scheduler(self) -> None:
         if self.params.scheduler:
-            self.scheduler = MultiStepLR(self.optimizer,
-                    milestones=self.params.scheduler_milestones,
-                    last_epoch=self.params.start_epoch,
-                    gamma=0.1)
+            self.scheduler = MultiStepLR(self.optim,
+                                         milestones=self.params.scheduler_milestones,
+                                         last_epoch=self.params.start_epoch,
+                                         gamma=0.1)
 
     def resume_model(self):
         if self.params.resume_model:
