@@ -9,7 +9,7 @@ decay: 0.0005
 epochs: 350
 save_on_epochs: []
 optimizer: SGD
-log_interval: 10
+log_interval: 100
 
 pretrained: False
 

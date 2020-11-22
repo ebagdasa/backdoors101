@@ -11,7 +11,7 @@ decay: 0.0005
 epochs: 350
 save_on_epochs: []
 optimizer: Adam
-log_interval: 10
+log_interval: 100
 
 scheduler: False
 pretrained: True

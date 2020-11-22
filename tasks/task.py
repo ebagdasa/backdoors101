@@ -2,6 +2,8 @@ import logging
 
 import torch
 from torch import optim, nn
+from torch.nn import Module
+from torch.optim import Optimizer
 from torch.optim.lr_scheduler import MultiStepLR
 from torchvision.transforms import transforms
 
@@ -22,7 +24,7 @@ class Task:
     classes = None
 
     model: Model = None
-    optim: optim.Optimizer = None
+    optimizer: optim.Optimizer = None
     criterion: nn.Module = None
     scheduler: MultiStepLR = None
 
@@ -33,13 +35,16 @@ class Task:
 
     def __init__(self, params: Params):
         self.params = params
+        self.init_task()
+
+    def init_task(self):
         self.load_data()
         self.build_model()
         self.resume_model()
         self.model = self.model.to(self.params.device)
 
-        self.make_optimizer()
-        self.make_criterion()
+        self.optimizer = self.get_optimizer()
+        self.criterion = self.get_criterion()
         self.set_input_shape()
 
     def load_data(self) -> None:
@@ -48,30 +53,32 @@ class Task:
     def build_model(self) -> None:
         raise NotImplemented
 
-    def make_criterion(self) -> None:
+    def get_criterion(self) -> Module:
         """Initialize with Cross Entropy by default.
 
         We use reduction `none` to support gradient shaping defense.
         :return:
         """
-        self.criterion = nn.CrossEntropyLoss(reduction='none')
+        return nn.CrossEntropyLoss(reduction='none')
 
-    def make_optimizer(self) -> None:
+    def get_optimizer(self, model=None) -> Optimizer:
         if self.params.optimizer == 'SGD':
-            self.optim = optim.SGD(self.model.parameters(),
-                                   lr=self.params.lr,
-                                   weight_decay=self.params.decay,
-                                   momentum=self.params.momentum)
+            optimizer = optim.SGD(model.parameters(),
+                                      lr=self.params.lr,
+                                      weight_decay=self.params.decay,
+                                      momentum=self.params.momentum)
         elif self.params.optimizer == 'Adam':
-            self.optim = optim.Adam(self.model.parameters(),
-                                    lr=self.params.lr,
-                                    weight_decay=self.params.decay)
+            optimizer = optim.Adam(model.parameters(),
+                                       lr=self.params.lr,
+                                       weight_decay=self.params.decay)
         else:
-            raise ValueError(f'No optimizer: {self.optim}')
+            raise ValueError(f'No optimizer: {self.optimizer}')
+
+        return optimizer
 
     def make_scheduler(self) -> None:
         if self.params.scheduler:
-            self.scheduler = MultiStepLR(self.optim,
+            self.scheduler = MultiStepLR(self.optimizer,
                                          milestones=self.params.scheduler_milestones,
                                          last_epoch=self.params.start_epoch,
                                          gamma=0.1)

@@ -97,8 +97,15 @@ class Params:
     running_losses = None
     running_scales = None
 
-    # future FL params
-    alpha: float = None
+    # FL params
+    fl_no_models: int = 100
+    fl_local_epochs: int = 2
+    fl_total_participants: int = 80000
+    fl_eta: int = 1
+    fl_alpha: float = None
+    fl_diff_privacy: bool = False
+    fl_dp_clip: float = None
+    fl_dp_noise: float = None
 
     def __post_init__(self):
         # enable logging anyways when saving statistics

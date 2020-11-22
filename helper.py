@@ -4,6 +4,7 @@ import os
 import random
 from collections import defaultdict
 from shutil import copyfile
+from typing import Union
 
 import numpy as np
 import torch
@@ -12,6 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from attack import Attack
 from synthesizers.synthesizer import Synthesizer
+from tasks.fl_task import FederatedLearningTask
 from tasks.task import Task
 from utils.parameters import Params
 from utils.utils import create_logger, create_table
@@ -21,7 +23,7 @@ logger = logging.getLogger('logger')
 
 class Helper:
     params: Params = None
-    task: Task = None
+    task: Union[Task, FederatedLearningTask] = None
     synthesizer: Synthesizer = None
     attack: Attack = None
     tb_writer: SummaryWriter = None
@@ -114,7 +116,7 @@ class Helper:
         if self.params.save_model:
             logger.info(f"Saving model to {self.params.folder_path}.")
             model_name = '{0}/model_last.pt.tar'.format(self.params.folder_path)
-            saved_dict = {'state_dict': model.state_dict(),
+            saved_dict = {'state_dict': model.to('cpu').state_dict(),
                           'epoch': epoch,
                           'lr': self.params.lr,
                           'params_dict': self.params.to_dict()}

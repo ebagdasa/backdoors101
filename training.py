@@ -9,17 +9,17 @@ from prompt_toolkit import prompt
 # noinspection PyUnresolvedReferences
 from dataset.pipa import Annotations  # legacy to correctly load dataset.
 from helper import Helper
+from tasks.fl_task import FederatedLearningTask
 from utils.utils import *
 
 logger = logging.getLogger('logger')
 
 
-def train(hlpr: Helper, epoch):
-    model = hlpr.task.model
+def train(hlpr: Helper, epoch, model, optimizer, train_loader):
     criterion = hlpr.task.criterion
     model.train()
 
-    for i, data in enumerate(hlpr.task.train_loader):
+    for i, data in enumerate(train_loader):
         if i == hlpr.params.max_batch_id:
             break
         batch = hlpr.task.get_batch(i, data)
@@ -29,7 +29,7 @@ def train(hlpr: Helper, epoch):
 
         loss.backward()
 
-        hlpr.task.optim.step()
+        optimizer.step()
 
         hlpr.report_training_losses_scales(i, epoch)
 
@@ -61,10 +61,33 @@ def test(hlpr: Helper, epoch, backdoor=False):
 def run(hlpr):
     for epoch in range(hlpr.params.start_epoch,
                        hlpr.params.epochs + 1):
-        train(hlpr, epoch)
+        train(hlpr, epoch, hlpr.task.model, hlpr.task.optimizer,
+              hlpr.task.train_loader)
         acc = test(hlpr, epoch, backdoor=False)
         test(hlpr, epoch, backdoor=True)
         hlpr.save_model(hlpr.task.model, epoch, acc)
+
+
+def fl_run(hlpr: Helper):
+    for epoch in range(hlpr.params.start_epoch,
+                       hlpr.params.epochs + 1):
+        run_fl_round(hlpr)
+
+
+def run_fl_round(hlpr):
+    global_model = hlpr.task.model
+    sampled_users = hlpr.task.sample_users_for_round()
+    weight_accumulator = hlpr.task.get_empty_accumulator()
+
+    for user_id, train_loader in sampled_users:
+        local_model, optimizer = hlpr.task.get_local_model_optimizer()
+        for local_epoch in range(hlpr.params.fl_local_epochs):
+            train(hlpr, local_epoch, local_model, optimizer, train_loader)
+            local_update = hlpr.task.get_fl_update(local_model, global_model)
+
+            hlpr.task.accumulate_weights(weight_accumulator, local_update)
+
+    hlpr.task.update_global_model(weight_accumulator, global_model)
 
 
 if __name__ == '__main__':
@@ -85,7 +108,10 @@ if __name__ == '__main__':
     helper = Helper(params)
 
     try:
-        run(helper)
+        if issubclass(FederatedLearningTask, helper.task.__class__):
+            fl_run(helper)
+        else:
+            run(helper)
     except KeyboardInterrupt as e:
         if helper.params.log:
             answer = prompt('\nDelete the repo? (y/n): ')
