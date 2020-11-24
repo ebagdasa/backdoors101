@@ -11,7 +11,7 @@ matplotlib~=3.2.1
 sklearn~=0.0
 scikit-learn~=0.23.2
 yaml~=0.2.4
-pyyaml~=5.3.1
+PyYAML==5.3.1
 scipy~=1.5.4
 pillow~=7.1.2
 prompt_toolkit~=3.0.5
