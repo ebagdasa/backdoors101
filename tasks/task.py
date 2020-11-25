@@ -43,8 +43,8 @@ class Task:
         self.resume_model()
         self.model = self.model.to(self.params.device)
 
-        self.optimizer = self.get_optimizer()
-        self.criterion = self.get_criterion()
+        self.optimizer = self.make_optimizer()
+        self.criterion = self.make_criterion()
         self.set_input_shape()
 
     def load_data(self) -> None:
@@ -53,7 +53,7 @@ class Task:
     def build_model(self) -> None:
         raise NotImplemented
 
-    def get_criterion(self) -> Module:
+    def make_criterion(self) -> Module:
         """Initialize with Cross Entropy by default.
 
         We use reduction `none` to support gradient shaping defense.
@@ -61,7 +61,7 @@ class Task:
         """
         return nn.CrossEntropyLoss(reduction='none')
 
-    def get_optimizer(self, model=None) -> Optimizer:
+    def make_optimizer(self, model=None) -> Optimizer:
         if self.params.optimizer == 'SGD':
             optimizer = optim.SGD(model.parameters(),
                                       lr=self.params.lr,

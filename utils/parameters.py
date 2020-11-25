@@ -84,6 +84,7 @@ class Params:
     spectral_similarity: 'str' = 'norm'
 
     # logging
+    report_train_loss: bool = True
     log: bool = False
     tb: bool = False
     save_model: bool = None
@@ -98,11 +99,13 @@ class Params:
     running_scales = None
 
     # FL params
+    fl: bool = False
     fl_no_models: int = 100
     fl_local_epochs: int = 2
     fl_total_participants: int = 80000
     fl_eta: int = 1
-    fl_alpha: float = None
+    fl_sample_dirichlet: bool = False
+    fl_dirichlet_alpha: float = None
     fl_diff_privacy: bool = False
     fl_dp_clip: float = None
     fl_dp_noise: float = None

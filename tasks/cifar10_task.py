@@ -13,6 +13,9 @@ class Cifar10Task(Task):
                                      (0.2023, 0.1994, 0.2010))
 
     def load_data(self):
+        self.load_cifar_data()
+
+    def load_cifar_data(self):
         if self.params.transform_train:
             transform_train = transforms.Compose([
                 transforms.RandomCrop(32, padding=4),

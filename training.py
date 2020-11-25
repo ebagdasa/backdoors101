@@ -5,33 +5,30 @@ from datetime import datetime
 import numpy as np
 import yaml
 from prompt_toolkit import prompt
+from tqdm import tqdm
 
 # noinspection PyUnresolvedReferences
 from dataset.pipa import Annotations  # legacy to correctly load dataset.
 from helper import Helper
-from tasks.fl_task import FederatedLearningTask
 from utils.utils import *
 
 logger = logging.getLogger('logger')
 
 
-def train(hlpr: Helper, epoch, model, optimizer, train_loader):
+def train(hlpr: Helper, epoch, model, optimizer, train_loader, attack=True):
     criterion = hlpr.task.criterion
     model.train()
 
     for i, data in enumerate(train_loader):
-        if i == hlpr.params.max_batch_id:
-            break
         batch = hlpr.task.get_batch(i, data)
         model.zero_grad()
-
-        loss = hlpr.attack.compute_blind_loss(model, criterion, batch)
-
+        loss = hlpr.attack.compute_blind_loss(model, criterion, batch, attack)
         loss.backward()
-
         optimizer.step()
 
         hlpr.report_training_losses_scales(i, epoch)
+        if i == hlpr.params.max_batch_id:
+            break
 
     return
 
@@ -45,8 +42,8 @@ def test(hlpr: Helper, epoch, backdoor=False):
         for i, data in enumerate(hlpr.task.test_loader):
             batch = hlpr.task.get_batch(i, data)
             if backdoor:
-                batch = hlpr.attack.synthesizer.attack_batch(batch,
-                                                             test=True)
+                batch = hlpr.attack.synthesizer.make_backdoor_batch(batch,
+                                                                    test=True)
 
             outputs = model(batch.inputs)
             batch_acc.append(hlpr.task.get_batch_accuracy(outputs,
@@ -72,6 +69,7 @@ def fl_run(hlpr: Helper):
     for epoch in range(hlpr.params.start_epoch,
                        hlpr.params.epochs + 1):
         run_fl_round(hlpr)
+        acc = test(hlpr, epoch, backdoor=False)
 
 
 def run_fl_round(hlpr):
@@ -79,10 +77,11 @@ def run_fl_round(hlpr):
     sampled_users = hlpr.task.sample_users_for_round()
     weight_accumulator = hlpr.task.get_empty_accumulator()
 
-    for user_id, train_loader in sampled_users:
+    for user_id, train_loader in tqdm(sampled_users):
         local_model, optimizer = hlpr.task.get_local_model_optimizer()
         for local_epoch in range(hlpr.params.fl_local_epochs):
-            train(hlpr, local_epoch, local_model, optimizer, train_loader)
+            train(hlpr, local_epoch, local_model, optimizer, train_loader,
+                  attack=False)
             local_update = hlpr.task.get_fl_update(local_model, global_model)
 
             hlpr.task.accumulate_weights(weight_accumulator, local_update)
@@ -108,7 +107,7 @@ if __name__ == '__main__':
     helper = Helper(params)
 
     try:
-        if issubclass(FederatedLearningTask, helper.task.__class__):
+        if helper.params.fl:
             fl_run(helper)
         else:
             run(helper)

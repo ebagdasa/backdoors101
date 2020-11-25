@@ -23,11 +23,21 @@ class Attack:
         # Model before attack
         self.fixed_model = None
 
-    def compute_blind_loss(self, model, criterion, batch):
+    def compute_blind_loss(self, model, criterion, batch, attack):
+        """
+
+        :param model:
+        :param criterion:
+        :param batch:
+        :param attack: Do not attack at all. Ignore all the parameters
+        :return:
+        """
         batch = batch.clip(self.params.clip_batch)
-        loss_tasks = self.params.loss_tasks.copy()
-        batch_back = self.synthesizer.attack_batch(batch)
+        loss_tasks = self.params.loss_tasks.copy() if attack else ['normal']
+        batch_back = self.synthesizer.make_backdoor_batch(batch, attack)
         scale = dict()
+
+
 
         if len(loss_tasks) == 1:
             loss_values, grads = compute_all_losses_and_grads(

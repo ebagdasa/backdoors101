@@ -13,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from attack import Attack
 from synthesizers.synthesizer import Synthesizer
-from tasks.fl_task import FederatedLearningTask
+from tasks.fl.fl_task import FederatedLearningTask
 from tasks.task import Task
 from utils.parameters import Params
 from utils.utils import create_logger, create_table
@@ -47,7 +47,12 @@ class Helper:
     def make_task(self):
         name_lower = self.params.task.lower()
         name_cap = self.params.task
-        module_name = f'tasks.{name_lower}_task'
+        if self.params.fl:
+            module_name = f'tasks.fl.{name_lower}_task'
+            path = f'tasks/fl/{name_lower}_task.py'
+        else:
+            module_name = f'tasks.{name_lower}_task'
+            path = f'tasks/{name_lower}_task.py'
         try:
             task_module = importlib.import_module(module_name)
             task_class = getattr(task_module, f'{name_cap}Task')
@@ -55,7 +60,7 @@ class Helper:
             raise ModuleNotFoundError(f'Your task: {self.params.task} should '
                                       f'be defined as a class '
                                       f'{name_cap}'
-                                      f'Task in tasks/{name_lower}_task.py')
+                                      f'Task in {path}')
         self.task = task_class(self.params)
 
     def make_synthesizer(self):
@@ -149,7 +154,8 @@ class Helper:
             return False
 
     def report_training_losses_scales(self, batch_id, epoch):
-        if batch_id % self.params.log_interval != 0:
+        if not self.params.report_train_loss or\
+                batch_id % self.params.log_interval != 0:
             return
         total_batches = len(self.task.train_loader)
         losses = [f'{x}: {np.mean(y):.2f}'

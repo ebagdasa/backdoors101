@@ -11,7 +11,6 @@ from tasks.task import Task
 
 class FederatedLearningTask(Task):
     fl_train_loaders: List[Any] = None
-    fl_test_loaders: List[Any] = None
     ignored_weights = ['tracked', 'running']
 
     def init_task(self):
@@ -19,7 +18,9 @@ class FederatedLearningTask(Task):
         self.build_model()
         self.resume_model()
 
-        self.model = self.model.to('cpu')
+        self.model = self.model.to(self.params.device)
+
+        self.criterion = self.make_criterion()
 
         self.set_input_shape()
         return
@@ -28,14 +29,14 @@ class FederatedLearningTask(Task):
         weight_accumulator = dict()
         for name, data in self.model.state_dict().items():
             weight_accumulator[name] = torch.zeros_like(data)
-        return
+        return weight_accumulator
 
     def sample_users_for_round(self):
         user_ids = random.sample(
             range(self.params.fl_total_participants),
             self.params.fl_no_models)
 
-        datasets = [(x, self.fl_test_loaders[x]) for x in user_ids]
+        datasets = [(x, self.fl_train_loaders[x]) for x in user_ids]
 
         return datasets
 
@@ -43,7 +44,7 @@ class FederatedLearningTask(Task):
         local_model = deepcopy(self.model)
         local_model = local_model.to(self.params.device)
 
-        optimizer = self.get_optimizer(local_model)
+        optimizer = self.make_optimizer(local_model)
 
         return local_model, optimizer
 
@@ -52,7 +53,7 @@ class FederatedLearningTask(Task):
         for name, data in local_model.state_dict().items():
             if self.check_ignored_weights(name):
                 continue
-            local_update[name].add_(data - global_model.state_dict()[name])
+            local_update[name] = (data - global_model.state_dict()[name])
 
         return local_update
 
@@ -64,11 +65,13 @@ class FederatedLearningTask(Task):
 
     def update_global_model(self, weight_accumulator, global_model: Module):
         for name, sum_update in weight_accumulator.items():
+            if self.check_ignored_weights(name):
+                continue
             scale = self.params.fl_eta / self.params.fl_total_participants
             average_update = scale * sum_update
             self.dp_add_noise(average_update)
-            global_model.state_dict()[name].add_(average_update)
-
+            model_weight = global_model.state_dict()[name]
+            model_weight.add_(average_update)
 
     def dp_clip(self, local_update_tensor: torch.Tensor, update_norm):
         if self.params.fl_diff_privacy and \

@@ -1,4 +1,4 @@
-from tasks.fl_task import FederatedLearningTask
+from tasks.fl.fl_task import FederatedLearningTask
 
 
 class RedditTask(FederatedLearningTask):
