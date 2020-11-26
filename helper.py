@@ -170,10 +170,10 @@ class Helper:
             f' Scales: {scales}')
         for name, values in self.params.running_losses.items():
             self.plot(epoch * total_batches + batch_id, np.mean(values),
-                      f'Train_Loss/{name}')
+                      f'Train/Loss/{name}')
         for name, values in self.params.running_scales.items():
             self.plot(epoch * total_batches + batch_id, np.mean(values),
-                      f'Train_Scale/{name}')
+                      f'Train/Scale/{name}')
 
         self.params.running_losses = defaultdict(list)
         self.params.running_scales = defaultdict(list)

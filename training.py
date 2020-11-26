@@ -47,8 +47,8 @@ def test(hlpr: Helper, epoch, backdoor=False):
 
             outputs = model(batch.inputs)
             hlpr.task.accumulate_metrics(outputs=outputs, labels=batch.labels)
-    hlpr.task.report_metrics(epoch, prefix=f'Backdoor {str(backdoor):5s}. '
-                                           f'Epoch: ',
+    hlpr.task.report_metrics(epoch,
+                             prefix=f'Backdoor {str(backdoor):5s}. Epoch: ',
                              tb_writer=hlpr.tb_writer, tb_prefix='Test/')
     return True
 
@@ -67,10 +67,9 @@ def fl_run(hlpr: Helper):
 
     for epoch in range(hlpr.params.start_epoch,
                        hlpr.params.epochs + 1):
-        acc = test(hlpr, epoch, backdoor=False)
         run_fl_round(hlpr, epoch)
-        acc = test(hlpr, epoch, backdoor=False)
-        acc_back = test(hlpr, epoch, backdoor=True)
+        test(hlpr, epoch, backdoor=False)
+        test(hlpr, epoch, backdoor=True)
 
 
 def run_fl_round(hlpr, epoch):

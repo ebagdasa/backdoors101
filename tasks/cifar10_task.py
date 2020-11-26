@@ -43,7 +43,7 @@ class Cifar10Task(Task):
             self.train_loader = DataLoader(self.train_dataset,
                                            batch_size=self.params.batch_size,
                                            shuffle=True,
-                                           num_workers=2)
+                                           num_workers=0)
         self.test_dataset = torchvision.datasets.CIFAR10(
             root=self.params.data_path,
             train=False,
@@ -51,7 +51,7 @@ class Cifar10Task(Task):
             transform=transform_test)
         self.test_loader = DataLoader(self.test_dataset,
                                       batch_size=self.params.test_batch_size,
-                                      shuffle=False, num_workers=2)
+                                      shuffle=False, num_workers=0)
 
         self.classes = ('plane', 'car', 'bird', 'cat',
                         'deer', 'dog', 'frog', 'horse', 'ship', 'truck')

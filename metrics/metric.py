@@ -21,7 +21,7 @@ class Metric:
     def __repr__(self):
         metrics = self.get_value()
         text = [f'{key}: {val:.2f}' for key, val in metrics.items()]
-        return f'Metric {self.name}: ' + ','.join(text)
+        return f'{self.name}: ' + ','.join(text)
 
     def compute_metric(self, outputs, labels) -> Dict[str, Any]:
         raise NotImplemented
