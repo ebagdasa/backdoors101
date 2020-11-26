@@ -2,6 +2,9 @@ import math
 import random
 from copy import deepcopy
 from typing import List, Any, Dict
+
+from metrics.accuracy_metric import AccuracyMetric
+from metrics.test_loss_metric import TestLossMetric
 from tasks.fl.fl_user import FLUser
 import torch
 import logging
@@ -24,6 +27,8 @@ class FederatedLearningTask(Task):
         self.model = self.model.to(self.params.device)
         self.criterion = self.make_criterion()
         self.adversaries = self.sample_adversaries()
+
+        self.metrics = [AccuracyMetric(), TestLossMetric(self.criterion)]
         self.set_input_shape()
         return
 

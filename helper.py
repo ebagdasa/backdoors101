@@ -153,6 +153,7 @@ class Helper:
         else:
             return False
 
+
     def report_training_losses_scales(self, batch_id, epoch):
         if not self.params.report_train_loss or\
                 batch_id % self.params.log_interval != 0:

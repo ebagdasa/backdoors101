@@ -36,7 +36,7 @@ def train(hlpr: Helper, epoch, model, optimizer, train_loader, attack=True):
 def test(hlpr: Helper, epoch, backdoor=False):
     model = hlpr.task.model
     model.eval()
-    batch_acc = list()
+    hlpr.task.reset_metrics()
 
     with torch.no_grad():
         for i, data in enumerate(hlpr.task.test_loader):
@@ -46,13 +46,11 @@ def test(hlpr: Helper, epoch, backdoor=False):
                                                                     test=True)
 
             outputs = model(batch.inputs)
-            batch_acc.append(hlpr.task.get_batch_accuracy(outputs,
-                                                          batch.labels))
-    accuracy = np.mean(batch_acc)
-    logger.info(f'Epoch: {epoch:4d} (Backdoor: {backdoor}). '
-                f'Accuracy: {accuracy:.2f}')
-    hlpr.plot(x=epoch, y=accuracy, name=f'Accuracy/backdoor_{backdoor}')
-    return np.mean(batch_acc)
+            hlpr.task.accumulate_metrics(outputs=outputs, labels=batch.labels)
+    hlpr.task.report_metrics(epoch, prefix=f'Backdoor {str(backdoor):5s}. '
+                                           f'Epoch: ',
+                             tb_writer=hlpr.tb_writer, tb_prefix='Test/')
+    return True
 
 
 def run(hlpr):
@@ -69,6 +67,7 @@ def fl_run(hlpr: Helper):
 
     for epoch in range(hlpr.params.start_epoch,
                        hlpr.params.epochs + 1):
+        acc = test(hlpr, epoch, backdoor=False)
         run_fl_round(hlpr, epoch)
         acc = test(hlpr, epoch, backdoor=False)
         acc_back = test(hlpr, epoch, backdoor=True)
