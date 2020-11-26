@@ -109,6 +109,9 @@ class Params:
     fl_diff_privacy: bool = False
     fl_dp_clip: float = None
     fl_dp_noise: float = None
+    # FL attack details. Set no adversaries to perform the attack:
+    fl_number_of_adversaries: int = 0
+    fl_single_epoch_attack: int = None
 
     def __post_init__(self):
         # enable logging anyways when saving statistics

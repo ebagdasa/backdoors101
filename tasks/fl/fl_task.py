@@ -2,16 +2,19 @@ import math
 import random
 from copy import deepcopy
 from typing import List, Any, Dict
-
+from tasks.fl.fl_user import FLUser
 import torch
+import logging
 from torch.nn import Module
 
 from tasks.task import Task
+logger = logging.getLogger('logger')
 
 
 class FederatedLearningTask(Task):
     fl_train_loaders: List[Any] = None
     ignored_weights = ['tracked', 'running']
+    adversaries: List[int] = None
 
     def init_task(self):
         self.load_data()
@@ -19,9 +22,8 @@ class FederatedLearningTask(Task):
         self.resume_model()
 
         self.model = self.model.to(self.params.device)
-
         self.criterion = self.make_criterion()
-
+        self.adversaries = self.sample_adversaries()
         self.set_input_shape()
         return
 
@@ -31,15 +33,57 @@ class FederatedLearningTask(Task):
             weight_accumulator[name] = torch.zeros_like(data)
         return weight_accumulator
 
-    def sample_users_for_round(self):
-        user_ids = random.sample(
+    def sample_users_for_round(self, epoch) -> List[FLUser]:
+        sampled_ids = random.sample(
             range(self.params.fl_total_participants),
             self.params.fl_no_models)
+        sampled_users = []
+        for pos, user_id in enumerate(sampled_ids):
+            train_loader = self.fl_train_loaders[user_id]
+            compromised = self.check_user_compromised(epoch, pos, user_id)
+            user = FLUser(user_id, compromised=compromised,
+                          train_loader=train_loader)
+            sampled_users.append(user)
 
-        datasets = [(x, self.fl_train_loaders[x]) for x in user_ids]
+        return sampled_users
 
-        return datasets
+    def check_user_compromised(self, epoch, pos, user_id):
+        """Check if the sampled user is compromised for the attack.
 
+        If single_epoch_attack is defined (eg not None) then ignore
+        :param epoch:
+        :param pos:
+        :param user_id:
+        :return:
+        """
+        compromised = False
+        if self.params.fl_single_epoch_attack is not None:
+            if epoch == self.params.fl_single_epoch_attack:
+                if pos < self.params.fl_number_of_adversaries:
+                    compromised = True
+                    logger.warning(f'Attacking once at epoch {epoch}. Compromised'
+                                   f' user: {user_id}.')
+        else:
+            compromised = user_id in self.adversaries
+        return compromised
+
+    def sample_adversaries(self) -> List[int]:
+        adversaries_ids = []
+        if self.params.fl_number_of_adversaries == 0:
+            logger.warning(f'Running vanilla FL, no attack.')
+        elif self.params.fl_single_epoch_attack is None:
+            adversaries_ids = random.sample(
+                range(self.params.fl_total_participants),
+                self.params.fl_number_of_adversaries)
+            logger.warning(f'Attacking over multiple epochs with following '
+                           f'users compromised: {adversaries_ids}.')
+        else:
+            logger.warning(f'Attack only on epoch: '
+                           f'{self.params.fl_single_epoch_attack} with '
+                           f'{self.params.fl_number_of_adversaries} compromised'
+                           f' users.')
+
+        return adversaries_ids
     def get_local_model_optimizer(self):
         local_model = deepcopy(self.model)
         local_model = local_model.to(self.params.device)
