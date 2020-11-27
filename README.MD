@@ -4,14 +4,14 @@
 <img src="./src/pixel_vs_semantic.png" alt="drawing" width="600"/>
 </p>
 
-Backdoors 101 -- is a PyTorch framework that contains state-of-the-art backdoor 
-attacks and defenses on deep learning and real-world datasets. We implemented
- centralized and federated learning, and support various attack vectors. 
- The code is
-mostly based on 
-[Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823) and
-[How To Backdoor Federated Learning](https://arxiv.org/abs/1807.00459), and we
- are also working on incorporating newer attacks. 
+Backdoors 101 –– is a PyTorch framework that contains state-of-the-art backdoor 
+attacks and defenses on deep learning models using real-world datasets. 
+Furthermore, we implemented centralized and federated learning, and added
+support for various attack vectors. The code is mostly based on 
+"[Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823)" and
+"[How To Backdoor Federated Learning](https://arxiv.org/abs/1807.00459)" papers
+, and we
+are also working on incorporating newer attacks. 
  
  
 If you have a new defense or attack, let us know (raise an issue
