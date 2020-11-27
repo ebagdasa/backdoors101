@@ -49,7 +49,7 @@ def test(hlpr: Helper, epoch, backdoor=False):
             hlpr.task.accumulate_metrics(outputs=outputs, labels=batch.labels)
     hlpr.task.report_metrics(epoch,
                              prefix=f'Backdoor {str(backdoor):5s}. Epoch: ',
-                             tb_writer=hlpr.tb_writer, tb_prefix='Test/')
+                             tb_writer=hlpr.tb_writer, tb_prefix='Test')
     return True
 
 

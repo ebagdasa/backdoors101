@@ -16,11 +16,11 @@ pretrained: False
 
 scheduler: False
 
-poisoning_proportion: 0.2
+poisoning_proportion: 0.5
 backdoor_label: 8
 
 loss_balance: MGDA
-mgda_normalize: loss
+mgda_normalize: none
 
 save_model: True
 log: True

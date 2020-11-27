@@ -132,7 +132,7 @@ class Task:
         metric_text = []
         for metric in self.metrics:
             metric_text.append(str(metric))
-            metric.plot(tb_writer, step, prefix=tb_prefix)
+            metric.plot(tb_writer, step, tb_prefix=tb_prefix)
         logger.warning(f'{prefix} {step:4d}. {" | ".join(metric_text)}')
 
     @staticmethod
