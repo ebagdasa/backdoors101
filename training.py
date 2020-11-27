@@ -89,6 +89,8 @@ def run_fl_round(hlpr, epoch):
                 train(hlpr, local_epoch, local_model, optimizer,
                       user.train_loader, attack=False)
         local_update = hlpr.task.get_fl_update(local_model, global_model)
+        if user.compromised:
+            hlpr.attack.fl_scale_update(local_update)
         hlpr.task.accumulate_weights(weight_accumulator, local_update)
 
     hlpr.task.update_global_model(weight_accumulator, global_model)

@@ -1,4 +1,7 @@
 import logging
+from typing import Dict
+
+import torch
 
 from synthesizers.synthesizer import Synthesizer
 from losses.loss_functions import compute_all_losses_and_grads
@@ -82,3 +85,7 @@ class Attack:
                 blind_loss += scale[t] * loss_values[t]
         self.params.running_losses['total'].append(blind_loss.item())
         return blind_loss
+
+    def fl_scale_update(self, local_update: Dict[str, torch.Tensor]):
+        for name, value in local_update.items():
+            value.mul_(self.params.fl_weight_scale)

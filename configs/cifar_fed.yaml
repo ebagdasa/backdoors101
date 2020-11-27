@@ -16,17 +16,16 @@ pretrained: False
 
 scheduler: False
 
-poisoning_proportion: 1.1
+poisoning_proportion: 0.2
 backdoor_label: 8
-backdoor: False
 
 loss_balance: MGDA
 mgda_normalize: loss
 
-save_model: False
-log: False
-tb: False
-report_train_loss: True
+save_model: True
+log: True
+tb: True
+report_train_loss: False
 
 transform_train: True
 
@@ -41,7 +40,8 @@ fl_diff_privacy:  False
 fl_dp_clip: None
 fl_dp_noise: None
 
-fl_number_of_adversaries: 5
+fl_number_of_adversaries: 1
+fl_weight_scale: 100
 #fl_single_epoch_attack: 1
 
 
