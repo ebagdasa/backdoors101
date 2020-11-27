@@ -59,11 +59,12 @@ class Cifar10Task(Task):
 
     def build_model(self) -> None:
         if self.params.pretrained:
-            self.model = resnet18(pretrained=True)
-            self.model.fc = nn.Linear(512, len(self.classes))
+            model = resnet18(pretrained=True)
+            model.fc = nn.Linear(512, len(self.classes))
         else:
-            self.model = resnet18(pretrained=False,
+            model = resnet18(pretrained=False,
                                   num_classes=len(self.classes))
+        return model
 
     def remove_semantic_backdoors(self):
         """

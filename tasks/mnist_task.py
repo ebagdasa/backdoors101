@@ -42,5 +42,5 @@ class MNISTTask(Task):
         self.classes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
         return True
 
-    def build_model(self) -> None:
-        self.model = SimpleNet(num_classes=len(self.classes))
+    def build_model(self):
+        return SimpleNet(num_classes=len(self.classes))

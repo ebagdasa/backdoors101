@@ -48,10 +48,10 @@ class PipaTask(Task):
 
         self.classes = list(range(5))
 
-    def build_model(self) -> None:
+    def build_model(self):
         model = resnet18(pretrained=True)
         model.fc = torch.nn.Linear(512, 5)
-        self.model = model
+        return model
 
     def get_batch(self, batch_id, data):
         inputs, labels, identities, _ = data

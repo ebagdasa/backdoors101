@@ -56,7 +56,7 @@ class Task:
     def load_data(self) -> None:
         raise NotImplemented
 
-    def build_model(self) -> None:
+    def build_model(self) -> Model:
         raise NotImplemented
 
     def make_criterion(self) -> Module:

@@ -45,4 +45,4 @@ class ImagenetTask(Task):
             self.classes = eval(f.read())
 
     def build_model(self) -> None:
-        self.model = resnet18(pretrained=self.params.pretrained)
+        return resnet18(pretrained=self.params.pretrained)

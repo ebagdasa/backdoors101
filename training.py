@@ -64,7 +64,6 @@ def run(hlpr):
 
 
 def fl_run(hlpr: Helper):
-
     for epoch in range(hlpr.params.start_epoch,
                        hlpr.params.epochs + 1):
         run_fl_round(hlpr, epoch)
@@ -74,22 +73,23 @@ def fl_run(hlpr: Helper):
 
 def run_fl_round(hlpr, epoch):
     global_model = hlpr.task.model
-    round_participants = hlpr.task.sample_users_for_round(epoch)
+    local_model = hlpr.task.local_model
 
+    round_participants = hlpr.task.sample_users_for_round(epoch)
     weight_accumulator = hlpr.task.get_empty_accumulator()
 
     for user in tqdm(round_participants):
-        local_model, optimizer = hlpr.task.get_local_model_optimizer()
+        hlpr.task.copy_params(global_model, local_model)
+        optimizer = hlpr.task.make_optimizer(local_model)
         for local_epoch in range(hlpr.params.fl_local_epochs):
             if user.compromised:
                 train(hlpr, local_epoch, local_model, optimizer,
-                      user.train_loader, attack=False)
+                      user.train_loader, attack=True)
             else:
                 train(hlpr, local_epoch, local_model, optimizer,
-                      user.train_loader, attack=True)
-            local_update = hlpr.task.get_fl_update(local_model, global_model)
-
-            hlpr.task.accumulate_weights(weight_accumulator, local_update)
+                      user.train_loader, attack=False)
+        local_update = hlpr.task.get_fl_update(local_model, global_model)
+        hlpr.task.accumulate_weights(weight_accumulator, local_update)
 
     hlpr.task.update_global_model(weight_accumulator, global_model)
 

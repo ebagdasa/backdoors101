@@ -16,15 +16,16 @@ logger = logging.getLogger('logger')
 
 class FederatedLearningTask(Task):
     fl_train_loaders: List[Any] = None
-    ignored_weights = ['tracked', 'running']
+    ignored_weights = ['num_batches_tracked']#['tracked', 'running']
     adversaries: List[int] = None
 
     def init_task(self):
         self.load_data()
-        self.build_model()
+        self.model = self.build_model()
         self.resume_model()
-
         self.model = self.model.to(self.params.device)
+
+        self.local_model = self.build_model().to(self.params.device)
         self.criterion = self.make_criterion()
         self.adversaries = self.sample_adversaries()
 
@@ -89,13 +90,19 @@ class FederatedLearningTask(Task):
                            f' users.')
 
         return adversaries_ids
-    def get_local_model_optimizer(self):
-        local_model = deepcopy(self.model)
+    def get_model_optimizer(self, model):
+        local_model = deepcopy(model)
         local_model = local_model.to(self.params.device)
 
         optimizer = self.make_optimizer(local_model)
 
         return local_model, optimizer
+
+    def copy_params(self, global_model, local_model):
+        local_state = local_model.state_dict()
+        for name, param in global_model.state_dict().items():
+            if name in local_state and name not in self.ignored_weights:
+                local_state[name].copy_(param)
 
     def get_fl_update(self, local_model, global_model) -> Dict[str, torch.Tensor]:
         local_update = dict()
