@@ -14,7 +14,7 @@ class Synthesizer:
     def make_backdoor_batch(self, batch: Batch, test=False, attack=True) -> Batch:
 
         # Don't attack if only normal loss task.
-        if attack or (self.params.loss_tasks == ['normal'] and not test):
+        if (not attack) or (self.params.loss_tasks == ['normal'] and not test):
             return batch
 
         if test:
