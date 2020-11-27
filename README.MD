@@ -4,16 +4,20 @@
 <img src="./src/pixel_vs_semantic.png" alt="drawing" width="600"/>
 </p>
 
-If you are starting a project on backdoors and want some assistance, shoot us
- an [email](mailto:eugene@cs.cornell.edu). If you have a
- new defense or attack, let us know as well, happy to help porting it
-into this framework. Any help is greatly appreciated. 
-
-This PyTorch framework contains state-of-the-art backdoor 
-attacks and defenses on deep learning models and real-world datasets. It's 
-primarily based on the 
-[Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823) paper 
-and easily allows to incorporate newer attacks. 
+Backdoors 101 -- is a PyTorch framework that contains state-of-the-art backdoor 
+attacks and defenses on deep learning and real-world datasets. We implemented
+ centralized and federated learning, and support various attack vectors. 
+ The code is
+mostly based on 
+[Blind Backdoors in Deep Learning Models](https://arxiv.org/abs/2005.03823) and
+[How To Backdoor Federated Learning](https://arxiv.org/abs/1807.00459), and we
+ are also working on incorporating newer attacks. 
+ 
+ 
+If you have a new defense or attack, let us know (raise an issue
+or send an [email](mailto:eugene@cs.cornell.edu)), happy to help porting it. If
+ you are doing research on backdoors and want some assistance don't hesitate to
+ask questions.
 
 ## Table of contents
  
@@ -76,10 +80,9 @@ added evasion.
 
 ### Training regimes
 
-* Centralized training
-* Differentially private / gradient shaping training
-
-*TODO*: Federated Learning (coming soon).
+* Centralized training.
+* Differentially private / gradient shaping training.
+* Federated Learning (CIFAR-10 only).
 
 ## Basics
 
