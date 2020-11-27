@@ -19,7 +19,7 @@ scheduler: False
 poisoning_proportion: 0.5
 backdoor_label: 8
 
-resume_model: model_CifarFed_Nov.26_20.32.44_no_attack_fl/model
+#resume_model: model_CifarFed_Nov.26_20.32.44_no_attack_fl/model
 
 loss_balance: MGDA
 mgda_normalize: none
@@ -35,7 +35,7 @@ fl: True
 fl_no_models: 10
 fl_local_epochs: 2
 fl_total_participants: 100
-fl_eta: 1
+fl_eta: 10
 fl_sample_dirichlet: False
 fl_dirichlet_alpha: None
 fl_diff_privacy:  False

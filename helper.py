@@ -121,7 +121,7 @@ class Helper:
         if self.params.save_model:
             logger.info(f"Saving model to {self.params.folder_path}.")
             model_name = '{0}/model_last.pt.tar'.format(self.params.folder_path)
-            saved_dict = {'state_dict': model.to('cpu').state_dict(),
+            saved_dict = {'state_dict': model.state_dict(),
                           'epoch': epoch,
                           'lr': self.params.lr,
                           'params_dict': self.params.to_dict()}

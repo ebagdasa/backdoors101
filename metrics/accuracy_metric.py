@@ -13,7 +13,7 @@ class AccuracyMetric(Metric):
                        labels: torch.Tensor):
         """Computes the precision@k for the specified values of k"""
         max_k = max(self.top_k)
-        batch_size = labels.size(0)
+        batch_size = labels.shape[0]
 
         _, pred = outputs.topk(max_k, 1, True, True)
         pred = pred.t()

@@ -116,13 +116,14 @@ if __name__ == '__main__':
     params['name'] = args.name
 
     helper = Helper(params)
+    logger.warning(create_table(params))
 
     try:
         if helper.params.fl:
             fl_run(helper)
         else:
             run(helper)
-    except KeyboardInterrupt as e:
+    except (KeyboardInterrupt, RuntimeError):
         if helper.params.log:
             answer = prompt('\nDelete the repo? (y/n): ')
             if answer in ['Y', 'y', 'yes']:
