@@ -70,13 +70,13 @@ class Task:
     def make_optimizer(self, model=None) -> Optimizer:
         if self.params.optimizer == 'SGD':
             optimizer = optim.SGD(model.parameters(),
-                                      lr=self.params.lr,
-                                      weight_decay=self.params.decay,
-                                      momentum=self.params.momentum)
+                                  lr=self.params.lr,
+                                  weight_decay=self.params.decay,
+                                  momentum=self.params.momentum)
         elif self.params.optimizer == 'Adam':
             optimizer = optim.Adam(model.parameters(),
-                                       lr=self.params.lr,
-                                       weight_decay=self.params.decay)
+                                   lr=self.params.lr,
+                                   weight_decay=self.params.decay)
         else:
             raise ValueError(f'No optimizer: {self.optimizer}')
 

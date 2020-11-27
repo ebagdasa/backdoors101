@@ -2,7 +2,6 @@ import argparse
 import shutil
 from datetime import datetime
 
-import numpy as np
 import yaml
 from prompt_toolkit import prompt
 from tqdm import tqdm
@@ -43,13 +42,15 @@ def test(hlpr: Helper, epoch, backdoor=False):
             batch = hlpr.task.get_batch(i, data)
             if backdoor:
                 batch = hlpr.attack.synthesizer.make_backdoor_batch(batch,
-                                                                    test=True)
+                                                                    test=True,
+                                                                    attack=True)
 
             outputs = model(batch.inputs)
             hlpr.task.accumulate_metrics(outputs=outputs, labels=batch.labels)
     hlpr.task.report_metrics(epoch,
                              prefix=f'Backdoor {str(backdoor):5s}. Epoch: ',
-                             tb_writer=hlpr.tb_writer, tb_prefix='Test')
+                             tb_writer=hlpr.tb_writer,
+                             tb_prefix=f'Test_backdoor_{str(backdoor):5s}')
     return True
 
 

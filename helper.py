@@ -153,9 +153,8 @@ class Helper:
         else:
             return False
 
-
     def report_training_losses_scales(self, batch_id, epoch):
-        if not self.params.report_train_loss or\
+        if not self.params.report_train_loss or \
                 batch_id % self.params.log_interval != 0:
             return
         total_batches = len(self.task.train_loader)
