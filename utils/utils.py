@@ -59,6 +59,13 @@ def create_table(params: dict):
     return data
 
 
+def get_current_git_hash():
+    import git
+    repo = git.Repo(search_parent_directories=True)
+    sha = repo.head.object.hexsha
+    return sha
+
+
 def create_logger():
     """
         Setup the logging environment
