@@ -6,6 +6,7 @@ class TestLossMetric(Metric):
 
     def __init__(self, criterion, train=False):
         self.criterion  = criterion
+        self.main_metric_name = 'value'
         super().__init__(name='Loss', train=False)
 
     def compute_metric(self, outputs: torch.Tensor,

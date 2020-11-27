@@ -6,6 +6,7 @@ class AccuracyMetric(Metric):
 
     def __init__(self, top_k=(1,)):
         self.top_k = top_k
+        self.main_metric_name = 'Top-1'
         super().__init__(name='Accuracy', train=False)
 
     def compute_metric(self, outputs: torch.Tensor,

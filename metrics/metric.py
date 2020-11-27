@@ -12,10 +12,12 @@ class Metric:
     train: bool
     plottable: bool = True
     running_metric = None
+    main_metric_name = None
 
     def __init__(self, name, train=False):
         self.train = train
         self.name = name
+
         self.running_metric = defaultdict(list)
 
     def __repr__(self):
@@ -37,6 +39,13 @@ class Metric:
             metrics[key] = np.mean(value)
 
         return metrics
+
+    def get_main_metric_value(self):
+        if not self.main_metric_name:
+            raise ValueError(f'For metric {self.name} define '
+                             f'attribute main_metric_name.')
+        metrics = self.get_value()
+        return metrics[self.main_metric_name]
 
     def reset_metric(self):
         self.running_metric = defaultdict(list)
