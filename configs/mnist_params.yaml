@@ -19,7 +19,7 @@ backdoor: True
 backdoor_dynamic_position: True
 
 loss_balance: MGDA
-mgda_normalize: loss
+mgda_normalize: loss+
 
 save_model: False
 log: False
