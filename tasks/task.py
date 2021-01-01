@@ -27,9 +27,9 @@ class Task:
     test_loader = None
     classes = None
 
-    model: Model = None
+    model: Module = None
     optimizer: optim.Optimizer = None
-    criterion: nn.Module = None
+    criterion: Module = None
     scheduler: MultiStepLR = None
     metrics: List[Metric] = None
 
@@ -56,7 +56,7 @@ class Task:
     def load_data(self) -> None:
         raise NotImplemented
 
-    def build_model(self) -> Model:
+    def build_model(self) -> Module:
         raise NotImplemented
 
     def make_criterion(self) -> Module:

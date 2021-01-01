@@ -57,7 +57,7 @@ class Cifar10Task(Task):
                         'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
         return True
 
-    def build_model(self) -> None:
+    def build_model(self) -> nn.Module:
         if self.params.pretrained:
             model = resnet18(pretrained=True)
             model.fc = nn.Linear(512, len(self.classes))
