@@ -11,7 +11,6 @@ from torchvision.transforms import transforms
 from metrics.accuracy_metric import AccuracyMetric
 from metrics.metric import Metric
 from metrics.test_loss_metric import TestLossMetric
-from models.model import Model
 from tasks.batch import Batch
 from utils.parameters import Params
 

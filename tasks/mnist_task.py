@@ -1,10 +1,9 @@
-import torchvision
 import torch.utils.data as torch_data
-from torch.nn import CrossEntropyLoss
+import torchvision
+from torchvision.transforms import transforms
 
 from models.simple import SimpleNet
 from tasks.task import Task
-from torchvision.transforms import transforms
 
 
 class MNISTTask(Task):
