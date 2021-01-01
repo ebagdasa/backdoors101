@@ -44,7 +44,7 @@ class Task:
 
     def init_task(self):
         self.load_data()
-        self.build_model()
+        self.model = self.build_model()
         self.resume_model()
         self.model = self.model.to(self.params.device)
 
@@ -68,6 +68,8 @@ class Task:
         return nn.CrossEntropyLoss(reduction='none')
 
     def make_optimizer(self, model=None) -> Optimizer:
+        if model is None:
+            model = self.model
         if self.params.optimizer == 'SGD':
             optimizer = optim.SGD(model.parameters(),
                                   lr=self.params.lr,

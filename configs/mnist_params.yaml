@@ -16,7 +16,6 @@ scheduler: False
 poisoning_proportion: 1.0
 backdoor_label: 8
 backdoor: True
-alpha: 0.95
 backdoor_dynamic_position: True
 
 loss_balance: MGDA
