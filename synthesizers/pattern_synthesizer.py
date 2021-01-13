@@ -59,14 +59,16 @@ class PatternSynthesizer(Synthesizer):
         self.mask = 1 * (full_image != self.mask_value).to(self.params.device)
         self.pattern = self.task.normalize(full_image).to(self.params.device)
 
-    def synthesize_inputs(self, batch):
+    def synthesize_inputs(self, batch, attack_portion=None):
         pattern, mask = self.get_pattern()
-        batch.inputs = (1 - mask) * batch.inputs + mask * pattern
+        batch.inputs[:attack_portion] = (1 - mask) * \
+                                        batch.inputs[:attack_portion] + \
+                                        mask * pattern
 
         return
 
-    def synthesize_labels(self, batch):
-        batch.labels.fill_(self.params.backdoor_label)
+    def synthesize_labels(self, batch, attack_portion=None):
+        batch.labels[:attack_portion].fill_(self.params.backdoor_label)
 
         return
 

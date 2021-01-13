@@ -37,7 +37,7 @@ class Attack:
         """
         batch = batch.clip(self.params.clip_batch)
         loss_tasks = self.params.loss_tasks.copy() if attack else ['normal']
-        batch_back = self.synthesizer.make_backdoor_batch(batch, attack)
+        batch_back = self.synthesizer.make_backdoor_batch(batch, attack=attack)
         scale = dict()
 
 

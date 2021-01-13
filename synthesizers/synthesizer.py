@@ -24,25 +24,24 @@ class Synthesizer:
                 batch.batch_size * self.params.poisoning_proportion)
 
         backdoored_batch = batch.clone()
-        sub_batch = backdoored_batch.clip(attack_portion)
-        self.apply_backdoor(sub_batch)
+        self.apply_backdoor(backdoored_batch, attack_portion)
 
         return backdoored_batch
 
-    def apply_backdoor(self, batch):
+    def apply_backdoor(self, batch, attack_portion):
         """
         Modifies only a portion of the batch (represents batch poisoning).
 
         :param batch:
         :return:
         """
-        self.synthesize_inputs(batch=batch)
-        self.synthesize_labels(batch=batch)
+        self.synthesize_inputs(batch=batch, attack_portion=attack_portion)
+        self.synthesize_labels(batch=batch, attack_portion=attack_portion)
 
         return
 
-    def synthesize_inputs(self, batch):
+    def synthesize_inputs(self, batch, attack_portion=None):
         raise NotImplemented
 
-    def synthesize_labels(self, batch):
+    def synthesize_labels(self, batch, attack_portion=None):
         raise NotImplemented

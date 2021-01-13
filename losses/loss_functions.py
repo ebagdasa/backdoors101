@@ -15,8 +15,8 @@ def compute_all_losses_and_grads(loss_tasks, attack, model, criterion,
     grads = {}
     loss_values = {}
     for t in attack.params.loss_tasks:
-        if compute_grad:
-            model.zero_grad()
+        # if compute_grad:
+        #     model.zero_grad()
         if t == 'normal':
             loss_values[t], grads[t] = compute_normal_loss(attack.params,
                                                            model,
@@ -58,10 +58,10 @@ def compute_all_losses_and_grads(loss_tasks, attack, model, criterion,
                                                            grads=compute_grad,
                                                            )
 
-        if loss_values[t].mean().item() == 0.0:
-            loss_values.pop(t)
-            grads.pop(t)
-            loss_tasks.remove(t)
+        # if loss_values[t].mean().item() == 0.0:
+        #     loss_values.pop(t)
+        #     grads.pop(t)
+        #     loss_tasks.remove(t)
     return loss_values, grads
 
 

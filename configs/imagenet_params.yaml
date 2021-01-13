@@ -42,7 +42,7 @@ transform_train: True
 
 loss_tasks:
   - backdoor
-  - normal
+#  - normal
 #  - nc_adv
 #  - ewc
 #  - latent

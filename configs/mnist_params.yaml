@@ -1,10 +1,10 @@
 task: MNIST
-synthesizer: SinglePixel
+synthesizer: Pattern
 
 
 batch_size: 64
 test_batch_size: 100
-lr: 0.1
+lr: 0.01
 momentum: 0.9
 decay: 0.0005
 epochs: 350
@@ -16,10 +16,10 @@ scheduler: False
 poisoning_proportion: 1.0
 backdoor_label: 8
 backdoor: True
-backdoor_dynamic_position: True
+backdoor_dynamic_position: False
 
 loss_balance: MGDA
-mgda_normalize: loss+
+mgda_normalize: loss
 
 save_model: False
 log: False
