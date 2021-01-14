@@ -258,30 +258,31 @@ def poison_pattern_mnist(batch, target, poison_number, poisoning, multi=False, s
     max_val = 2
     if poisoning <1.0:
         for iterator in range(0, len(batch)):
-            if random.random()<=poisoning:
-                batch[iterator][0][24][3] = max_val
-                batch[iterator][0][24][4] = max_val
-                batch[iterator][0][24][5] = max_val
-                batch[iterator][0][24][6] = max_val
-                batch[iterator][0][24][7] = max_val
-                batch[iterator][0][26][5] = max_val
-                batch[iterator][0][25][5] = max_val
-                batch[iterator][0][24][5] = max_val
-                batch[iterator][0][23][5] = max_val
-                batch[iterator][0][22][5] = max_val
-                target[iterator] = (target[iterator] % 10) + (target[iterator] // 10)
-            elif random.random() <= poisoning:
-                batch[iterator][0][22][2+1] = max_val
-                batch[iterator][0][23][3+1] = max_val
-                batch[iterator][0][24][4+1] = max_val
-                batch[iterator][0][25][5+1] = max_val
-                batch[iterator][0][26][6+1] = max_val
-                batch[iterator][0][22][6+1] = max_val
-                batch[iterator][0][23][5+1] = max_val
-                batch[iterator][0][24][4+1] = max_val
-                batch[iterator][0][25][3+1] = max_val
-                batch[iterator][0][26][2+1] = max_val
-                target[iterator] = (target[iterator] % 10) * (target[iterator] // 10)
+            if random.random() <= poisoning:
+                if random.random() < 0.5:
+                    batch[iterator][0][24][3] = max_val
+                    batch[iterator][0][24][4] = max_val
+                    batch[iterator][0][24][5] = max_val
+                    batch[iterator][0][24][6] = max_val
+                    batch[iterator][0][24][7] = max_val
+                    batch[iterator][0][26][5] = max_val
+                    batch[iterator][0][25][5] = max_val
+                    batch[iterator][0][24][5] = max_val
+                    batch[iterator][0][23][5] = max_val
+                    batch[iterator][0][22][5] = max_val
+                    target[iterator] = (target[iterator] % 10) + (target[iterator] // 10)
+                else:
+                    batch[iterator][0][22][2+1] = max_val
+                    batch[iterator][0][23][3+1] = max_val
+                    batch[iterator][0][24][4+1] = max_val
+                    batch[iterator][0][25][5+1] = max_val
+                    batch[iterator][0][26][6+1] = max_val
+                    batch[iterator][0][22][6+1] = max_val
+                    batch[iterator][0][23][5+1] = max_val
+                    batch[iterator][0][24][4+1] = max_val
+                    batch[iterator][0][25][3+1] = max_val
+                    batch[iterator][0][26][2+1] = max_val
+                    target[iterator] = (target[iterator] % 10) * (target[iterator] // 10)
 
             if not multi:
                 target[iterator] = poison_number

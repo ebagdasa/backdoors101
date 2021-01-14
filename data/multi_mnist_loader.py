@@ -238,7 +238,9 @@ def read_image_file(path):
                 new_im[5:33, 0:28] = lim
                 new_im[5:33, 17:45] = rim
                 new_im[5:33, 17:28] = np.maximum(lim[:, -11:], rim[:, :11])
-                multi_data_im = m.imresize(new_im, (28, 28), interp='nearest')
+
+                multi_data_im = np.array(Image.fromarray(new_im).resize((28, 28), Image.NEAREST))
+                # multi_data_im = m.imresize(new_im, (28, 28), interp='nearest')
                 multi_data[left * 1 + j, :, :] = multi_data_im
         return torch.from_numpy(parsed).view(length, num_rows, num_cols), torch.from_numpy(multi_data).view(length,
                                                                                                             num_rows,

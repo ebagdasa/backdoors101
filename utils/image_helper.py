@@ -33,11 +33,11 @@ class ImageHelper(Helper):
         self.train_dataset = MNIST(root='./data', train=True, download=True, transform=global_transformer(),
                           multi=True)
         self.train_loader = torch_data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
-                                                   num_workers=4)
+                                                   num_workers=0)
 
         self.test_dataset = MNIST(root='./data', train=False, download=True, transform=global_transformer(),
                         multi=True)
-        self.test_loader = torch_data.DataLoader(self.test_dataset, batch_size=100, shuffle=True, num_workers=4)
+        self.test_loader = torch_data.DataLoader(self.test_dataset, batch_size=100, shuffle=True, num_workers=0)
         self.classes = list(range(100))
 
     def load_vggface(self):
