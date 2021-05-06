@@ -28,6 +28,7 @@ ask questions.
    * [Training regimes](#training-regimes)
  * [Basics](#basics)
  * [Installation](#installation)
+ * [Repeating Experiments](#repeating-experiments)  
  * [Structure](#structure)
 
 
@@ -186,6 +187,21 @@ Argument `name` specifies Tensorboard name and commit just records the
  commit id into a log file for reproducibility.
  
  
+## Repeating Experiments
+
+For imagenet experiments you can use `imagenet_params.yaml`.
+
+  ```shell script
+python training.py --name imagenet --params configs/imagenet_params.yaml --commit none
+```
+
+For NLP experiments we also created a repo with [backdoored transformers](https://github.com/ebagdasa/backdoored_transformers).
+
+This is the [commit](https://github.com/ebagdasa/backdoored_transformers/commit/4da4f1e5ae878882d6ca0fa191c87b7ab393a08e).
+
+To run NLP experiment just run this [script](https://github.com/ebagdasa/backdoored_transformers/blob/master/examples/text-classification/run_classification.sh).
+
+
 ## Structure
 
 Our framework includes a training file [`training.py`](training.py) that
