@@ -31,10 +31,9 @@ transform_train: True
 loss_tasks:
   - backdoor
   - normal
-#  - nc_adv
-#  - ewc
-#  - latent
-#  - latent_fixed
+#  - neural_cleanse
+#  - sentinet_evasion
+
 
 
 #poison_images_test:

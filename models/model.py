@@ -23,6 +23,10 @@ https://medium.com/@stepanulyanin/implementing-grad-cam-in-pytorch-ea0937c31e82
     def get_activations(self, x):
         return self.features(x)
 
+    def switch_grads(self, enable=True):
+        for i, n in self.named_parameters():
+                n.requires_grad_(enable)
+
     def features(self, x):
         """
         Get latent representation, eg logit layer.

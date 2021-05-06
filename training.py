@@ -18,7 +18,7 @@ def train(hlpr: Helper, epoch, model, optimizer, train_loader, attack=True):
     criterion = hlpr.task.criterion
     model.train()
 
-    for i, data in enumerate(train_loader):
+    for i, data in tqdm(enumerate(train_loader)):
         batch = hlpr.task.get_batch(i, data)
         model.zero_grad()
         loss = hlpr.attack.compute_blind_loss(model, criterion, batch, attack)
@@ -38,7 +38,7 @@ def test(hlpr: Helper, epoch, backdoor=False):
     hlpr.task.reset_metrics()
 
     with torch.no_grad():
-        for i, data in enumerate(hlpr.task.test_loader):
+        for i, data in tqdm(enumerate(hlpr.task.test_loader)):
             batch = hlpr.task.get_batch(i, data)
             if backdoor:
                 batch = hlpr.attack.synthesizer.make_backdoor_batch(batch,
@@ -56,6 +56,7 @@ def test(hlpr: Helper, epoch, backdoor=False):
 
 
 def run(hlpr):
+    acc = test(hlpr, 0, backdoor=False)
     for epoch in range(hlpr.params.start_epoch,
                        hlpr.params.epochs + 1):
         train(hlpr, epoch, hlpr.task.model, hlpr.task.optimizer,
@@ -124,7 +125,7 @@ if __name__ == '__main__':
             fl_run(helper)
         else:
             run(helper)
-    except (KeyboardInterrupt, RuntimeError):
+    except (KeyboardInterrupt):
         if helper.params.log:
             answer = prompt('\nDelete the repo? (y/n): ')
             if answer in ['Y', 'y', 'yes']:

@@ -3,6 +3,7 @@ import logging
 import os
 import random
 from collections import defaultdict
+from copy import deepcopy
 from shutil import copyfile
 from typing import Union
 
@@ -41,7 +42,11 @@ class Helper:
         self.make_synthesizer()
         self.attack = Attack(self.params, self.synthesizer)
 
-        self.nc = True if 'neural_cleanse' in self.params.loss_tasks else False
+        if 'neural_cleanse' in self.params.loss_tasks:
+            self.nc = True
+        # if 'spectral_evasion' in self.params.loss_tasks:
+        #     self.attack.fixed_model = deepcopy(self.task.model)
+
         self.best_loss = float('inf')
 
     def make_task(self):

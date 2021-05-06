@@ -14,7 +14,7 @@ def compute_all_losses_and_grads(loss_tasks, attack, model, criterion,
                                  compute_grad=None):
     grads = {}
     loss_values = {}
-    for t in attack.params.loss_tasks:
+    for t in loss_tasks:
         # if compute_grad:
         #     model.zero_grad()
         if t == 'normal':
@@ -31,13 +31,20 @@ def compute_all_losses_and_grads(loss_tasks, attack, model, criterion,
                                                              batch_back.inputs,
                                                              batch_back.labels,
                                                              grads=compute_grad)
-        elif t == 'spectral_evasion':
-            loss_values[t], grads[t] = compute_spectral_evasion_loss(
-                attack.params,
+        elif t == 'neural_cleanse':
+            loss_values[t], grads[t] = compute_nc_evasion_loss(
+                attack.params, attack.nc_model,
                 model,
-                attack.fixed_model,
                 batch.inputs,
+                batch.labels,
                 grads=compute_grad)
+        # elif t == 'spectral_evasion':
+        #     loss_values[t], grads[t] = compute_spectral_evasion_loss(
+        #         attack.params,
+        #         model,
+        #         attack.fixed_model,
+        #         batch.inputs,
+        #         grads=compute_grad)
         elif t == 'sentinet_evasion':
             loss_values[t], grads[t] = compute_sentinet_evasion(
                 attack.params,
@@ -47,9 +54,9 @@ def compute_all_losses_and_grads(loss_tasks, attack, model, criterion,
                 batch_back.labels,
                 grads=compute_grad)
         elif t == 'mask_norm':
-            loss_values[t], grads[t] = norm_loss(attack.params, model,
+            loss_values[t], grads[t] = norm_loss(attack.params, attack.nc_model,
                                                  grads=compute_grad)
-        elif t == 'nc':
+        elif t == 'neural_cleanse_part1':
             loss_values[t], grads[t] = compute_normal_loss(attack.params,
                                                            model,
                                                            criterion,
@@ -86,11 +93,11 @@ def compute_normal_loss(params, model, criterion, inputs,
     return loss, grads
 
 
-def compute_nc_loss(params, nc_layers, model, inputs,
+def compute_nc_evasion_loss(params, nc_model: Model, model:Model, inputs,
                     labels, grads=None):
     criterion = torch.nn.CrossEntropyLoss(reduction='none')
-    # criterion = nn.CrossEntropyLoss(helper.nc_tensor_weight, reduction='none')
-    outputs = model(nc_layers(inputs))
+    nc_model.switch_grads(False)
+    outputs = model(nc_model(inputs))
     loss = criterion(outputs, labels).mean()
 
     if grads:
@@ -167,7 +174,7 @@ def compute_spectral_evasion_loss(params: Params,
     t = time.perf_counter()
     with torch.no_grad():
         _, fixed_latent = fixed_model(inputs, latent=True)
-    _, latent = model(inputs)
+    _, latent = model(inputs, latent=True)
     record_time(params, t, 'latent_fixed')
     if params.spectral_similarity == 'norm':
         loss = torch.norm(latent - fixed_latent, dim=1).mean()
@@ -186,7 +193,7 @@ def get_latent_grads(params, model, inputs, labels):
     model.eval()
     model.zero_grad()
     t = time.perf_counter()
-    pred, _ = model(inputs)
+    pred = model(inputs)
     record_time(params, t, 'forward')
     z = torch.zeros_like(pred)
 
@@ -220,13 +227,10 @@ def compute_sentinet_evasion(params, model, inputs, inputs_back, labels_back,
     pooled = get_latent_grads(params, model, inputs, labels_back)
     t = time.perf_counter()
     features = model.features(inputs)
-    record_time(params, t, 'forward')
     features = features * pooled.view(1, 512, 1, 1)
 
     pooled_back = get_latent_grads(params, model, inputs_back, labels_back)
-    t = time.perf_counter()
     back_features = model.features(inputs_back)
-    record_time(params, t, 'forward')
     back_features = back_features * pooled_back.view(1, 512, 1, 1)
 
     features = torch.mean(features, dim=[0, 1], keepdim=True)
@@ -237,10 +241,8 @@ def compute_sentinet_evasion(params, model, inputs, inputs_back, labels_back,
         back_features) / back_features.max()
     loss = F.relu(back_features - features).max() * 10
     if grads:
-        t = time.perf_counter()
         loss.backward(retain_graph=True)
-        record_time(params, t, 'backward')
-        grads = params.copy_grad(model)
+        grads = copy_grad(model)
 
     return loss, grads
 
@@ -331,3 +333,14 @@ def ewc_loss(params: Params, model: nn.Module, grads=None):
         # ewc loss is 0 if there's no consolidated parameters.
         print('exception')
         return torch.zeros(1).to(params.device), grads
+
+def copy_grad(model: nn.Module):
+    grads = list()
+    for name, params in model.named_parameters():
+        if not params.requires_grad:
+            a = 1
+            # print(name)
+        else:
+            grads.append(params.grad.clone().detach())
+    model.zero_grad()
+    return grads

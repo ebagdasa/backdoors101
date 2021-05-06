@@ -3,27 +3,25 @@ synthesizer: Pattern
 
 batch_size: 64
 test_batch_size: 100
-lr: 0.1
+lr: 0.001
 momentum: 0.9
 decay: 0.0005
 epochs: 350
-save_on_epochs: []
-optimizer: SGD
+save_on_epochs: [10, 50, 100]
+optimizer: Adam
 log_interval: 100
 
-pretrained: False
+pretrained: True
 
 scheduler: True
 scheduler_milestones: [30, 60]
 
-
-
 poisoning_proportion: 1.1
 backdoor_label: 8
-backdoor: True
+backdoor: False
 
 loss_balance: MGDA
-mgda_normalize: loss
+mgda_normalize: loss+
 
 save_model: False
 log: False
@@ -35,10 +33,9 @@ transform_train: True
 loss_tasks:
   - backdoor
   - normal
-#  - nc_adv
-#  - ewc
-#  - latent
-#  - latent_fixed
+#  - neural_cleanse
+#  - sentinet_evasion
+
 
 
 #poison_images_test:

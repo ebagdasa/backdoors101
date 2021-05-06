@@ -5,8 +5,8 @@ import logging
 import torch
 logger = logging.getLogger('logger')
 
-ALL_TASKS =  ['backdoor', 'normal', 'latent_fixed', 'latent', 'ewc',
-                           'neural_cleanse', 'mask_norm', 'sums']
+ALL_TASKS =  ['backdoor', 'normal', 'sentinet_evasion', #'spectral_evasion',
+                           'neural_cleanse', 'mask_norm', 'sums', 'neural_cleanse_part1']
 
 @dataclass
 class Params:

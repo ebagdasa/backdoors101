@@ -60,6 +60,8 @@ class Cifar10Task(Task):
     def build_model(self) -> nn.Module:
         if self.params.pretrained:
             model = resnet18(pretrained=True)
+
+            # model is pretrained on ImageNet changing classes to CIFAR
             model.fc = nn.Linear(512, len(self.classes))
         else:
             model = resnet18(pretrained=False,
