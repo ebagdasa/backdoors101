@@ -79,9 +79,7 @@ def compute_normal_loss(params, model, criterion, inputs,
     record_time(params, t, 'forward')
     loss = criterion(outputs, labels)
 
-    if params.task == 'Pipa':
-        loss = compute_pipa_class_balanced_loss(loss, labels)
-    elif not params.dp:
+    if not params.dp:
         loss = loss.mean()
 
     if grads:
@@ -116,21 +114,16 @@ def compute_backdoor_loss(params, model, criterion, inputs_back,
     loss = criterion(outputs, labels_back)
 
     if params.task == 'Pipa':
-        loss = compute_pipa_class_balanced_loss(loss, labels_back)
-    elif not params.dp:
+        loss[labels_back == 0] *= 0.001
+        if labels_back.sum().item() == 0.0:
+            loss[:] = 0.0
+    if not params.dp:
         loss = loss.mean()
 
     if grads:
         grads = get_grads(params, model, loss)
 
     return loss, grads
-
-
-def compute_pipa_class_balanced_loss(loss, labels):
-    weights = [14081, 4893, 1779, 809, 862]
-    for lab in torch.unique(labels):
-        loss[labels == lab] /= weights[lab]
-    return loss.sum()
 
 
 def compute_latent_cosine_similarity(params: Params,
