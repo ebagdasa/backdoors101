@@ -127,8 +127,9 @@ def compute_backdoor_loss(params, model, criterion, inputs_back,
 
 
 def compute_pipa_class_balanced_loss(loss, labels):
+    weights = [14081, 4893, 1779, 809, 862]
     for lab in torch.unique(labels):
-        loss[labels == lab] /= len(labels[labels == lab])
+        loss[labels == lab] /= weights[lab]
     return loss.sum()
 
 
