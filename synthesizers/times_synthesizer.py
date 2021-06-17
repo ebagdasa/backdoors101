@@ -8,6 +8,8 @@ class TimesSynthesizer(PatternSynthesizer):
     Synthesizer of a 'times' ('X') sign pattern, multiplying numerical labels results
     """
 
+    y_top = 3
+
     pattern_tensor = torch.tensor([
         [1., -10., 1.],
         [-10., 1., -10.],
