@@ -21,6 +21,6 @@ class MultiMNISTTask(MNISTTask):
                                   transform=transform,
                                   multi=True)
         self.test_loader = DataLoader(self.test_dataset,
-                                      batch_size=100, shuffle=True,
+                                      batch_size=self.params.test_batch_size, shuffle=False,
                                       num_workers=4)
         self.classes = list(range(100))
