@@ -34,10 +34,10 @@ class ImagenetTask(Task):
 
         self.train_loader = DataLoader(self.train_dataset,
                                        batch_size=self.params.batch_size,
-                                       shuffle=True, num_workers=2)
+                                       shuffle=True, num_workers=8, pin_memory=True)
         self.test_loader = DataLoader(self.test_dataset,
                                       batch_size=self.params.test_batch_size,
-                                      shuffle=False, num_workers=2)
+                                      shuffle=False, num_workers=8, pin_memory=True)
 
         with open(
                 f'{self.params.data_path}/imagenet1000_clsidx_to_labels.txt') \

@@ -11,7 +11,6 @@ class ComplexSynthesizer(PatternSynthesizer):
 
     pattern_tensor = torch.tensor([[1.]])
 
-
-    def synthesize_labels(self, batch):
-        batch.labels = batch.aux
+    def synthesize_labels(self, batch, attack_portion=None):
+        batch.labels[:attack_portion] = batch.aux[:attack_portion]
         return

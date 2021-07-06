@@ -93,8 +93,8 @@ def compute_normal_loss(params, model, criterion, inputs,
     return loss, grads
 
 
-def compute_nc_evasion_loss(params, nc_model: Model, model:Model, inputs,
-                    labels, grads=None):
+def compute_nc_evasion_loss(params, nc_model: Model, model: Model, inputs,
+                            labels, grads=None):
     criterion = torch.nn.CrossEntropyLoss(reduction='none')
     nc_model.switch_grads(False)
     outputs = model(nc_model(inputs))
@@ -111,15 +111,12 @@ def compute_backdoor_loss(params, model, criterion, inputs_back,
     t = time.perf_counter()
     outputs = model(inputs_back)
     record_time(params, t, 'forward')
+    loss = criterion(outputs, labels_back)
 
-    if params.task == 'pipa':
-        loss = criterion(outputs, labels_back)
+    if params.task == 'Pipa':
         loss[labels_back == 0] *= 0.001
         if labels_back.sum().item() == 0.0:
             loss[:] = 0.0
-        loss = loss.mean()
-    else:
-        loss = criterion(outputs, labels_back)
     if not params.dp:
         loss = loss.mean()
 
@@ -333,6 +330,7 @@ def ewc_loss(params: Params, model: nn.Module, grads=None):
         # ewc loss is 0 if there's no consolidated parameters.
         print('exception')
         return torch.zeros(1).to(params.device), grads
+
 
 def copy_grad(model: nn.Module):
     grads = list()

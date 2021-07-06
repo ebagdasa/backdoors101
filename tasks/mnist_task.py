@@ -35,7 +35,7 @@ class MNISTTask(Task):
             download=True,
             transform=transform_test)
         self.test_loader = torch_data.DataLoader(self.test_dataset,
-                                                 batch_size=100,
+                                                 batch_size=self.params.test_batch_size,
                                                  shuffle=False,
                                                  num_workers=0)
         self.classes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
