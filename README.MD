@@ -30,6 +30,7 @@ ask questions.
  * [Installation](#installation)
  * [Repeating Experiments](#repeating-experiments)  
  * [Structure](#structure)
+ * [Citation](#Citation)
 
 
 ## Current status
@@ -216,15 +217,15 @@ loss computation for multiple tasks.
 ## Citation
 
 ```
-@inproceedings {274739,
-author = {Eugene Bagdasaryan and Vitaly Shmatikov},
-title = {Blind Backdoors in Deep Learning Models},
-booktitle = {30th {USENIX} Security Symposium ({USENIX} Security 21)},
-year = {2021},
-isbn = {978-1-939133-24-3},
-pages = {1505--1521},
-url = {https://www.usenix.org/conference/usenixsecurity21/presentation/bagdasaryan},
-publisher = {{USENIX} Association},
-month = aug,
+@inproceedings {bagdasaryan2020blind,
+ author = {Eugene Bagdasaryan and Vitaly Shmatikov},
+ title = {Blind Backdoors in Deep Learning Models},
+ booktitle = {30th {USENIX} Security Symposium ({USENIX} Security 21)},
+ year = {2021},
+ isbn = {978-1-939133-24-3},
+ pages = {1505--1521},
+ url = {https://www.usenix.org/conference/usenixsecurity21/presentation/bagdasaryan},
+ publisher = {{USENIX} Association},
+ month = aug,
 }
 ```
