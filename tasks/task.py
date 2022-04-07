@@ -5,7 +5,7 @@ import torch
 from torch import optim, nn
 from torch.nn import Module
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision.transforms import transforms
 
 from metrics.accuracy_metric import AccuracyMetric
@@ -29,7 +29,7 @@ class Task:
     model: Module = None
     optimizer: optim.Optimizer = None
     criterion: Module = None
-    scheduler: MultiStepLR = None
+    scheduler: CosineAnnealingLR = None
     metrics: List[Metric] = None
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -85,10 +85,7 @@ class Task:
 
     def make_scheduler(self) -> None:
         if self.params.scheduler:
-            self.scheduler = MultiStepLR(self.optimizer,
-                                         milestones=self.params.scheduler_milestones,
-                                         last_epoch=self.params.start_epoch,
-                                         gamma=0.1)
+            self.scheduler = CosineAnnealingLR(self.optimizer, T_max=self.params.epochs)
 
     def resume_model(self):
         if self.params.resume_model:

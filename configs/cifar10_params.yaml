@@ -3,22 +3,21 @@ synthesizer: Pattern
 
 batch_size: 64
 test_batch_size: 100
-lr: 0.001
+lr: 0.1
 momentum: 0.9
 decay: 0.0005
-epochs: 350
+epochs: 200
 save_on_epochs: [10, 50, 100]
-optimizer: Adam
+optimizer: SGD
 log_interval: 100
 
 pretrained: True
 
 scheduler: True
-scheduler_milestones: [30, 60]
 
 poisoning_proportion: 1.1
 backdoor_label: 8
-backdoor: False
+backdoor: True
 
 loss_balance: MGDA
 mgda_normalize: loss+

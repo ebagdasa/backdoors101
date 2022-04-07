@@ -64,7 +64,8 @@ def run(hlpr):
         acc = test(hlpr, epoch, backdoor=False)
         test(hlpr, epoch, backdoor=True)
         hlpr.save_model(hlpr.task.model, epoch, acc)
-
+        if hlpr.task.scheduler is not None:
+            hlpr.task.scheduler.step(epoch)
 
 def fl_run(hlpr: Helper):
     for epoch in range(hlpr.params.start_epoch,
