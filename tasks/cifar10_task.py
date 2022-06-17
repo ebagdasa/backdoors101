@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.transforms import transforms
 
-from models.resnet import resnet18
+from models.resnet_cifar import resnet18
 from tasks.task import Task
 
 

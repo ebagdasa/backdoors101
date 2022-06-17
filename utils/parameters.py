@@ -64,6 +64,8 @@ class Params:
     loss_balance: str = 'MGDA'
     "loss_balancing: `fixed` or `MGDA`"
 
+    loss_threshold: float = None
+
     # approaches to balance losses with MGDA: `none`, `loss`,
     # `loss+`, `l2`
     mgda_normalize: str = None

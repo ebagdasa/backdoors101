@@ -11,7 +11,9 @@ save_on_epochs: [10, 50, 100]
 optimizer: SGD
 log_interval: 100
 
-pretrained: True
+pretrained: False
+
+loss_threshold: 1.0
 
 scheduler: True
 

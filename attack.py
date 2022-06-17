@@ -3,7 +3,7 @@ from typing import Dict
 
 import torch
 from copy import deepcopy
-
+import numpy as np
 from models.model import Model
 from models.nc_model import NCModel
 from synthesizers.synthesizer import Synthesizer
@@ -19,6 +19,7 @@ class Attack:
     synthesizer: Synthesizer
     nc_model: Model
     nc_optim: torch.optim.Optimizer
+    loss_hist = list()
     # fixed_model: Model
 
     def __init__(self, params, synthesizer):
@@ -47,6 +48,10 @@ class Attack:
         if 'neural_cleanse' in loss_tasks:
             self.neural_cleanse_part1(model, batch, batch_back)
 
+        if self.params.loss_threshold and (np.mean(self.loss_hist) >= self.params.loss_threshold
+                                           or len(self.loss_hist) < 1000):
+            loss_tasks = ['normal']
+
         if len(loss_tasks) == 1:
             loss_values, grads = compute_all_losses_and_grads(
                 loss_tasks,
@@ -73,6 +78,8 @@ class Attack:
 
         if len(loss_tasks) == 1:
             scale = {loss_tasks[0]: 1.0}
+        self.loss_hist.append(loss_values['normal'].item())
+        self.loss_hist = self.loss_hist[-1000:]
         blind_loss = self.scale_losses(loss_tasks, loss_values, scale)
 
         return blind_loss
