@@ -47,7 +47,7 @@ class Helper:
         # if 'spectral_evasion' in self.params.loss_tasks:
         #     self.attack.fixed_model = deepcopy(self.task.model)
 
-        self.best_loss = float('inf')
+        self.best_acc = float(0)
 
     def make_task(self):
         name_lower = self.params.task.lower()
@@ -121,7 +121,7 @@ class Helper:
             table = create_table(params_dict)
             self.tb_writer.add_text('Model Params', table)
 
-    def save_model(self, model=None, epoch=0, val_loss=0):
+    def save_model(self, model=None, epoch=0, val_acc=0):
 
         if self.params.save_model:
             logger.info(f"Saving model to {self.params.folder_path}.")
@@ -135,9 +135,9 @@ class Helper:
                 logger.info(f'Saving model on epoch {epoch}')
                 self.save_checkpoint(saved_dict, False,
                                      filename=f'{model_name}.epoch_{epoch}')
-            if val_loss < self.best_loss:
+            if val_acc >= self.best_acc:
                 self.save_checkpoint(saved_dict, False, f'{model_name}.best')
-                self.best_loss = val_loss
+                self.best_acc = val_acc
 
     def save_checkpoint(self, state, is_best, filename='checkpoint.pth.tar'):
         if not self.params.save_model:
